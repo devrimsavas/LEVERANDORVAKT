@@ -12,6 +12,6 @@ const doc = {
 };
 
 const outputFile = path.join(process.cwd(), "swagger_output.json");
-const endpointsFiles = [path.join(process.cwd(), "dist", "app.js")];
+const endpointsFiles = ["./dist/app.js"];
 
 swaggerAutogen({ openapi: "3.0.0" })(outputFile, endpointsFiles, doc);
