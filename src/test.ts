@@ -1,0 +1,1 @@
+const mytext:string="This is a test";
