@@ -6,7 +6,9 @@ const PORT = process.env.PORT || 3000;
 import path from "node:path";
 
 //routes
-import indexPage from "./routes/index.js";
+import indexRouter from "./routes/index.js";
+//companies router
+import companiesRouter from "./routes/companies.js";
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -16,7 +18,8 @@ app.use(express.json());
 app.use(express.static(path.join(import.meta.dirname, "public")));
 
 //routes 
-app.use("/",indexPage)
+app.use("/",indexRouter)
+app.use("/api/companies",companiesRouter);
 
 
 
