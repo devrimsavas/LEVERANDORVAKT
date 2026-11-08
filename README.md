@@ -222,8 +222,8 @@ On startup the app connects to the database and applies any pending migrations a
 ### Authentication and users
 - [x] User registration and login (bcrypt + JWT)
 - [x] Internal ID + public UUID, roles (`user` / `admin`)
-- [ ] `requireAuth` middleware for protected endpoints
-- [ ] `GET /api/auth/me` — current user's profile
+- [x] `requireAuth` middleware for protected endpoints
+- [x] `GET /api/auth/me` — current user's profile
 - [x] Admin account created once on startup from environment variables
 
 ### Watchlist and change detection
