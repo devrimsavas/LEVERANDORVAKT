@@ -4,8 +4,18 @@ export type UserRole = "user" | "admin";
 
 @Table({ tableName: "users", underscored: true })
 export class User extends Model {
-  @Column({ type: DataType.UUID, primaryKey: true, defaultValue: DataType.UUIDV4 })
-  declare id: string;
+  // Internal primary key, never exposed outside the database
+  @Column({ type: DataType.INTEGER, autoIncrement: true, primaryKey: true })
+  declare id: number;
+
+  // Public user number, used in the API and in tokens
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    unique: true,
+    defaultValue: DataType.UUIDV4,
+  })
+  declare publicId: string;
 
   @Column({ type: DataType.STRING(100), allowNull: false })
   declare firstName: string;

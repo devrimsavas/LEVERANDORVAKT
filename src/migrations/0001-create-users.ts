@@ -5,9 +5,17 @@ type MigrationParams = { context: QueryInterface };
 
 export async function up({ context: queryInterface }: MigrationParams) {
   await queryInterface.createTable("users", {
+    // Internal primary key, never exposed outside the database
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
       primaryKey: true,
+    },
+    // Public user number, used in the API and in tokens
+    public_id: {
+      type: DataTypes.UUID,
+      allowNull: false,
+      unique: true,
       defaultValue: literal("gen_random_uuid()"),
     },
     first_name: {
