@@ -14,6 +14,8 @@ import path from "node:path";
 import indexRouter from "./routes/index.js";
 //companies router
 import companiesRouter from "./routes/companies.js";
+//auth router
+import authRouter from "./routes/auth.js";
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -25,6 +27,7 @@ app.use(express.static(path.join(import.meta.dirname, "public")));
 //routes
 app.use("/", indexRouter);
 app.use("/api/companies", companiesRouter);
+app.use("/api/auth", authRouter);
 
 //swagger docs
 const swaggerPath = path.join(process.cwd(), "swagger_output.json");
