@@ -6,6 +6,8 @@ import { sequelize } from "./config/database.js";
 //swagger
 import swaggerUi from "swagger-ui-express";
 import { existsSync, readFileSync } from "node:fs";
+//migrator
+import { runMigrations } from "./config/migrator.js";
 //path
 import path from "node:path";
 //routes
@@ -41,6 +43,8 @@ const mainApp = async () => {
     //DB connection
     await sequelize.authenticate();
     console.log("Database connected");
+    //migrator
+    await runMigrations();
     //listen port
     app.listen(PORT, async () => {
       console.log(`listening at ${PORT}`);
