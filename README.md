@@ -224,7 +224,7 @@ On startup the app connects to the database and applies any pending migrations a
 - [x] Internal ID + public UUID, roles (`user` / `admin`)
 - [ ] `requireAuth` middleware for protected endpoints
 - [ ] `GET /api/auth/me` — current user's profile
-- [ ] Admin account created once on startup from environment variables
+- [x] Admin account created once on startup from environment variables
 
 ### Watchlist and change detection
 - [ ] Data model design: `companies`, `watchlist_entries`, `company_changes`

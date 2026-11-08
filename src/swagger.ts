@@ -9,6 +9,15 @@ const doc = {
     version: "1.0.0",
   },
   servers: [{ url: "/" }],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      },
+    },
+  },
 };
 
 const outputFile = path.join(process.cwd(), "swagger_output.json");

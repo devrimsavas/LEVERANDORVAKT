@@ -37,7 +37,7 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
-function getJwtSecret(): string {
+export function getJwtSecret(): string {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     throw new Error("JWT_SECRET is not set");
@@ -116,4 +116,13 @@ export async function loginUser(
   );
 
   return { token, user: toPublicUser(user) };
+}
+
+// Returns the public data of the user with the given public id,
+// or null if the user no longer exists.
+export async function getUserByPublicId(
+  publicId: string,
+): Promise<PublicUser | null> {
+  const user = await User.findOne({ where: { publicId } });
+  return user ? toPublicUser(user) : null;
 }

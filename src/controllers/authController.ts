@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import {
   registerUser,
   loginUser,
+  getUserByPublicId,
   EmailTakenError,
   InvalidCredentialsError,
 } from "../services/authService.js";
@@ -11,7 +12,11 @@ const MIN_PASSWORD_LENGTH = 8;
 const MAX_NAME_LENGTH = 100;
 
 function isValidName(value: unknown): value is string {
-  return typeof value === "string" && value.trim().length > 0 && value.trim().length <= MAX_NAME_LENGTH;
+  return (
+    typeof value === "string" &&
+    value.trim().length > 0 &&
+    value.trim().length <= MAX_NAME_LENGTH
+  );
 }
 
 // POST /api/auth/register
@@ -19,7 +24,11 @@ export const register = async (req: Request, res: Response) => {
   const { firstName, lastName, email, password } = req.body ?? {};
 
   if (!isValidName(firstName) || !isValidName(lastName)) {
-    res.status(400).json({ error: `First and last name are required (max ${MAX_NAME_LENGTH} characters)` });
+    res
+      .status(400)
+      .json({
+        error: `First and last name are required (max ${MAX_NAME_LENGTH} characters)`,
+      });
     return;
   }
 
@@ -29,7 +38,11 @@ export const register = async (req: Request, res: Response) => {
   }
 
   if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
-    res.status(400).json({ error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters` });
+    res
+      .status(400)
+      .json({
+        error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+      });
     return;
   }
 
@@ -65,5 +78,28 @@ export const login = async (req: Request, res: Response) => {
     }
     console.error(error);
     res.status(500).json({ error: "Login failed" });
+  }
+};
+
+// GET /api/auth/me
+export const me = async (req: Request, res: Response) => {
+  /* #swagger.security = [{ "bearerAuth": [] }] */
+
+  // requireAuth has already verified the token
+  const userId = req.auth!.userId;
+
+  try {
+    const user = await getUserByPublicId(userId);
+
+    // The token is valid, but the account has been deleted
+    if (!user) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Could not load the user" });
   }
 };
