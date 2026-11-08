@@ -4,7 +4,7 @@ import type { SignOptions } from "jsonwebtoken";
 import { User } from "../models/User.js";
 import type { UserRole } from "../models/User.js";
 
-const SALT_ROUNDS = 10;
+export const SALT_ROUNDS = 10;
 
 export class EmailTakenError extends Error {}
 export class InvalidCredentialsError extends Error {}

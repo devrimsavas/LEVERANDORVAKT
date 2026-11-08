@@ -8,6 +8,8 @@ import swaggerUi from "swagger-ui-express";
 import { existsSync, readFileSync } from "node:fs";
 //migrator
 import { runMigrations } from "./config/migrator.js";
+//admin creation 
+import { ensureAdmin } from "./config/ensureAdmin.js";
 //path
 import path from "node:path";
 //routes
@@ -48,6 +50,7 @@ const mainApp = async () => {
     console.log("Database connected");
     //migrator
     await runMigrations();
+    await ensureAdmin();
     //listen port
     app.listen(PORT, async () => {
       console.log(`listening at ${PORT}`);
