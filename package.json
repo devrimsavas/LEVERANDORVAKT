@@ -6,7 +6,8 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
-    "dev": "concurrently \"tsc -w\" \"node --watch dist/app.js\""
+    "dev": "concurrently \"tsc -w\" \"node --watch dist/app.js\"",
+    "swagger": "node dist/swagger.js"
   },
   "keywords": [],
   "author": "",
@@ -14,12 +15,15 @@
   "type": "module",
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "@types/swagger-ui-express": "^4.1.8",
     "concurrently": "^10.0.7",
+    "swagger-autogen": "^2.23.7",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "@types/express": "^5.0.6",
     "dotenv": "^18.0.9",
-    "express": "^5.3.0"
+    "express": "^5.3.0",
+    "swagger-ui-express": "^5.0.1"
   }
 }
