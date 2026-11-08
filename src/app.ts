@@ -2,6 +2,7 @@
 import "dotenv/config";
 import express from "express";
 const PORT = process.env.PORT || 3000;
+import { sequelize } from "./config/database.js";
 //swagger
 import swaggerUi from "swagger-ui-express";
 import { existsSync, readFileSync } from "node:fs";
@@ -37,6 +38,9 @@ if (existsSync(swaggerPath)) {
 
 const mainApp = async () => {
   try {
+    //DB connection
+    await sequelize.authenticate();
+    console.log("Database connected");
     //listen port
     app.listen(PORT, async () => {
       console.log(`listening at ${PORT}`);
