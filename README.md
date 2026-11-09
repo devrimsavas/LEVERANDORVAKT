@@ -1,5 +1,9 @@
 # Leverandørvakt
 
+[![CI](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml/badge.svg)](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml)
+
+
+
 _Last updated: 09.11.2026_
 
 > ⚠️ **Under active development** — the backend foundation (company lookup, authentication, database migrations) is in place. The watchlist and change-detection features are being built next. See the [Roadmap](#-roadmap).
