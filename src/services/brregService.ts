@@ -9,10 +9,14 @@ import type {
 } from "../types/brreg.js";
 import type { Company } from "../types/company.js";
 import type { CompanyRoles } from "../types/companyRoles.js";
+import type { BrregRegnskap, BrregRegnskapError } from "../types/regnskap.js";
+import type { AnnualAccountsResult } from "../types/annualAccounts.js";
 import { toCompany } from "../mappers/companyMapper.js";
 import { toCompanyRoles } from "../mappers/companyRolesMapper.js";
+import { toAnnualAccountsList } from "../mappers/annualAccountsMapper.js";
 
 const BRREG_BASE_URL = "https://data.brreg.no/enhetsregisteret/api";
+const ACCOUNTS_BASE_URL = "https://data.brreg.no/regnskapsregisteret/regnskap";
 
 // Result of looking up one company in the register.
 export type CompanyLookup =
@@ -213,4 +217,41 @@ export async function getLatestRoleEventId(): Promise<number> {
   }
 
   throw new Error("Brreg role feed has no events in the last 7 days");
+}
+
+// The accounts API answers 500 with this message for companies whose
+// accounts it does not cover (e.g. "... oppstillingsplan som ikke er stottet (BANK)")
+const UNSUPPORTED_ACCOUNTS = /ikke er st(o|ø)ttet/i;
+
+// Fetches the key figures from the latest annual accounts of a company
+// (the API keeps the last three years), newest first.
+// A company that has not filed any accounts gets an empty list.
+export async function getAnnualAccounts(
+  orgNumber: string,
+): Promise<AnnualAccountsResult> {
+  // Without this header the API answers in XML
+  const response = await fetch(`${ACCOUNTS_BASE_URL}/${orgNumber}`, {
+    headers: { Accept: "application/json" },
+  });
+
+  // 404 with an empty body: the company exists but has no accounts
+  if (response.status === 404) {
+    return { status: "available", accounts: [] };
+  }
+
+  if (response.status === 500) {
+    const body = (await response
+      .json()
+      .catch(() => null)) as BrregRegnskapError | null;
+    if (body?.message && UNSUPPORTED_ACCOUNTS.test(body.message)) {
+      return { status: "unsupported", accounts: [] };
+    }
+  }
+
+  if (!response.ok) {
+    throw brregError(response);
+  }
+
+  const data = (await response.json()) as BrregRegnskap[];
+  return { status: "available", accounts: toAnnualAccountsList(data) };
 }

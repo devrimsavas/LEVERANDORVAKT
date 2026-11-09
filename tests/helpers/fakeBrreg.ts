@@ -6,6 +6,7 @@ import type {
   BrregRollerResponse,
   BrregUpdate,
 } from "../../src/types/brreg.js";
+import type { BrregRegnskap } from "../../src/types/regnskap.js";
 
 // What the fake register answers for one organization number
 export type FakeCompany =
@@ -21,6 +22,12 @@ export interface FakeBrreg {
   // Roles per company: the Brreg response, or an HTTP status to fail with
   roles: Map<string, BrregRollerResponse | { errorStatus: number }>;
   roleEvents: BrregRoleEvent[];
+  // Annual accounts per company: the Brreg response, or an HTTP status
+  // (and error message) to fail with
+  accounts: Map<
+    string,
+    BrregRegnskap[] | { errorStatus: number; message: string }
+  >;
   // Every URL the app requested, to check how often Brreg was called
   requests: URL[];
   // Milliseconds to wait before answering, to simulate a slow register
@@ -35,6 +42,8 @@ export interface FakeBrreg {
   setRoles(orgNumber: string, roles: BrregRollerResponse): void;
   setRolesError(orgNumber: string, status: number): void;
   addRoleEvent(orgNumber: string): number;
+  setAccounts(orgNumber: string, accounts: BrregRegnskap[]): void;
+  setAccountsError(orgNumber: string, status: number, message: string): void;
 }
 
 export interface FakeRoles {
@@ -150,7 +159,31 @@ export function brregEnhet(
   };
 }
 
-function handle(fake: FakeBrreg, url: URL): Response {
+function handle(fake: FakeBrreg, url: URL, headers: Headers): Response {
+  const accountsMatch = url.pathname.match(
+    /\/regnskapsregisteret\/regnskap\/(\d{9})$/,
+  );
+  if (accountsMatch) {
+    // Like the real API, answer in XML unless JSON is asked for
+    if (headers.get("accept") !== "application/json") {
+      return new Response("<regnskap/>", {
+        headers: { "content-type": "application/xml" },
+      });
+    }
+    const accounts = fake.accounts.get(accountsMatch[1]!);
+    // The real API answers 404 with an empty body when there are no accounts
+    if (!accounts) {
+      return new Response(null, { status: 404 });
+    }
+    if ("errorStatus" in accounts) {
+      return Response.json(
+        { status: String(accounts.errorStatus), message: accounts.message },
+        { status: accounts.errorStatus, statusText: "Fake error" },
+      );
+    }
+    return Response.json(accounts);
+  }
+
   const rolesMatch = url.pathname.match(
     /\/enhetsregisteret\/api\/enheter\/(\d{9})\/roller$/,
   );
@@ -282,6 +315,7 @@ export function useFakeBrreg(): FakeBrreg {
     updates: [],
     roles: new Map(),
     roleEvents: [],
+    accounts: new Map(),
     requests: [],
     delayMs: 0,
 
@@ -299,6 +333,12 @@ export function useFakeBrreg(): FakeBrreg {
     },
     setRolesError(orgNumber, status) {
       fake.roles.set(orgNumber, { errorStatus: status });
+    },
+    setAccounts(orgNumber, accounts) {
+      fake.accounts.set(orgNumber, accounts);
+    },
+    setAccountsError(orgNumber, status, message) {
+      fake.accounts.set(orgNumber, { errorStatus: status, message });
     },
     addRoleEvent(orgNumber) {
       const last = Number(fake.roleEvents.at(-1)?.id ?? 4999);
@@ -325,9 +365,10 @@ export function useFakeBrreg(): FakeBrreg {
   };
 
   beforeEach(() => {
-    clock=Date.now();
+    clock = Date.now();
     fake.companies.clear();
     fake.roles.clear();
+    fake.accounts.clear();
     fake.roleEvents.length = 0;
     fake.addRoleEvent("000000000");
     fake.requests.length = 0;
@@ -335,14 +376,20 @@ export function useFakeBrreg(): FakeBrreg {
     fake.delayMs = 0;
     fake.addUpdate("000000000", "Ny");
 
-    vi.stubGlobal("fetch", async (input: string | URL | Request) => {
-      const url = new URL(input instanceof Request ? input.url : String(input));
-      fake.requests.push(url);
-      if (fake.delayMs > 0) {
-        await new Promise((resolve) => setTimeout(resolve, fake.delayMs));
-      }
-      return handle(fake, url);
-    });
+    vi.stubGlobal(
+      "fetch",
+      async (input: string | URL | Request, init?: RequestInit) => {
+        const url = new URL(
+          input instanceof Request ? input.url : String(input),
+        );
+        const headers = new Headers(init?.headers);
+        fake.requests.push(url);
+        if (fake.delayMs > 0) {
+          await new Promise((resolve) => setTimeout(resolve, fake.delayMs));
+        }
+        return handle(fake, url, headers);
+      },
+    );
   });
 
   afterEach(() => {

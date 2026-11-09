@@ -1,7 +1,9 @@
 import type { Request, Response } from "express";
 import {
+  getAnnualAccounts,
   getCompany,
   getCompanyRoles,
+  lookupCompany,
   searchCompanies,
 } from "../services/brregService.js";
 
@@ -88,6 +90,39 @@ export const getRolesByOrgNumber = async (
     }
 
     res.json(roles);
+  } catch (error) {
+    console.error(error);
+    res.status(502).json({ error: "Could not reach the Brreg API" });
+  }
+};
+
+// GET /api/companies/:orgNumber/accounts
+export const getAccountsByOrgNumber = async (
+  req: Request<{ orgNumber: string }>,
+  res: Response,
+) => {
+  // #swagger.tags = ["Companies"]
+  /* #swagger.responses[200] = { description: "status is 'available', or 'unsupported' when the register does not give figures for this kind of company (e.g. banks)" } */
+  /* #swagger.responses[404] = { description: "Company not found in the Brønnøysund Register" } */
+  const { orgNumber } = req.params;
+
+  if (!isValidOrgNumber(orgNumber)) {
+    res.status(400).json({ error: "Organization number must be 9 digits" });
+    return;
+  }
+
+  try {
+    // The accounts API answers 404 both for unknown companies and for
+    // companies without accounts, so check that the company exists first.
+    // Struck-off companies still have their accounts.
+    const lookup = await lookupCompany(orgNumber);
+    if (lookup.status === "notFound") {
+      res.status(404).json({ error: "Company not found" });
+      return;
+    }
+
+    const result = await getAnnualAccounts(orgNumber);
+    res.json(result);
   } catch (error) {
     console.error(error);
     res.status(502).json({ error: "Could not reach the Brreg API" });

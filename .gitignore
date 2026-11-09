@@ -38,3 +38,7 @@ program_notes/
 
 #test database
 .env.test
+
+
+#company files 
+equinor-regnskap.json 

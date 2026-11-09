@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml/badge.svg)](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml)
 
-_Last updated: 09.11.2026_
+_Last updated: 10.11.2026_
 
-> ⚠️ **Under active development** — the backend for following companies, detecting changes (company data and roles) and notifying users is in place and covered by tests. Annual accounts, risk signals and the AI assistant are next. See the [Roadmap](#roadmap).
+> ⚠️ **Under active development** — the backend for following companies, detecting changes (company data and roles) and notifying users is in place and covered by tests. Annual accounts can be looked up; storing them and detecting new filings is in progress, followed by risk signals and the AI assistant. See the [Roadmap](#roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
 
@@ -17,6 +17,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Company lookup** — fetch a company by its 9-digit organization number, live from the Brønnøysund API
 - **Company search** — search companies by name (handles Norwegian characters such as æ, ø, å)
 - **Company roles** — the current CEO, board, auditor and accountant of a company
+- **Annual accounts** — key figures from the last three annual accounts (company and group), in the currency they were reported in, with warning signs such as unaudited accounts
 - **Clean company model** — the raw registry format is mapped into the app's own English data shape, so the rest of the app never depends on the external API format
 - **User registration and login** — bcrypt-hashed passwords, JWT authentication, role-based users (`user` / `admin`)
 - **Public user IDs** — users are identified externally by a UUID; the internal database ID is never exposed
@@ -29,7 +30,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 
 ### Planned
 
-- **Annual accounts** — key figures and late filings from the Register of Company Accounts
+- **New annual accounts and late filings** — store every set of accounts seen, notify followers when new accounts are filed or show warning signs, and flag companies that file late
 - **Ownership** — shareholders from Skatteetaten's shareholder register, imported by a separate Python service
 - **Role network** — how people and companies are connected through board and management roles
 - **Risk signals** — a "check before you sign" score based on bankruptcy/liquidation flags, company age, late annual accounts and frequent management changes
@@ -38,17 +39,17 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 
 ## Tech Stack
 
-| Area           | Technology                                                                       |
-| -------------- | -------------------------------------------------------------------------------- |
-| Runtime        | Node.js, TypeScript (strict mode, ES modules)                                    |
-| Framework      | Express 5                                                                        |
-| Database       | PostgreSQL                                                                       |
-| ORM            | Sequelize with `sequelize-typescript` (decorator models)                         |
-| Migrations     | Umzug                                                                            |
-| Authentication | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs`               |
-| API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                   |
-| Testing        | Vitest + Supertest, GitHub Actions CI                                            |
-| Data source    | [Brønnøysund Register Centre open API](https://data.brreg.no) (free, no API key) |
+| Area           | Technology                                                                                                                                       |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Runtime        | Node.js, TypeScript (strict mode, ES modules)                                                                                                    |
+| Framework      | Express 5                                                                                                                                        |
+| Database       | PostgreSQL                                                                                                                                       |
+| ORM            | Sequelize with `sequelize-typescript` (decorator models)                                                                                         |
+| Migrations     | Umzug                                                                                                                                            |
+| Authentication | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs`                                                                               |
+| API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                                                                                   |
+| Testing        | Vitest + Supertest, GitHub Actions CI                                                                                                            |
+| Data source    | [Brønnøysund Register Centre open API](https://data.brreg.no) (Central Coordinating Register and Register of Company Accounts; free, no API key) |
 
 ## Architecture
 
@@ -83,6 +84,8 @@ Services do not know about HTTP, so the same functions can be reused by the sche
 - **Nothing is skipped or recorded twice.** Companies are checked in the order their changes happened; if a check fails, the run stops there and both feed positions stay just before that company, so it is checked again on the next run. The changes, the notifications and the new stored state of a company are saved in one transaction.
 - **A first look is not a change.** When a company is followed, or its roles are stored for the first time, that state becomes the starting point; only later differences are recorded.
 - **No personal data beyond names.** Roles are stored by name only; birth dates from the registry are not stored.
+- **Annual accounts are kept in the currency they were reported in.** Some companies report in USD or EUR; figures are never converted, and the currency is always returned with them.
+- **"Not covered" is not an error.** The accounts register answers banks and insurance companies with a `500` and a message; the app recognises that message and returns `status: "unsupported"`, so these companies are not retried as failures.
 - **Clear error status codes.** `400` invalid input, `401` missing or invalid token / credentials, `403` not allowed (e.g. not an admin), `404` not found, `409` conflict (email already registered, change detection already running), `502` the Brønnøysund API could not be reached.
 
 ## API Endpoints
@@ -91,11 +94,12 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 
 ### Companies
 
-| Method | Endpoint                           | Description                                                   |
-| ------ | ---------------------------------- | ------------------------------------------------------------- |
-| GET    | `/api/companies/{orgNumber}`       | Get a company by its 9-digit organization number              |
-| GET    | `/api/companies/search?name=...`   | Search companies by name (at least 2 characters)              |
-| GET    | `/api/companies/{orgNumber}/roles` | Get the current CEO, board, auditor and accountant from Brreg |
+| Method | Endpoint                              | Description                                                                                                                                                     |
+| ------ | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/companies/{orgNumber}`          | Get a company by its 9-digit organization number                                                                                                                |
+| GET    | `/api/companies/search?name=...`      | Search companies by name (at least 2 characters)                                                                                                                |
+| GET    | `/api/companies/{orgNumber}/roles`    | Get the current CEO, board, auditor and accountant from Brreg                                                                                                   |
+| GET    | `/api/companies/{orgNumber}/accounts` | Key figures from the latest annual accounts (up to three years), newest first; `status` is `unsupported` for companies the register does not cover (e.g. banks) |
 
 ### Authentication
 
@@ -186,7 +190,7 @@ LEVERANDORVAKT/
 │   │   └── requireRole.ts        # Allows only the given roles (e.g. admin)
 │   ├── controllers/              # HTTP layer: input validation and status codes
 │   ├── services/
-│   │   ├── brregService.ts       # Calls the Brønnøysund API: companies, roles and both update feeds
+│   │   ├── brregService.ts       # Calls the Brønnøysund APIs: companies, roles, annual accounts and both update feeds
 │   │   ├── authService.ts        # Registration, login, JWT
 │   │   ├── userService.ts        # Maps the public user id in tokens to the internal id
 │   │   ├── watchlistService.ts   # Following companies, notes, change history
@@ -196,11 +200,13 @@ LEVERANDORVAKT/
 │   │   └── notificationService.ts     # Creates and serves notifications
 │   ├── jobs/
 │   │   └── changeDetectionJob.ts # Runs change detection on a timer, never two runs at once
-│   ├── mappers/                  # Brreg / database shapes → API shapes (company, roles, changes)
+│   ├── mappers/                  # Brreg / database shapes → API shapes (company, roles, accounts, changes)
 │   ├── types/
 │   │   ├── brreg.ts              # Shapes of the Brønnøysund API responses
+│   │   ├── regnskap.ts           # Shapes of the Register of Company Accounts API responses
 │   │   ├── company.ts            # The app's own Company type
 │   │   ├── companyRoles.ts       # The app's own CompanyRoles type
+│   │   ├── annualAccounts.ts     # The app's own AnnualAccounts type
 │   │   └── express.d.ts          # Adds the authenticated user to Express requests
 │   └── utils/                    # Validation and pagination helpers
 ├── tests/
@@ -309,6 +315,7 @@ Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. 
 | `tests/watchlist.test.ts`       | Following a company (stored once and fetched from Brreg once even with several followers, unknown and struck-off companies, Brreg unavailable, input validation), listing only your own companies, notes, unfollowing, change history with pagination, users cannot see or change each other's watchlists                                                                 |
 | `tests/changeDetection.test.ts` | Starting point on the first run, changes recorded with severity and source update, stored state updated so nothing is recorded twice, one Brreg lookup per company, struck-off companies (including `410 Gone`), stopping before a failed company and catching up after a Brreg outage, notifications only to followers, full rollback when notifications cannot be saved |
 | `tests/roleChanges.test.ts`     | Role changes (CEO, auditor, board) with severity and source event, deregistered members, ordering-only changes ignored, starting points in both feeds (also for existing installations), filling in missing roles, one check per company across both feeds, stopping before a failed company in both feeds and catching up                                                |
+| `tests/accounts.test.ts`        | Accounts mapped from a real-shaped response (missing figures, other currencies, warning signs, year from the period end), newest first with company before group, companies without accounts, unsupported companies (banks), struck-off companies, unknown companies, Brreg errors                                                                                        |
 | `tests/notifications.test.ts`   | Notifications created end to end from detected changes, unread filter, pagination, unread count, marking one or all as read (first read time is kept), users cannot read or change each other's notifications                                                                                                                                                             |
 | `tests/admin.test.ts`           | Admin account created once from environment variables (never by promoting an existing user), admin-only change detection endpoint (`401` / `403` / `200`), `409` when a run is already in progress, `502` when Brreg cannot be reached                                                                                                                                    |
 
@@ -377,7 +384,8 @@ GitHub Actions runs the type check and all tests on every push, against a tempor
 ### Company data
 
 - [x] Roles: CEO and board changes from the Brønnøysund roles API
-- [ ] Annual accounts figures from the Register of Company Accounts
+- [x] Annual accounts: key figures from the Register of Company Accounts
+- [ ] Annual accounts: storing every filing, detecting new filings and warning signs
 - [ ] Ownership service: separate Python ETL for Skatteetaten shareholder data
 
 ### Insights
