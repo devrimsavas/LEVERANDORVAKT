@@ -19,6 +19,10 @@ const doc = {
       name: "Watchlist",
       description: "Companies followed by the logged-in user",
     },
+    {
+      name: "Notifications",
+      description: "Changes in followed companies, per user",
+    },
     { name: "Admin", description: "Admin-only operations" },
     { name: "General", description: "API status" },
   ],

@@ -20,6 +20,8 @@ import companiesRouter from "./routes/companies.js";
 import authRouter from "./routes/auth.js";
 //watchlist router
 import watchlistRouter from "./routes/watchlist.js";
+//notifications router
+import notificationsRouter from "./routes/notifications.js";
 //admin router
 import adminRouter from "./routes/admin.js";
 //change detection job
@@ -37,6 +39,7 @@ app.use("/", indexRouter);
 app.use("/api/companies", companiesRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/watchlist", watchlistRouter);
+app.use("/api/notifications", notificationsRouter);
 app.use("/api/admin", adminRouter);
 
 //swagger docs
@@ -63,7 +66,7 @@ const mainApp = async () => {
     app.listen(PORT, async () => {
       console.log(`listening at ${PORT}`);
     });
-    //change detection 
+    //change detection
     startChangeDetectionJob();
   } catch (error: any) {
     console.log(`Error ${error.message}`);

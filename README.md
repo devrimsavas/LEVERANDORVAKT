@@ -245,7 +245,7 @@ On startup the app connects to the database and applies any pending migrations a
 - [x] Data model design: `companies`, `watchlist_entries`, `company_changes`
 - [x] Add and remove companies from a user's watchlist
 - [x] Scheduled change detection using the Brønnøysund update feed
-- [ ] Change history per company
+- [x] Change history per company
 - [ ] Notifications for followed companies
 
 ### Admin
