@@ -1,15 +1,11 @@
 //app.ts
-import "dotenv/config";
+// The Express application: middleware, routes and API docs.
+// It does not connect to the database or listen on a port;
+// that happens in server.ts, so tests can import the app safely.
 import express from "express";
-const PORT = process.env.PORT || 3000;
-import { sequelize } from "./config/database.js";
 //swagger
 import swaggerUi from "swagger-ui-express";
 import { existsSync, readFileSync } from "node:fs";
-//migrator
-import { runMigrations } from "./config/migrator.js";
-//admin creation
-import { ensureAdmin } from "./config/ensureAdmin.js";
 //path
 import path from "node:path";
 //routes
@@ -24,8 +20,6 @@ import watchlistRouter from "./routes/watchlist.js";
 import notificationsRouter from "./routes/notifications.js";
 //admin router
 import adminRouter from "./routes/admin.js";
-//change detection job
-import { startChangeDetectionJob } from "./jobs/changeDetectionJob.js";
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -54,24 +48,4 @@ if (existsSync(swaggerPath)) {
   );
 }
 
-const mainApp = async () => {
-  try {
-    //DB connection
-    await sequelize.authenticate();
-    console.log("Database connected");
-    //migrator
-    await runMigrations();
-    await ensureAdmin();
-    //listen port
-    app.listen(PORT, async () => {
-      console.log(`listening at ${PORT}`);
-    });
-    //change detection
-    startChangeDetectionJob();
-  } catch (error: any) {
-    console.log(`Error ${error.message}`);
-    process.exit(1);
-  }
-};
-
-mainApp();
+export default app;

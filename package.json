@@ -5,10 +5,14 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "start": "node dist/app.js",
+    "start": "node dist/server.js",
     "predev": "npm run build && npm run swagger",
-    "dev": "concurrently \"tsc -w --preserveWatchOutput\" \"node --watch --watch-preserve-output dist/app.js\"",
-    "swagger": "node dist/swagger.js"
+    "dev": "concurrently \"tsc -w --preserveWatchOutput\" \"node --watch --watch-preserve-output dist/server.js\"",
+    "swagger": "node dist/swagger.js",
+    "pretest": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit && tsc -p tests"
   },
   "keywords": [],
   "author": "",
@@ -17,10 +21,13 @@
   "devDependencies": {
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^26.6.6",
+    "@types/supertest": "^7.2.1",
     "@types/swagger-ui-express": "^4.1.8",
     "concurrently": "^10.0.7",
+    "supertest": "^7.3.2",
     "swagger-autogen": "^2.23.7",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   },
   "dependencies": {
     "@types/express": "^5.0.6",

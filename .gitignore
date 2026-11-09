@@ -35,3 +35,6 @@ swagger_output.json
 
 #Private project notes 
 program_notes/
+
+#test database
+.env.test

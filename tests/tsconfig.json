@@ -1,0 +1,10 @@
+{
+  // Type checking for the tests in the editor and with "npm run typecheck".
+  // Tests are not compiled to dist; Vitest runs them directly.
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "..",
+    "noEmit": true
+  },
+  "include": ["../src/**/*", "./**/*", "../vitest.config.ts"]
+}
