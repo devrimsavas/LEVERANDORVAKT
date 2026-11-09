@@ -4,6 +4,7 @@ import { CompanyRecord } from "../models/CompanyRecord.js";
 import { WatchlistEntry } from "../models/WatchlistEntry.js";
 import { CompanyChange } from "../models/CompanyChange.js";
 import { BrregSyncState } from "../models/BrregSyncState.js";
+import { Notification } from "../models/Notification.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -14,5 +15,12 @@ if (!databaseUrl) {
 export const sequelize = new Sequelize(databaseUrl, {
   dialect: "postgres",
   logging: false,
-  models: [User, CompanyRecord, WatchlistEntry, CompanyChange, BrregSyncState],
+  models: [
+    User,
+    CompanyRecord,
+    WatchlistEntry,
+    CompanyChange,
+    BrregSyncState,
+    Notification,
+  ],
 });

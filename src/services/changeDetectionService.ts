@@ -8,6 +8,7 @@ import {
   lookupCompany,
 } from "./brregService.js";
 import { detectChanges } from "./companyDiff.js";
+import { notifyFollowers } from "./notificationService.js";
 import type { BrregUpdate } from "../types/brreg.js";
 
 // Brreg accepts a list of organization numbers in one request; keep URLs short
@@ -78,7 +79,7 @@ async function checkCompany(
     const deletedDate = lookup.status === "deleted" ? lookup.deletedDate : null;
 
     await sequelize.transaction(async (transaction) => {
-      await CompanyChange.create(
+      const change = await CompanyChange.create(
         {
           companyId: record.id,
           field: "deletedFromRegistry",
@@ -90,6 +91,7 @@ async function checkCompany(
         },
         { transaction },
       );
+      await notifyFollowers(record.id, [change], transaction);
 
       record.deletedFromRegistryAt = deletedDate ? new Date(deletedDate) : now;
       record.lastCheckedAt = now;
@@ -105,7 +107,7 @@ async function checkCompany(
   // The changes and the new snapshot are saved together, or not at all
   await sequelize.transaction(async (transaction) => {
     if (changes.length > 0) {
-      await CompanyChange.bulkCreate(
+      const savedChanges = await CompanyChange.bulkCreate(
         changes.map((change) => ({
           companyId: record.id,
           field: change.field,
@@ -117,6 +119,7 @@ async function checkCompany(
         })),
         { transaction },
       );
+      await notifyFollowers(record.id, savedChanges, transaction);
       record.lastChangedAt = now;
     }
 
