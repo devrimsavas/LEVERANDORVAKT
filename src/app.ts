@@ -8,7 +8,7 @@ import swaggerUi from "swagger-ui-express";
 import { existsSync, readFileSync } from "node:fs";
 //migrator
 import { runMigrations } from "./config/migrator.js";
-//admin creation 
+//admin creation
 import { ensureAdmin } from "./config/ensureAdmin.js";
 //path
 import path from "node:path";
@@ -18,6 +18,8 @@ import indexRouter from "./routes/index.js";
 import companiesRouter from "./routes/companies.js";
 //auth router
 import authRouter from "./routes/auth.js";
+//watchlist router
+import watchlistRouter from "./routes/watchlist.js";
 
 const app = express();
 app.use(express.urlencoded({ extended: true }));
@@ -30,6 +32,7 @@ app.use(express.static(path.join(import.meta.dirname, "public")));
 app.use("/", indexRouter);
 app.use("/api/companies", companiesRouter);
 app.use("/api/auth", authRouter);
+app.use("/api/watchlist", watchlistRouter);
 
 //swagger docs
 const swaggerPath = path.join(process.cwd(), "swagger_output.json");

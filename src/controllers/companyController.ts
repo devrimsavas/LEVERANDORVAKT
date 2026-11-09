@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { getCompany, searchCompanies } from "../services/brregService.js";
+import { isValidOrgNumber } from "../utils/orgNumber.js";
 
 // GET /api/companies
 export const getCompaniesInfo = (req: Request, res: Response) => {
@@ -34,7 +35,7 @@ export const getCompanyByOrgNumber = async (
   const { orgNumber } = req.params;
 
   // Norwegian organization numbers are exactly 9 digits
-  if (!/^\d{9}$/.test(orgNumber)) {
+  if (!isValidOrgNumber(orgNumber)) {
     res.status(400).json({ error: "Organization number must be 9 digits" });
     return;
   }
