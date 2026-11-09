@@ -9,6 +9,18 @@ const doc = {
     version: "1.0.0",
   },
   servers: [{ url: "/" }],
+  tags: [
+    { name: "Auth", description: "Registration, login and the current user" },
+    {
+      name: "Companies",
+      description: "Company lookup and search in the Brønnøysund Register",
+    },
+    {
+      name: "Watchlist",
+      description: "Companies followed by the logged-in user",
+    },
+    { name: "General", description: "API status" },
+  ],
   components: {
     securitySchemes: {
       bearerAuth: {

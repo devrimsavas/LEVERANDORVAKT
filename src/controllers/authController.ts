@@ -21,14 +21,13 @@ function isValidName(value: unknown): value is string {
 
 // POST /api/auth/register
 export const register = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Auth"]
   const { firstName, lastName, email, password } = req.body ?? {};
 
   if (!isValidName(firstName) || !isValidName(lastName)) {
-    res
-      .status(400)
-      .json({
-        error: `First and last name are required (max ${MAX_NAME_LENGTH} characters)`,
-      });
+    res.status(400).json({
+      error: `First and last name are required (max ${MAX_NAME_LENGTH} characters)`,
+    });
     return;
   }
 
@@ -38,11 +37,9 @@ export const register = async (req: Request, res: Response) => {
   }
 
   if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
-    res
-      .status(400)
-      .json({
-        error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
-      });
+    res.status(400).json({
+      error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+    });
     return;
   }
 
@@ -61,6 +58,7 @@ export const register = async (req: Request, res: Response) => {
 
 // POST /api/auth/login
 export const login = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Auth"]
   const { email, password } = req.body ?? {};
 
   if (typeof email !== "string" || typeof password !== "string") {
@@ -83,6 +81,7 @@ export const login = async (req: Request, res: Response) => {
 
 // GET /api/auth/me
 export const me = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Auth"]
   /* #swagger.security = [{ "bearerAuth": [] }] */
 
   // requireAuth has already verified the token

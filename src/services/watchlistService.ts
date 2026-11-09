@@ -61,7 +61,7 @@ async function findOrCreateCompanyRecord(
   const company = await getCompany(orgNumber);
   if (!company) {
     throw new CompanyNotFoundError(
-      "Company not found in the Brønnøysund Register",
+      "Company not found in the Brønnøysund Register or struck off",
     );
   }
 

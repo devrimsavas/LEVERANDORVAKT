@@ -41,10 +41,44 @@ export interface BrregEnhet {
   sisteInnsendteAarsregnskap?: string;
 }
 
-//in case no result 
+//in case no result
 export interface BrregSearchResponse {
   _embedded?: {
     enheter: BrregEnhet[];
+  };
+  page: {
+    size: number;
+    totalElements: number;
+    totalPages: number;
+    number: number;
+  };
+}
+
+// A company that has been struck off the register.
+// Brreg answers with 200 OK but only a few fields, and the risk flags are missing.
+export interface BrregSlettetEnhet {
+  organisasjonsnummer: string;
+  navn: string;
+  respons_klasse: "SlettetEnhet";
+  slettedato: string;
+}
+
+// Response of GET /enheter/{orgNumber}: an active or a struck-off company.
+export type BrregEnhetResponse =
+  | (BrregEnhet & { respons_klasse?: string })
+  | BrregSlettetEnhet;
+
+// One entry in the update feed (GET /oppdateringer/enheter).
+export interface BrregUpdate {
+  oppdateringsid: number;
+  dato: string;
+  organisasjonsnummer: string;
+  endringstype: "Ukjent" | "Ny" | "Endring" | "Sletting" | "Fjernet";
+}
+
+export interface BrregUpdatesResponse {
+  _embedded?: {
+    oppdaterteEnheter: BrregUpdate[];
   };
   page: {
     size: number;

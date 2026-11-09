@@ -50,6 +50,7 @@ function sendKnownError(error: unknown, res: Response): boolean {
 
 // GET /api/watchlist
 export const listWatchlist = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Watchlist"]
   /* #swagger.security = [{ "bearerAuth": [] }] */
   try {
     const items = await getWatchlist(req.auth!.userId);
@@ -63,8 +64,9 @@ export const listWatchlist = async (req: Request, res: Response) => {
 
 // POST /api/watchlist
 export const addCompany = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Watchlist"]
   /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.responses[404] = { description: "Company not found in the Brønnøysund Register" }
+     #swagger.responses[404] = { description: "Company not found in the Brønnøysund Register or struck off" }
      #swagger.responses[409] = { description: "Company is already on the watchlist" } */
   const { orgNumber, note } = req.body ?? {};
 
@@ -75,11 +77,9 @@ export const addCompany = async (req: Request, res: Response) => {
 
   const parsedNote = parseNote(note);
   if (!parsedNote.ok) {
-    res
-      .status(400)
-      .json({
-        error: `Note must be text of at most ${MAX_NOTE_LENGTH} characters`,
-      });
+    res.status(400).json({
+      error: `Note must be text of at most ${MAX_NOTE_LENGTH} characters`,
+    });
     return;
   }
 
@@ -103,6 +103,7 @@ export const updateNote = async (
   req: Request<{ orgNumber: string }>,
   res: Response,
 ) => {
+  // #swagger.tags = ["Watchlist"]
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.requestBody = {
        required: true,
@@ -118,11 +119,9 @@ export const updateNote = async (
 
   const parsedNote = parseNote(req.body?.note);
   if (!parsedNote.ok) {
-    res
-      .status(400)
-      .json({
-        error: `Note must be text of at most ${MAX_NOTE_LENGTH} characters`,
-      });
+    res.status(400).json({
+      error: `Note must be text of at most ${MAX_NOTE_LENGTH} characters`,
+    });
     return;
   }
 
@@ -145,6 +144,7 @@ export const removeCompany = async (
   req: Request<{ orgNumber: string }>,
   res: Response,
 ) => {
+  // #swagger.tags = ["Watchlist"]
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.responses[404] = { description: "Company is not on the watchlist" } */
   const { orgNumber } = req.params;

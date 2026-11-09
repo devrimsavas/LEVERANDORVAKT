@@ -4,11 +4,13 @@ import { isValidOrgNumber } from "../utils/orgNumber.js";
 
 // GET /api/companies
 export const getCompaniesInfo = (req: Request, res: Response) => {
+  // #swagger.tags = ["Companies"]
   res.json({ message: "Companies API" });
 };
 
 // GET /api/companies/search?name=...
 export const searchCompaniesByName = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Companies"]
   const name = req.query.name;
 
   if (typeof name !== "string" || name.trim().length < 2) {
@@ -32,6 +34,7 @@ export const getCompanyByOrgNumber = async (
   req: Request<{ orgNumber: string }>,
   res: Response,
 ) => {
+  // #swagger.tags = ["Companies"]
   const { orgNumber } = req.params;
 
   // Norwegian organization numbers are exactly 9 digits
@@ -44,7 +47,9 @@ export const getCompanyByOrgNumber = async (
     const company = await getCompany(orgNumber);
 
     if (!company) {
-      res.status(404).json({ error: "Company not found" });
+      res
+        .status(404)
+        .json({ error: "Company not found or struck off the register" });
       return;
     }
 
