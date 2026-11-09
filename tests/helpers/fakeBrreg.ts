@@ -14,6 +14,8 @@ export interface FakeBrreg {
   updates: BrregUpdate[];
   // Every URL the app requested, to check how often Brreg was called
   requests: URL[];
+  // Milliseconds to wait before answering, to simulate a slow register
+  delayMs: number;
   setActive(enhet: BrregEnhet): void;
   setDeleted(orgNumber: string, slettedato: string): void;
   setError(orgNumber: string, status: number): void;
@@ -140,6 +142,8 @@ export function useFakeBrreg(): FakeBrreg {
     companies: new Map(),
     updates: [],
     requests: [],
+    delayMs: 0,
+
     setActive(enhet) {
       fake.companies.set(enhet.organisasjonsnummer, { kind: "active", enhet });
     },
@@ -166,11 +170,15 @@ export function useFakeBrreg(): FakeBrreg {
     fake.companies.clear();
     fake.requests.length = 0;
     fake.updates.length = 0;
+    fake.delayMs = 0;
     fake.addUpdate("000000000", "Ny");
 
     vi.stubGlobal("fetch", async (input: string | URL | Request) => {
       const url = new URL(input instanceof Request ? input.url : String(input));
       fake.requests.push(url);
+      if (fake.delayMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, fake.delayMs));
+      }
       return handle(fake, url);
     });
   });

@@ -225,7 +225,7 @@ On startup the app connects to the database and applies any pending migrations a
 | `npm start`       | Runs the compiled app                                                     |
 | `npm run swagger` | Generates `swagger_output.json` from the compiled routes                  |
 
-## 🧪 Tests
+##  Tests
 
 Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. Every test starts with empty tables, and the Brønnøysund API is replaced by a fake in tests that need it, so the suite never depends on the network.
 
@@ -235,6 +235,8 @@ Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. 
 | `tests/auth.test.ts`            | Registration (public data only, bcrypt hashing, email normalization, role cannot be set by the client, duplicate email, input validation), login (token content, same error for unknown email and wrong password), `/me` (missing, tampered and expired tokens, deleted account)                                                                                          |
 | `tests/watchlist.test.ts`       | Following a company (stored once and fetched from Brreg once even with several followers, unknown and struck-off companies, Brreg unavailable, input validation), listing only your own companies, notes, unfollowing, change history with pagination, users cannot see or change each other's watchlists                                                                 |
 | `tests/changeDetection.test.ts` | Starting point on the first run, changes recorded with severity and source update, stored state updated so nothing is recorded twice, one Brreg lookup per company, struck-off companies (including `410 Gone`), stopping before a failed company and catching up after a Brreg outage, notifications only to followers, full rollback when notifications cannot be saved |
+| `tests/notifications.test.ts`   | Notifications created end to end from detected changes, unread filter, pagination, unread count, marking one or all as read (first read time is kept), users cannot read or change each other's notifications                                                                                                                                                             |
+| `tests/admin.test.ts`           | Admin account created once from environment variables (never by promoting an existing user), admin-only change detection endpoint (`401` / `403` / `200`), `409` when a run is already in progress, `502` when Brreg cannot be reached                                                                                                                                    |
 
 ### Running the tests
 
@@ -290,6 +292,36 @@ GitHub Actions runs the type check and all tests on every push, against a tempor
 - [x] Scheduled change detection using the Brønnøysund update feed
 - [x] Change history per company
 - [x] Notifications for followed companies
+
+### Testing and CI
+
+- [x] Test setup: Vitest + Supertest with a separate test database
+- [x] Fake Brønnøysund API for tests, so the suite never depends on the network
+- [x] Tests for auth, watchlist, change detection, notifications and admin
+- [x] GitHub Actions CI: type check and tests on every push
+
+### Company data
+
+- [ ] Roles: CEO and board changes from the Brønnøysund roles API
+- [ ] Annual accounts figures from the Register of Company Accounts
+- [ ] Ownership service: separate Python ETL for Skatteetaten shareholder data
+
+### Insights
+
+- [ ] Role network (board members and management across companies)
+- [ ] Risk signals score
+- [ ] Regional trends by municipality and industry
+
+### AI
+
+- [ ] AI assistant with tool calling, using the existing service functions
+
+### Delivery
+
+- [ ] Docker Compose for local development
+- [ ] Deployment (Render + Aiven PostgreSQL)
+- [ ] Frontend
+- [ ] Usage guide with scenarios
 
 ### Admin
 
