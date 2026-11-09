@@ -4,7 +4,7 @@
 
 _Last updated: 09.11.2026_
 
-> ⚠️ **Under active development** — the backend foundation (company lookup, authentication, database migrations) is in place. The watchlist and change-detection features are being built next. See the [Roadmap](#-roadmap).
+> ⚠️ **Under active development** — the backend for following companies, detecting changes (company data and roles) and notifying users is in place and covered by tests. Annual accounts, risk signals and the AI assistant are next. See the [Roadmap](#roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
 
@@ -16,17 +16,21 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 
 - **Company lookup** — fetch a company by its 9-digit organization number, live from the Brønnøysund API
 - **Company search** — search companies by name (handles Norwegian characters such as æ, ø, å)
+- **Company roles** — the current CEO, board, auditor and accountant of a company
 - **Clean company model** — the raw registry format is mapped into the app's own English data shape, so the rest of the app never depends on the external API format
 - **User registration and login** — bcrypt-hashed passwords, JWT authentication, role-based users (`user` / `admin`)
 - **Public user IDs** — users are identified externally by a UUID; the internal database ID is never exposed
+- **Company watchlist** — each user follows their own list of companies, with a private note per company
+- **Change detection** — a scheduled job reads the Brønnøysund company and role update feeds and records every change with a severity (`critical` / `warning` / `info`)
+- **Notifications** — followers of a company are notified of every recorded change
 - **Versioned database migrations** — schema changes are tracked as numbered migration files and applied automatically on startup
 - **Interactive API documentation** — Swagger UI at `/api/docs`
+- **Automated tests and CI** — Vitest + Supertest against a real PostgreSQL database, run by GitHub Actions on every push
 
 ### Planned
 
-- **Company watchlist** — each user follows their own list of companies
-- **Change detection** — a scheduled job compares the registry with the last known state and records every change
-- **Notifications** — users are alerted when a followed company changes
+- **Annual accounts** — key figures and late filings from the Register of Company Accounts
+- **Ownership** — shareholders from Skatteetaten's shareholder register, imported by a separate Python service
 - **Role network** — how people and companies are connected through board and management roles
 - **Risk signals** — a "check before you sign" score based on bankruptcy/liquidation flags, company age, late annual accounts and frequent management changes
 - **Regional trends** — new companies over time by municipality and industry code
@@ -43,6 +47,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 | Migrations     | Umzug                                                                            |
 | Authentication | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs`               |
 | API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                   |
+| Testing        | Vitest + Supertest, GitHub Actions CI                                            |
 | Data source    | [Brønnøysund Register Centre open API](https://data.brreg.no) (free, no API key) |
 
 ## Architecture
@@ -71,10 +76,14 @@ Services do not know about HTTP, so the same functions can be reused by the sche
 
 - **Own data model instead of the raw registry format.** `BrregEnhet` describes the API's Norwegian, nested format; `Company` is the app's own flat, English shape; `toCompany` converts between them. If the registry changes a field, only the mapper changes.
 - **Two user identifiers.** `id` is an internal auto-increment primary key used for relations between tables. `public_id` is a UUID used in the API and in tokens, so user numbers cannot be guessed and the number of users is not revealed.
-- **Roles are never taken from client input.** New users are always `user`; admin accounts are created separately.
+- **User roles are never taken from client input.** New users are always `user`; the admin account is created once from environment variables.
 - **Same error for unknown email and wrong password**, so the login endpoint cannot be used to find out which emails are registered.
 - **Migrations instead of `sequelize.sync()`.** Every schema change is an explicit, reviewable file that runs the same way locally and in production, without guessing or losing data.
-- **Clear error status codes.** `400` invalid input, `401` invalid credentials, `404` company not found, `409` email already registered, `502` the Brønnøysund API could not be reached.
+- **Change detection reads the Brønnøysund update feeds instead of polling every company.** Only companies that appear in the company feed or the role feed are looked up, and each feed has its own stored position, so a run continues exactly where the previous one stopped.
+- **Nothing is skipped or recorded twice.** Companies are checked in the order their changes happened; if a check fails, the run stops there and both feed positions stay just before that company, so it is checked again on the next run. The changes, the notifications and the new stored state of a company are saved in one transaction.
+- **A first look is not a change.** When a company is followed, or its roles are stored for the first time, that state becomes the starting point; only later differences are recorded.
+- **No personal data beyond names.** Roles are stored by name only; birth dates from the registry are not stored.
+- **Clear error status codes.** `400` invalid input, `401` missing or invalid token / credentials, `403` not allowed (e.g. not an admin), `404` not found, `409` conflict (email already registered, change detection already running), `502` the Brønnøysund API could not be reached.
 
 ## API Endpoints
 
@@ -82,11 +91,11 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 
 ### Companies
 
-| Method | Endpoint                         | Description                                                   |
-| ------ | -------------------------------- | ------------------------------------------------------------- |
-| GET    | `/api/companies/{orgNumber}`     | Get a company by its 9-digit organization number              |
-| GET    | `/api/companies/search?name=...` | Search companies by name (at least 2 characters)              |
-| GET    | /api/companies/{orgNumber}/roles | Get the current CEO, board, auditor and accountant from Brreg |
+| Method | Endpoint                           | Description                                                   |
+| ------ | ---------------------------------- | ------------------------------------------------------------- |
+| GET    | `/api/companies/{orgNumber}`       | Get a company by its 9-digit organization number              |
+| GET    | `/api/companies/search?name=...`   | Search companies by name (at least 2 characters)              |
+| GET    | `/api/companies/{orgNumber}/roles` | Get the current CEO, board, auditor and accountant from Brreg |
 
 ### Authentication
 
@@ -95,6 +104,39 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 | POST   | `/api/auth/register` | Create an account (`firstName`, `lastName`, `email`, `password`) |
 | POST   | `/api/auth/login`    | Log in and receive a JWT together with the user's public data    |
 | GET    | `/api/auth/me`       | Get the logged-in user's profile (requires token)                |
+
+### Watchlist
+
+All watchlist endpoints require a token (`Authorization: Bearer <token>`). Each user sees and changes only their own watchlist.
+
+| Method | Endpoint                             | Description                                                             |
+| ------ | ------------------------------------ | ----------------------------------------------------------------------- |
+| GET    | `/api/watchlist`                     | List the companies on your watchlist with their roles, sorted by name   |
+| POST   | `/api/watchlist`                     | Follow a company (`orgNumber`, optional `note`)                         |
+| PATCH  | `/api/watchlist/{orgNumber}`         | Change or remove your note on a followed company                        |
+| DELETE | `/api/watchlist/{orgNumber}`         | Stop following a company                                                |
+| GET    | `/api/watchlist/{orgNumber}/changes` | Change history of a followed company, newest first (`page`, `pageSize`) |
+
+### Notifications
+
+All notification endpoints require a token. Each user sees and changes only their own notifications.
+
+| Method | Endpoint                          | Description                                                 |
+| ------ | --------------------------------- | ----------------------------------------------------------- |
+| GET    | `/api/notifications`              | List your notifications (`unread=true`, `page`, `pageSize`) |
+| GET    | `/api/notifications/unread-count` | Number of unread notifications                              |
+| PATCH  | `/api/notifications/{id}/read`    | Mark one notification as read                               |
+| POST   | `/api/notifications/read-all`     | Mark all notifications as read                              |
+
+### Admin
+
+Admin endpoints require a token from an admin account. Regular users get `403 Forbidden`.
+
+| Method | Endpoint                          | Description                                                                    |
+| ------ | --------------------------------- | ------------------------------------------------------------------------------ |
+| POST   | `/api/admin/change-detection/run` | Run change detection immediately instead of waiting for the next scheduled run |
+
+List endpoints return `{ items, page, pageSize, totalItems, totalPages }` (default page size 20, maximum 100).
 
 ## Data Model
 
@@ -112,23 +154,19 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 | `last_login_at`            | timestamp    | Updated on every successful login                 |
 | `created_at`, `updated_at` | timestamp    | Managed automatically                             |
 
+### Other tables
+
+| Table               | What it holds                                                                                                   |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `companies`         | One row per followed company: organization number, last known state (`snapshot`) and roles (JSONB), check times |
+| `watchlist_entries` | Which user follows which company, with the user's note (unique per user and company)                            |
+| `company_changes`   | Every detected change: field, old and new value, severity, and the feed event that revealed it                  |
+| `notifications`     | One row per follower per change, with a public UUID and the time it was read                                    |
+| `brreg_sync_state`  | Where change detection stopped in each Brønnøysund feed                                                         |
+
 Applied migrations are recorded in the `migrations` table.
 
-### Watchlist
-
-All watchlist endpoints require a token (`Authorization: Bearer <token>`). Each user sees and changes only their own watchlist.
-
-| Method | Endpoint                     | Description                                          |
-| ------ | ---------------------------- | ---------------------------------------------------- |
-| GET    | `/api/watchlist`             | List the companies on your watchlist, sorted by name |
-| POST   | `/api/watchlist`             | Follow a company (`orgNumber`, optional `note`)      |
-| PATCH  | `/api/watchlist/{orgNumber}` | Change or remove your note on a followed company     |
-| DELETE | `/api/watchlist/{orgNumber}` | Stop following a company                             |
-
-## 📂 Project Structure
-
-```
-## 📂 Project Structure
+## Project Structure
 
 ```
 LEVERANDORVAKT/
@@ -153,7 +191,8 @@ LEVERANDORVAKT/
 │   │   ├── userService.ts        # Maps the public user id in tokens to the internal id
 │   │   ├── watchlistService.ts   # Following companies, notes, change history
 │   │   ├── companyDiff.ts        # Compares two company states and rates each change
-│   │   ├── changeDetectionService.ts  # Reads the update feed and records changes
+│   │   ├── roleDiff.ts           # Compares two sets of roles and rates each change
+│   │   ├── changeDetectionService.ts  # Reads both update feeds and records changes
 │   │   └── notificationService.ts     # Creates and serves notifications
 │   ├── jobs/
 │   │   └── changeDetectionJob.ts # Runs change detection on a timer, never two runs at once
@@ -214,7 +253,16 @@ PORT=3000
 DATABASE_URL=postgres://postgres:password@localhost:5432/leverandorvakt
 JWT_SECRET=change_me
 JWT_EXPIRES_IN=1d
+
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=change_me
+ADMIN_FIRST_NAME=Admin
+ADMIN_LAST_NAME=User
+
+CHANGE_DETECTION_INTERVAL_MINUTES=10
 ```
+
+The admin account is created once on the first startup from the `ADMIN_*` values; an existing user is never promoted to admin.
 
 Generate a strong `JWT_SECRET` with:
 
@@ -239,26 +287,30 @@ On startup the app connects to the database and applies any pending migrations a
 
 ### Available scripts
 
-| Script            | What it does                                                              |
-| ----------------- | ------------------------------------------------------------------------- |
-| `npm run dev`     | Compiles TypeScript in watch mode and restarts the server on every change |
-| `npm run build`   | Compiles TypeScript into `dist/`                                          |
-| `npm start`       | Runs the compiled app                                                     |
-| `npm run swagger` | Generates `swagger_output.json` from the compiled routes                  |
+| Script               | What it does                                                              |
+| -------------------- | ------------------------------------------------------------------------- |
+| `npm run dev`        | Compiles TypeScript in watch mode and restarts the server on every change |
+| `npm run build`      | Compiles TypeScript into `dist/`                                          |
+| `npm start`          | Runs the compiled app                                                     |
+| `npm run swagger`    | Generates `swagger_output.json` from the compiled routes                  |
+| `npm test`           | Runs all tests once                                                       |
+| `npm run test:watch` | Runs the tests again on every change                                      |
+| `npm run typecheck`  | Type checks the app and the tests without writing files                   |
 
 ## Tests
 
 Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. Every test starts with empty tables, and the Brønnøysund API is replaced by a fake in tests that need it, so the suite never depends on the network.
 
 | Test file                       | What it covers                                                                                                                                                                                                                                                                                                                                                            |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tests/index.test.ts`           | The API responds                                                                                                                                                                                                                                                                                                                                                          |
 | `tests/auth.test.ts`            | Registration (public data only, bcrypt hashing, email normalization, role cannot be set by the client, duplicate email, input validation), login (token content, same error for unknown email and wrong password), `/me` (missing, tampered and expired tokens, deleted account)                                                                                          |
+| `tests/companies.test.ts`       | Company lookup and search (struck-off companies, Norwegian characters, input validation, Brreg unavailable), roles mapped from a real-shaped Brreg response (deregistered members left out, sorted in Norwegian order, no birth dates)                                                                                                                                    |
 | `tests/watchlist.test.ts`       | Following a company (stored once and fetched from Brreg once even with several followers, unknown and struck-off companies, Brreg unavailable, input validation), listing only your own companies, notes, unfollowing, change history with pagination, users cannot see or change each other's watchlists                                                                 |
 | `tests/changeDetection.test.ts` | Starting point on the first run, changes recorded with severity and source update, stored state updated so nothing is recorded twice, one Brreg lookup per company, struck-off companies (including `410 Gone`), stopping before a failed company and catching up after a Brreg outage, notifications only to followers, full rollback when notifications cannot be saved |
+| `tests/roleChanges.test.ts`     | Role changes (CEO, auditor, board) with severity and source event, deregistered members, ordering-only changes ignored, starting points in both feeds (also for existing installations), filling in missing roles, one check per company across both feeds, stopping before a failed company in both feeds and catching up                                                |
 | `tests/notifications.test.ts`   | Notifications created end to end from detected changes, unread filter, pagination, unread count, marking one or all as read (first read time is kept), users cannot read or change each other's notifications                                                                                                                                                             |
 | `tests/admin.test.ts`           | Admin account created once from environment variables (never by promoting an existing user), admin-only change detection endpoint (`401` / `403` / `200`), `409` when a run is already in progress, `502` when Brreg cannot be reached                                                                                                                                    |
-| tests/companies.test.ts         | Company lookup and search (struck-off companies, Norwegian characters, input validation, Brreg unavailable), roles mapped from a real-shaped Brreg response (deregistered members left out, sorted in Norwegian order, no birth dates)                                                                                                                                    |     |
 
 ### Running the tests
 
@@ -311,7 +363,7 @@ GitHub Actions runs the type check and all tests on every push, against a tempor
 
 - [x] Data model design: `companies`, `watchlist_entries`, `company_changes`
 - [x] Add and remove companies from a user's watchlist
-- [x] Scheduled change detection using the Brønnøysund update feed
+- [x] Scheduled change detection using the Brønnøysund update feeds (companies and roles)
 - [x] Change history per company
 - [x] Notifications for followed companies
 
@@ -319,12 +371,12 @@ GitHub Actions runs the type check and all tests on every push, against a tempor
 
 - [x] Test setup: Vitest + Supertest with a separate test database
 - [x] Fake Brønnøysund API for tests, so the suite never depends on the network
-- [x] Tests for auth, watchlist, change detection, notifications and admin
+- [x] Tests for auth, companies, watchlist, change detection, role changes, notifications and admin
 - [x] GitHub Actions CI: type check and tests on every push
 
 ### Company data
 
-- [ ] Roles: CEO and board changes from the Brønnøysund roles API
+- [x] Roles: CEO and board changes from the Brønnøysund roles API
 - [ ] Annual accounts figures from the Register of Company Accounts
 - [ ] Ownership service: separate Python ETL for Skatteetaten shareholder data
 
@@ -344,32 +396,6 @@ GitHub Actions runs the type check and all tests on every push, against a tempor
 - [ ] Deployment (Render + Aiven PostgreSQL)
 - [ ] Frontend
 - [ ] Usage guide with scenarios
-
-### Admin
-
-Admin endpoints require a token from an admin account. Regular users get `403 Forbidden`.
-
-| Method | Endpoint                          | Description                                                                    |
-| ------ | --------------------------------- | ------------------------------------------------------------------------------ |
-| POST   | `/api/admin/change-detection/run` | Run change detection immediately instead of waiting for the next scheduled run |
-
-### Insights
-
-- [ ] Role network (board members and management across companies)
-- [ ] Risk signals score
-- [ ] Regional trends by municipality and industry
-
-### AI
-
-- [ ] AI assistant with tool calling, using the existing service functions
-
-### Quality and delivery
-
-- [ ] Automated tests (Jest + Supertest)
-- [ ] GitHub Actions CI
-- [ ] Docker Compose for local development
-- [ ] Deployment (Render + Aiven PostgreSQL)
-- [ ] Frontend
 
 ## Data Source
 

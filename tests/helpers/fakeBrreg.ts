@@ -65,7 +65,12 @@ function role(
   rekkefolge: number,
   avregistrert = false,
 ): BrregRolle {
-  return { type: { kode: code, beskrivelse: code }, avregistrert, rekkefolge, ...holder };
+  return {
+    type: { kode: code, beskrivelse: code },
+    avregistrert,
+    rekkefolge,
+    ...holder,
+  };
 }
 
 // Builds a roles response with the same structure as the real register:
@@ -79,21 +84,36 @@ export function brregRoller(roles: FakeRoles): BrregRollerResponse {
     });
   }
   const board = [
-    ...(roles.boardChair ? [role("LEDE", { person: person(roles.boardChair) }, 0)] : []),
-    ...(roles.boardMembers ?? []).map((name, i) => role("MEDL", { person: person(name) }, i + 1)),
+    ...(roles.boardChair
+      ? [role("LEDE", { person: person(roles.boardChair) }, 0)]
+      : []),
+    ...(roles.boardMembers ?? []).map((name, i) =>
+      role("MEDL", { person: person(name) }, i + 1),
+    ),
     ...(roles.deregisteredMembers ?? []).map((name, i) =>
       role("MEDL", { person: person(name) }, i + 50, true),
     ),
-    ...(roles.deputyMembers ?? []).map((name, i) => role("VARA", { person: person(name) }, i + 100)),
+    ...(roles.deputyMembers ?? []).map((name, i) =>
+      role("VARA", { person: person(name) }, i + 100),
+    ),
   ];
   if (board.length > 0) {
-    groups.push({ type: { kode: "STYR", beskrivelse: "Styre" }, roller: board });
+    groups.push({
+      type: { kode: "STYR", beskrivelse: "Styre" },
+      roller: board,
+    });
   }
   if (roles.auditor) {
     groups.push({
       type: { kode: "REVI", beskrivelse: "Revisor" },
       roller: [
-        role("REVI", { enhet: { organisasjonsnummer: "976389387", navn: [roles.auditor] } }, 0),
+        role(
+          "REVI",
+          {
+            enhet: { organisasjonsnummer: "976389387", navn: [roles.auditor] },
+          },
+          0,
+        ),
       ],
     });
   }
@@ -131,14 +151,19 @@ export function brregEnhet(
 }
 
 function handle(fake: FakeBrreg, url: URL): Response {
-  const rolesMatch = url.pathname.match(/\/enhetsregisteret\/api\/enheter\/(\d{9})\/roller$/);
+  const rolesMatch = url.pathname.match(
+    /\/enhetsregisteret\/api\/enheter\/(\d{9})\/roller$/,
+  );
   if (rolesMatch) {
     const roles = fake.roles.get(rolesMatch[1]!);
     if (!roles) {
       return new Response("{}", { status: 404 });
     }
     if ("errorStatus" in roles) {
-      return new Response("", { status: roles.errorStatus, statusText: "Fake error" });
+      return new Response("", {
+        status: roles.errorStatus,
+        statusText: "Fake error",
+      });
     }
     return Response.json(roles);
   }
@@ -159,7 +184,9 @@ function handle(fake: FakeBrreg, url: URL): Response {
       list = list.filter((e) => wanted.has(e.data.organisasjonsnummer));
     }
     list.sort((a, b) => Number(a.id) - Number(b.id));
-    return Response.json(list.slice(0, Number(url.searchParams.get("size") ?? 100)));
+    return Response.json(
+      list.slice(0, Number(url.searchParams.get("size") ?? 100)),
+    );
   }
 
   const companyMatch = url.pathname.match(
@@ -245,6 +272,11 @@ function handle(fake: FakeBrreg, url: URL): Response {
 // The company feed starts at update id 1000 and the role feed at event id 5000,
 // as if the register already had a history.
 export function useFakeBrreg(): FakeBrreg {
+  // Events in both feeds get strictly increasing times, 1 ms apart,
+  // so their order is always clear even within the same millisecond
+  let clock = Date.now();
+  const nextTime = () => new Date(++clock).toISOString();
+
   const fake: FakeBrreg = {
     companies: new Map(),
     updates: [],
@@ -273,7 +305,7 @@ export function useFakeBrreg(): FakeBrreg {
       const id = last + 1;
       fake.roleEvents.push({
         id: String(id),
-        time: new Date().toISOString(),
+        time: nextTime(),
         type: "no.brreg.enhetsregisteret.rolle.oppdatert",
         data: { organisasjonsnummer: orgNumber },
       });
@@ -284,7 +316,7 @@ export function useFakeBrreg(): FakeBrreg {
       const oppdateringsid = last + 1;
       fake.updates.push({
         oppdateringsid,
-        dato: new Date().toISOString(),
+        dato: nextTime(),
         organisasjonsnummer: orgNumber,
         endringstype,
       });
@@ -293,6 +325,7 @@ export function useFakeBrreg(): FakeBrreg {
   };
 
   beforeEach(() => {
+    clock=Date.now();
     fake.companies.clear();
     fake.roles.clear();
     fake.roleEvents.length = 0;

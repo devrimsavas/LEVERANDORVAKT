@@ -40,7 +40,9 @@ export class CompanyChange extends Model {
   })
   declare severity: ChangeSeverity;
 
-  // BIGINT columns are returned as strings by the pg driver
+  // The feed event that revealed the change: a company feed update id,
+  // or for "roles.*" fields a role feed event id.
+  // BIGINT columns are returned as strings by the pg driver.
   @Column({ type: DataType.BIGINT, allowNull: true })
   declare sourceUpdateId: string | null;
 

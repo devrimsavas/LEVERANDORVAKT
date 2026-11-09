@@ -2,13 +2,14 @@ import { UniqueConstraintError } from "sequelize";
 import { CompanyRecord } from "../models/CompanyRecord.js";
 import { WatchlistEntry } from "../models/WatchlistEntry.js";
 import { CompanyChange } from "../models/CompanyChange.js";
-import { getCompany } from "./brregService.js";
+import { getCompany, getCompanyRoles } from "./brregService.js";
 import { getInternalUserId } from "./userService.js";
-import { toChangeItem } from "../mappers/changeMapper.js"; 
+import { toChangeItem } from "../mappers/changeMapper.js";
 import type { ChangeItem } from "../mappers/changeMapper.js";
 import { toOffset, toPaginated } from "../utils/pagination.js";
 import type { Pagination, Paginated } from "../utils/pagination.js";
 import type { Company } from "../types/company.js";
+import type { CompanyRoles } from "../types/companyRoles.js";
 
 export class CompanyNotFoundError extends Error {}
 export class AlreadyWatchingError extends Error {}
@@ -24,6 +25,7 @@ export interface WatchlistItem {
   lastChangedAt: Date | null;
   deletedFromRegistryAt: Date | null;
   company: Company;
+  roles: CompanyRoles | null;
 }
 
 function toWatchlistItem(entry: WatchlistEntry): WatchlistItem {
@@ -37,11 +39,12 @@ function toWatchlistItem(entry: WatchlistEntry): WatchlistItem {
     lastChangedAt: record.lastChangedAt,
     deletedFromRegistryAt: record.deletedFromRegistryAt,
     company: record.snapshot,
+    roles: record.roles,
   };
 }
 
-// Returns the stored company, or fetches it from Brreg and stores it
-// the first time anyone follows it.
+// Returns the stored company, or fetches it and its roles from Brreg
+// and stores them the first time anyone follows it.
 async function findOrCreateCompanyRecord(
   orgNumber: string,
 ): Promise<CompanyRecord> {
@@ -56,12 +59,13 @@ async function findOrCreateCompanyRecord(
       "Company not found in the Brønnøysund Register or struck off",
     );
   }
-
+  const roles = await getCompanyRoles(orgNumber);
   try {
     return await CompanyRecord.create({
       orgNumber: company.orgNumber,
       name: company.name,
       snapshot: company,
+      roles,
       lastCheckedAt: new Date(),
     });
   } catch (error) {
