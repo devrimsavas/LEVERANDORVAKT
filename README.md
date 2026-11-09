@@ -2,8 +2,6 @@
 
 [![CI](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml/badge.svg)](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml)
 
-
-
 _Last updated: 09.11.2026_
 
 > ⚠️ **Under active development** — the backend foundation (company lookup, authentication, database migrations) is in place. The watchlist and change-detection features are being built next. See the [Roadmap](#-roadmap).
@@ -227,6 +225,43 @@ On startup the app connects to the database and applies any pending migrations a
 | `npm start`       | Runs the compiled app                                                     |
 | `npm run swagger` | Generates `swagger_output.json` from the compiled routes                  |
 
+## 🧪 Tests
+
+Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. Every test starts with empty tables, and the Brønnøysund API is replaced by a fake in tests that need it, so the suite never depends on the network.
+
+| Test file             | What it covers                                                                                                                                                                                                                                                                   |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tests/index.test.ts` | The API responds                                                                                                                                                                                                                                                                 |
+| `tests/auth.test.ts`  | Registration (public data only, bcrypt hashing, email normalization, role cannot be set by the client, duplicate email, input validation), login (token content, same error for unknown email and wrong password), `/me` (missing, tampered and expired tokens, deleted account) |
+
+### Running the tests
+
+1. Create a separate test database, so tests never touch your development data:
+
+   ```sql
+   CREATE DATABASE leverandorvakt_test;
+   ```
+
+2. Create a `.env.test` file:
+
+   ```env
+   DATABASE_URL=postgres://postgres:password@localhost:5432/leverandorvakt_test
+   JWT_SECRET=test_secret
+   JWT_EXPIRES_IN=1h
+   ```
+
+3. Run:
+
+   ```bash
+   npm test
+   ```
+
+Migrations are applied to the test database automatically.
+
+### Continuous integration
+
+GitHub Actions runs the type check and all tests on every push, against a temporary PostgreSQL database.
+
 ## Roadmap
 
 ### Foundation
@@ -252,7 +287,7 @@ On startup the app connects to the database and applies any pending migrations a
 - [x] Add and remove companies from a user's watchlist
 - [x] Scheduled change detection using the Brønnøysund update feed
 - [x] Change history per company
-- [ ] Notifications for followed companies
+- [x] Notifications for followed companies
 
 ### Admin
 
