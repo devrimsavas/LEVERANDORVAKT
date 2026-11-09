@@ -6,7 +6,7 @@ An early-warning service for Norwegian businesses, built on open data from the *
 
 Small businesses rarely notice when a supplier or customer gets into trouble until an invoice goes unpaid. Leverandørvakt lets users follow the companies they work with — suppliers, customers, partners — and get notified when something important changes in the public registry: a new CEO, a change in the board, late annual accounts, or the start of bankruptcy proceedings.
 
-## 🚀 Features
+##  Features
 
 ### Implemented
 
@@ -28,7 +28,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Regional trends** — new companies over time by municipality and industry code
 - **AI assistant** — ask questions about followed companies in plain language, using the same service functions as the API
 
-## 🛠 Tech Stack
+##  Tech Stack
 
 | Area           | Technology                                                                       |
 | -------------- | -------------------------------------------------------------------------------- |
@@ -41,7 +41,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 | API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                   |
 | Data source    | [Brønnøysund Register Centre open API](https://data.brreg.no) (free, no API key) |
 
-## 🏗 Architecture
+##  Architecture
 
 The backend is split into layers, each with one responsibility:
 
@@ -63,7 +63,7 @@ services/      Business logic: talk to Brreg and the database, no knowledge of H
 
 Services do not know about HTTP, so the same functions can be reused by the scheduled change-detection job and by the AI assistant, not only by the API.
 
-## 🔑 Key Design Decisions
+##  Key Design Decisions
 
 - **Own data model instead of the raw registry format.** `BrregEnhet` describes the API's Norwegian, nested format; `Company` is the app's own flat, English shape; `toCompany` converts between them. If the registry changes a field, only the mapper changes.
 - **Two user identifiers.** `id` is an internal auto-increment primary key used for relations between tables. `public_id` is a UUID used in the API and in tokens, so user numbers cannot be guessed and the number of users is not revealed.
@@ -72,7 +72,7 @@ Services do not know about HTTP, so the same functions can be reused by the sche
 - **Migrations instead of `sequelize.sync()`.** Every schema change is an explicit, reviewable file that runs the same way locally and in production, without guessing or losing data.
 - **Clear error status codes.** `400` invalid input, `401` invalid credentials, `404` company not found, `409` email already registered, `502` the Brønnøysund API could not be reached.
 
-## 📡 API Endpoints
+##  API Endpoints
 
 Full, interactive documentation is available at `/api/docs` when the server is running.
 
@@ -91,7 +91,7 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 | POST   | `/api/auth/login`    | Log in and receive a JWT together with the user's public data    |
 | GET    | `/api/auth/me`       | Get the logged-in user's profile (requires token)                |
 
-## 🗄 Data Model
+##  Data Model
 
 ### `users`
 
@@ -154,7 +154,7 @@ LEVERANDORVAKT/
 └── tsconfig.json
 ```
 
-## ▶️ Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -221,7 +221,7 @@ On startup the app connects to the database and applies any pending migrations a
 | `npm start`       | Runs the compiled app                                                     |
 | `npm run swagger` | Generates `swagger_output.json` from the compiled routes                  |
 
-## 🗺 Roadmap
+## Roadmap
 
 ### Foundation
 
@@ -266,6 +266,6 @@ On startup the app connects to the database and applies any pending migrations a
 - [ ] Deployment (Render + Aiven PostgreSQL)
 - [ ] Frontend
 
-## 📄 Data Source
+##  Data Source
 
 Company data comes from the open API of the [Brønnøysund Register Centre](https://data.brreg.no), available under the Norwegian Licence for Open Government Data (NLOD).

@@ -19,6 +19,7 @@ const doc = {
       name: "Watchlist",
       description: "Companies followed by the logged-in user",
     },
+    { name: "Admin", description: "Admin-only operations" },
     { name: "General", description: "API status" },
   ],
   components: {

@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/app.js",
+    "predev": "npm run build && npm run swagger",
     "dev": "concurrently \"tsc -w --preserveWatchOutput\" \"node --watch --watch-preserve-output dist/app.js\"",
     "swagger": "node dist/swagger.js"
   },
