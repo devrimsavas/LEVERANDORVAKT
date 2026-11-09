@@ -1,5 +1,6 @@
 import { Table, Column, Model, DataType } from "sequelize-typescript";
 import type { Company } from "../types/company.js";
+import type { CompanyRoles } from "../types/companyRoles.js";
 
 // A followed company and its last known state.
 // Named CompanyRecord to avoid a clash with the Company type in types/company.ts.
@@ -19,6 +20,10 @@ export class CompanyRecord extends Model {
   // Last known state of the company
   @Column({ type: DataType.JSONB, allowNull: false })
   declare snapshot: Company;
+
+  // Last known roles. null means they have not been fetched yet.
+  @Column({ type: DataType.JSONB, allowNull: true })
+  declare roles: CompanyRoles | null;
 
   @Column({ type: DataType.DATE, allowNull: true })
   declare deletedFromRegistryAt: Date | null;

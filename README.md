@@ -82,10 +82,11 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 
 ### Companies
 
-| Method | Endpoint                         | Description                                      |
-| ------ | -------------------------------- | ------------------------------------------------ |
-| GET    | `/api/companies/{orgNumber}`     | Get a company by its 9-digit organization number |
-| GET    | `/api/companies/search?name=...` | Search companies by name (at least 2 characters) |
+| Method | Endpoint                         | Description                                                   |
+| ------ | -------------------------------- | ------------------------------------------------------------- |
+| GET    | `/api/companies/{orgNumber}`     | Get a company by its 9-digit organization number              |
+| GET    | `/api/companies/search?name=...` | Search companies by name (at least 2 characters)              |
+| GET    | /api/companies/{orgNumber}/roles | Get the current CEO, board, auditor and accountant from Brreg |
 
 ### Authentication
 
@@ -127,32 +128,52 @@ All watchlist endpoints require a token (`Authorization: Bearer <token>`). Each 
 ## 📂 Project Structure
 
 ```
+## 📂 Project Structure
+
+```
 LEVERANDORVAKT/
 ├── src/
-│   ├── app.ts                    # Entry point: Express setup, DB connection, migrations, server start
+│   ├── app.ts                    # Express app: middleware, routes, Swagger UI (no startup side effects)
+│   ├── server.ts                 # Entry point: loads .env, connects to the DB, runs migrations, starts the server and the job
 │   ├── swagger.ts                # Generates swagger_output.json from the routes
 │   ├── config/
-│   │   ├── database.ts           # Sequelize connection
-│   │   └── migrator.ts           # Umzug migration runner
-│   ├── migrations/
-│   │   └── 0001-create-users.ts
-│   ├── models/
-│   │   └── User.ts
-│   ├── routes/
-│   │   ├── index.ts
-│   │   ├── companies.ts
-│   │   └── auth.ts
-│   ├── controllers/
-│   │   ├── companyController.ts
-│   │   └── authController.ts
+│   │   ├── database.ts           # Sequelize connection and model registration
+│   │   ├── migrator.ts           # Umzug migration runner
+│   │   └── ensureAdmin.ts        # Creates the admin account once from environment variables
+│   ├── migrations/               # Numbered schema changes (0001-create-users.ts, ...), applied on startup
+│   ├── models/                   # User, CompanyRecord, WatchlistEntry, CompanyChange, Notification, BrregSyncState
+│   ├── routes/                   # URL → controller mapping: index, auth, companies, watchlist, notifications, admin
+│   ├── middlewares/
+│   │   ├── requireAuth.ts        # Verifies the JWT and adds the user to the request
+│   │   └── requireRole.ts        # Allows only the given roles (e.g. admin)
+│   ├── controllers/              # HTTP layer: input validation and status codes
 │   ├── services/
-│   │   ├── brregService.ts       # Calls the Brønnøysund API
-│   │   └── authService.ts        # Registration, login, JWT
-│   ├── mappers/
-│   │   └── companyMapper.ts      # Brreg format → Company
-│   └── types/
-│       ├── brreg.ts              # Shapes of the Brønnøysund API responses
-│       └── company.ts            # The app's own Company type
+│   │   ├── brregService.ts       # Calls the Brønnøysund API: companies, roles and both update feeds
+│   │   ├── authService.ts        # Registration, login, JWT
+│   │   ├── userService.ts        # Maps the public user id in tokens to the internal id
+│   │   ├── watchlistService.ts   # Following companies, notes, change history
+│   │   ├── companyDiff.ts        # Compares two company states and rates each change
+│   │   ├── changeDetectionService.ts  # Reads the update feed and records changes
+│   │   └── notificationService.ts     # Creates and serves notifications
+│   ├── jobs/
+│   │   └── changeDetectionJob.ts # Runs change detection on a timer, never two runs at once
+│   ├── mappers/                  # Brreg / database shapes → API shapes (company, roles, changes)
+│   ├── types/
+│   │   ├── brreg.ts              # Shapes of the Brønnøysund API responses
+│   │   ├── company.ts            # The app's own Company type
+│   │   ├── companyRoles.ts       # The app's own CompanyRoles type
+│   │   └── express.d.ts          # Adds the authenticated user to Express requests
+│   └── utils/                    # Validation and pagination helpers
+├── tests/
+│   ├── helpers/
+│   │   ├── fakeBrreg.ts          # In-memory stand-in for the Brønnøysund API
+│   │   ├── users.ts              # Test users and register/login helper
+│   │   ├── globalSetup.ts        # Applies migrations to the test database once
+│   │   └── setup.ts              # Empties all tables before every test
+│   ├── fixtures/                 # Fictional data shaped like real Brreg responses
+│   └── *.test.ts                 # One test file per area (auth, companies, watchlist, ...)
+├── .github/workflows/ci.yml      # GitHub Actions: type check and tests on every push
+├── vitest.config.ts
 ├── envexample
 ├── package.json
 └── tsconfig.json
@@ -225,18 +246,19 @@ On startup the app connects to the database and applies any pending migrations a
 | `npm start`       | Runs the compiled app                                                     |
 | `npm run swagger` | Generates `swagger_output.json` from the compiled routes                  |
 
-##  Tests
+## Tests
 
 Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. Every test starts with empty tables, and the Brønnøysund API is replaced by a fake in tests that need it, so the suite never depends on the network.
 
 | Test file                       | What it covers                                                                                                                                                                                                                                                                                                                                                            |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
 | `tests/index.test.ts`           | The API responds                                                                                                                                                                                                                                                                                                                                                          |
 | `tests/auth.test.ts`            | Registration (public data only, bcrypt hashing, email normalization, role cannot be set by the client, duplicate email, input validation), login (token content, same error for unknown email and wrong password), `/me` (missing, tampered and expired tokens, deleted account)                                                                                          |
 | `tests/watchlist.test.ts`       | Following a company (stored once and fetched from Brreg once even with several followers, unknown and struck-off companies, Brreg unavailable, input validation), listing only your own companies, notes, unfollowing, change history with pagination, users cannot see or change each other's watchlists                                                                 |
 | `tests/changeDetection.test.ts` | Starting point on the first run, changes recorded with severity and source update, stored state updated so nothing is recorded twice, one Brreg lookup per company, struck-off companies (including `410 Gone`), stopping before a failed company and catching up after a Brreg outage, notifications only to followers, full rollback when notifications cannot be saved |
 | `tests/notifications.test.ts`   | Notifications created end to end from detected changes, unread filter, pagination, unread count, marking one or all as read (first read time is kept), users cannot read or change each other's notifications                                                                                                                                                             |
 | `tests/admin.test.ts`           | Admin account created once from environment variables (never by promoting an existing user), admin-only change detection endpoint (`401` / `403` / `200`), `409` when a run is already in progress, `502` when Brreg cannot be reached                                                                                                                                    |
+| tests/companies.test.ts         | Company lookup and search (struck-off companies, Norwegian characters, input validation, Brreg unavailable), roles mapped from a real-shaped Brreg response (deregistered members left out, sorted in Norwegian order, no birth dates)                                                                                                                                    |     |
 
 ### Running the tests
 

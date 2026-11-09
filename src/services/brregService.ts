@@ -1,12 +1,16 @@
 import type {
   BrregEnhet,
   BrregEnhetResponse,
+  BrregRoleEvent,
+  BrregRollerResponse,
   BrregSearchResponse,
   BrregUpdate,
   BrregUpdatesResponse,
 } from "../types/brreg.js";
 import type { Company } from "../types/company.js";
+import type { CompanyRoles } from "../types/companyRoles.js";
 import { toCompany } from "../mappers/companyMapper.js";
+import { toCompanyRoles } from "../mappers/companyRolesMapper.js";
 
 const BRREG_BASE_URL = "https://data.brreg.no/enhetsregisteret/api";
 
@@ -123,4 +127,90 @@ export async function getUpdatesSince(
 
   const data = (await response.json()) as BrregUpdatesResponse;
   return data._embedded?.oppdaterteEnheter ?? [];
+}
+
+// Fetches the current roles of a company.
+// Returns null if the company does not exist or has been removed from the register.
+export async function getCompanyRoles(
+  orgNumber: string,
+): Promise<CompanyRoles | null> {
+  const response = await fetch(`${BRREG_BASE_URL}/enheter/${orgNumber}/roller`);
+
+  if (response.status === 404 || response.status === 410) {
+    return null;
+  }
+
+  if (!response.ok) {
+    throw brregError(response);
+  }
+
+  const data = (await response.json()) as BrregRollerResponse;
+  return toCompanyRoles(data);
+}
+
+// The role feed accepts at most this many events per request
+const ROLE_EVENTS_MAX_PAGE = 10000;
+
+async function fetchRoleEvents(
+  params: Record<string, string>,
+): Promise<BrregRoleEvent[]> {
+  const url = new URL(`${BRREG_BASE_URL}/oppdateringer/roller`);
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw brregError(response);
+  }
+
+  const events = (await response.json()) as BrregRoleEvent[];
+  // Ids are sent as text; sort numerically so the newest is always last
+  return events.sort((a, b) => Number(a.id) - Number(b.id));
+}
+
+// Returns role events for the given companies after afterId, oldest first.
+// At most `limit` events are returned per call.
+export async function getRoleEventsAfter(
+  afterId: number,
+  orgNumbers: string[],
+  limit = 1000,
+): Promise<BrregRoleEvent[]> {
+  return fetchRoleEvents({
+    afterId: String(afterId),
+    organisasjonsnummer: orgNumbers.join(","),
+    size: String(limit),
+  });
+}
+
+// Returns the id of the newest event in the role feed.
+// The feed cannot be sorted newest first, so it looks back from now,
+// widening the window until it finds events, then reads forward to the end.
+export async function getLatestRoleEventId(): Promise<number> {
+  const windowsInMinutes = [10, 60, 24 * 60, 7 * 24 * 60];
+
+  for (const minutes of windowsInMinutes) {
+    const afterTime = new Date(Date.now() - minutes * 60 * 1000).toISOString();
+    let events = await fetchRoleEvents({
+      afterTime,
+      size: String(ROLE_EVENTS_MAX_PAGE),
+    });
+    let latest = events.at(-1);
+
+    // A full page means there may be more events after it
+    while (latest && events.length === ROLE_EVENTS_MAX_PAGE) {
+      events = await fetchRoleEvents({
+        afterId: latest.id,
+        size: String(ROLE_EVENTS_MAX_PAGE),
+      });
+      latest = events.at(-1) ?? latest;
+    }
+
+    if (latest) {
+      return Number(latest.id);
+    }
+  }
+
+  throw new Error("Brreg role feed has no events in the last 7 days");
 }

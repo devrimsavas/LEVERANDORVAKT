@@ -11,6 +11,11 @@ export class BrregSyncState extends Model {
   @Column({ type: DataType.BIGINT, allowNull: false })
   declare lastUpdateId: string;
 
+  // Position in the role update feed, which has its own ids.
+  // null until change detection has started reading the role feed.
+  @Column({ type: DataType.BIGINT, allowNull: true })
+  declare lastRoleEventId: string | null;
+
   @Column({ type: DataType.DATE, allowNull: true })
   declare lastRunAt: Date | null;
 }

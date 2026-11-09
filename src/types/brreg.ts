@@ -87,3 +87,52 @@ export interface BrregUpdatesResponse {
     number: number;
   };
 }
+
+// Roles of a company (GET /enheter/{orgNumber}/roller).
+// A role is held either by a person or by another entity (e.g. an audit firm).
+export interface BrregRollePerson {
+  fodselsdato?: string;
+  erDoed?: boolean;
+  navn: {
+    fornavn?: string;
+    mellomnavn?: string;
+    etternavn?: string;
+  };
+}
+
+export interface BrregRolleEnhet {
+  organisasjonsnummer: string;
+  navn: string[];
+  erSlettet?: boolean;
+}
+
+export interface BrregRolle {
+  type: BrregKode;
+  person?: BrregRollePerson;
+  enhet?: BrregRolleEnhet;
+  // The role is still listed but no longer held
+  avregistrert?: boolean;
+  fratraadt?: boolean;
+  rekkefolge?: number;
+}
+
+export interface BrregRollegruppe {
+  type: BrregKode;
+  sistEndret?: string;
+  roller: BrregRolle[];
+}
+
+export interface BrregRollerResponse {
+  rollegrupper?: BrregRollegruppe[];
+}
+
+// One event in the role update feed (GET /oppdateringer/roller).
+// It only says that the roles of a company changed, not what changed.
+export interface BrregRoleEvent {
+  id: string;
+  time: string;
+  type: string;
+  data: {
+    organisasjonsnummer: string;
+  };
+}

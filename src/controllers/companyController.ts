@@ -1,5 +1,10 @@
 import type { Request, Response } from "express";
-import { getCompany, searchCompanies } from "../services/brregService.js";
+import {
+  getCompany,
+  getCompanyRoles,
+  searchCompanies,
+} from "../services/brregService.js";
+
 import { isValidOrgNumber } from "../utils/orgNumber.js";
 
 // GET /api/companies
@@ -54,6 +59,35 @@ export const getCompanyByOrgNumber = async (
     }
 
     res.json(company);
+  } catch (error) {
+    console.error(error);
+    res.status(502).json({ error: "Could not reach the Brreg API" });
+  }
+};
+
+// GET /api/companies/:orgNumber/roles
+export const getRolesByOrgNumber = async (
+  req: Request<{ orgNumber: string }>,
+  res: Response,
+) => {
+  // #swagger.tags = ["Companies"]
+  /* #swagger.responses[404] = { description: "Company not found in the Brønnøysund Register" } */
+  const { orgNumber } = req.params;
+
+  if (!isValidOrgNumber(orgNumber)) {
+    res.status(400).json({ error: "Organization number must be 9 digits" });
+    return;
+  }
+
+  try {
+    const roles = await getCompanyRoles(orgNumber);
+
+    if (!roles) {
+      res.status(404).json({ error: "Company not found" });
+      return;
+    }
+
+    res.json(roles);
   } catch (error) {
     console.error(error);
     res.status(502).json({ error: "Could not reach the Brreg API" });

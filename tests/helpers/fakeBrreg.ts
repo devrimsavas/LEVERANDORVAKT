@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, vi } from "vitest";
-import type { BrregEnhet, BrregUpdate } from "../../src/types/brreg.js";
+import type {
+  BrregEnhet,
+  BrregRoleEvent,
+  BrregRolle,
+  BrregRollerResponse,
+  BrregUpdate,
+} from "../../src/types/brreg.js";
 
 // What the fake register answers for one organization number
 export type FakeCompany =
@@ -12,6 +18,9 @@ export type FakeCompany =
 export interface FakeBrreg {
   companies: Map<string, FakeCompany>;
   updates: BrregUpdate[];
+  // Roles per company: the Brreg response, or an HTTP status to fail with
+  roles: Map<string, BrregRollerResponse | { errorStatus: number }>;
+  roleEvents: BrregRoleEvent[];
   // Every URL the app requested, to check how often Brreg was called
   requests: URL[];
   // Milliseconds to wait before answering, to simulate a slow register
@@ -23,6 +32,72 @@ export interface FakeBrreg {
     orgNumber: string,
     endringstype?: BrregUpdate["endringstype"],
   ): number;
+  setRoles(orgNumber: string, roles: BrregRollerResponse): void;
+  setRolesError(orgNumber: string, status: number): void;
+  addRoleEvent(orgNumber: string): number;
+}
+
+export interface FakeRoles {
+  ceo?: string;
+  boardChair?: string;
+  boardMembers?: string[];
+  deputyMembers?: string[];
+  auditor?: string;
+  // Board members who are still listed but marked as deregistered
+  deregisteredMembers?: string[];
+}
+
+function person(fullName: string) {
+  const parts = fullName.split(" ");
+  return {
+    erDoed: false,
+    fodselsdato: "1970-01-01",
+    navn: {
+      fornavn: parts.slice(0, -1).join(" "),
+      etternavn: parts.at(-1)!,
+    },
+  };
+}
+
+function role(
+  code: string,
+  holder: Partial<BrregRolle>,
+  rekkefolge: number,
+  avregistrert = false,
+): BrregRolle {
+  return { type: { kode: code, beskrivelse: code }, avregistrert, rekkefolge, ...holder };
+}
+
+// Builds a roles response with the same structure as the real register:
+// groups for the CEO (DAGL), the board (STYR) and the auditor (REVI).
+export function brregRoller(roles: FakeRoles): BrregRollerResponse {
+  const groups: NonNullable<BrregRollerResponse["rollegrupper"]> = [];
+  if (roles.ceo) {
+    groups.push({
+      type: { kode: "DAGL", beskrivelse: "Daglig leder" },
+      roller: [role("DAGL", { person: person(roles.ceo) }, 0)],
+    });
+  }
+  const board = [
+    ...(roles.boardChair ? [role("LEDE", { person: person(roles.boardChair) }, 0)] : []),
+    ...(roles.boardMembers ?? []).map((name, i) => role("MEDL", { person: person(name) }, i + 1)),
+    ...(roles.deregisteredMembers ?? []).map((name, i) =>
+      role("MEDL", { person: person(name) }, i + 50, true),
+    ),
+    ...(roles.deputyMembers ?? []).map((name, i) => role("VARA", { person: person(name) }, i + 100)),
+  ];
+  if (board.length > 0) {
+    groups.push({ type: { kode: "STYR", beskrivelse: "Styre" }, roller: board });
+  }
+  if (roles.auditor) {
+    groups.push({
+      type: { kode: "REVI", beskrivelse: "Revisor" },
+      roller: [
+        role("REVI", { enhet: { organisasjonsnummer: "976389387", navn: [roles.auditor] } }, 0),
+      ],
+    });
+  }
+  return { rollegrupper: groups };
 }
 
 // Builds a realistic active company. Fields can be overridden per test.
@@ -56,6 +131,37 @@ export function brregEnhet(
 }
 
 function handle(fake: FakeBrreg, url: URL): Response {
+  const rolesMatch = url.pathname.match(/\/enhetsregisteret\/api\/enheter\/(\d{9})\/roller$/);
+  if (rolesMatch) {
+    const roles = fake.roles.get(rolesMatch[1]!);
+    if (!roles) {
+      return new Response("{}", { status: 404 });
+    }
+    if ("errorStatus" in roles) {
+      return new Response("", { status: roles.errorStatus, statusText: "Fake error" });
+    }
+    return Response.json(roles);
+  }
+
+  if (url.pathname.endsWith("/enhetsregisteret/api/oppdateringer/roller")) {
+    let list = [...fake.roleEvents];
+    const afterId = url.searchParams.get("afterId");
+    const afterTime = url.searchParams.get("afterTime");
+    const orgNumbers = url.searchParams.get("organisasjonsnummer");
+    if (afterId) {
+      list = list.filter((e) => Number(e.id) > Number(afterId));
+    }
+    if (afterTime) {
+      list = list.filter((e) => e.time > afterTime);
+    }
+    if (orgNumbers) {
+      const wanted = new Set(orgNumbers.split(","));
+      list = list.filter((e) => wanted.has(e.data.organisasjonsnummer));
+    }
+    list.sort((a, b) => Number(a.id) - Number(b.id));
+    return Response.json(list.slice(0, Number(url.searchParams.get("size") ?? 100)));
+  }
+
   const companyMatch = url.pathname.match(
     /\/enhetsregisteret\/api\/enheter\/(\d{9})$/,
   );
@@ -136,11 +242,14 @@ function handle(fake: FakeBrreg, url: URL): Response {
 }
 
 // Replaces fetch with the fake register for every test in the file.
-// The feed starts at update id 1000, as if the register already had a history.
+// The company feed starts at update id 1000 and the role feed at event id 5000,
+// as if the register already had a history.
 export function useFakeBrreg(): FakeBrreg {
   const fake: FakeBrreg = {
     companies: new Map(),
     updates: [],
+    roles: new Map(),
+    roleEvents: [],
     requests: [],
     delayMs: 0,
 
@@ -152,6 +261,23 @@ export function useFakeBrreg(): FakeBrreg {
     },
     setError(orgNumber, status) {
       fake.companies.set(orgNumber, { kind: "error", status });
+    },
+    setRoles(orgNumber, roles) {
+      fake.roles.set(orgNumber, roles);
+    },
+    setRolesError(orgNumber, status) {
+      fake.roles.set(orgNumber, { errorStatus: status });
+    },
+    addRoleEvent(orgNumber) {
+      const last = Number(fake.roleEvents.at(-1)?.id ?? 4999);
+      const id = last + 1;
+      fake.roleEvents.push({
+        id: String(id),
+        time: new Date().toISOString(),
+        type: "no.brreg.enhetsregisteret.rolle.oppdatert",
+        data: { organisasjonsnummer: orgNumber },
+      });
+      return id;
     },
     addUpdate(orgNumber, endringstype = "Endring") {
       const last = fake.updates.at(-1)?.oppdateringsid ?? 999;
@@ -168,6 +294,9 @@ export function useFakeBrreg(): FakeBrreg {
 
   beforeEach(() => {
     fake.companies.clear();
+    fake.roles.clear();
+    fake.roleEvents.length = 0;
+    fake.addRoleEvent("000000000");
     fake.requests.length = 0;
     fake.updates.length = 0;
     fake.delayMs = 0;

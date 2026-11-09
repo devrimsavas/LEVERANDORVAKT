@@ -1,0 +1,105 @@
+{
+  "_links": {
+    "self": {
+      "href": "https://data.brreg.no/enhetsregisteret/api/enheter/912345678/roller"
+    }
+  },
+  "rollegrupper": [
+    {
+      "type": { "kode": "DAGL", "beskrivelse": "Daglig leder" },
+      "sistEndret": "2020-11-02",
+      "roller": [
+        {
+          "type": { "kode": "DAGL", "beskrivelse": "Daglig leder" },
+          "person": {
+            "fodselsdato": "1968-05-04",
+            "erDoed": false,
+            "navn": { "fornavn": "Ingrid", "etternavn": "Solberg" }
+          },
+          "avregistrert": false,
+          "rekkefolge": 0
+        }
+      ]
+    },
+    {
+      "type": { "kode": "STYR", "beskrivelse": "Styre" },
+      "sistEndret": "2026-09-04",
+      "roller": [
+        {
+          "type": { "kode": "LEDE", "beskrivelse": "Styrets leder" },
+          "person": {
+            "fodselsdato": "1960-04-26",
+            "erDoed": false,
+            "navn": { "fornavn": "Per Olav", "etternavn": "Hansen" }
+          },
+          "avregistrert": false,
+          "rekkefolge": 0
+        },
+        {
+          "type": { "kode": "MEDL", "beskrivelse": "Styremedlem" },
+          "person": {
+            "fodselsdato": "1964-02-15",
+            "erDoed": false,
+            "navn": { "fornavn": "Tor", "etternavn": "Berg" }
+          },
+          "avregistrert": true,
+          "rekkefolge": 1
+        },
+        {
+          "type": { "kode": "MEDL", "beskrivelse": "Styremedlem" },
+          "person": {
+            "fodselsdato": "1974-04-09",
+            "erDoed": false,
+            "navn": { "fornavn": "Siri", "etternavn": "Østby" }
+          },
+          "avregistrert": false,
+          "rekkefolge": 2
+        },
+        {
+          "type": { "kode": "MEDL", "beskrivelse": "Styremedlem" },
+          "person": {
+            "fodselsdato": "1990-03-05",
+            "erDoed": false,
+            "navn": {
+              "fornavn": "Erik",
+              "mellomnavn": "Aas",
+              "etternavn": "Dahl"
+            }
+          },
+          "avregistrert": false,
+          "rekkefolge": 3,
+          "valgtAv": {
+            "kode": "AREP",
+            "beskrivelse": "Representant for de ansatte"
+          }
+        },
+        {
+          "type": { "kode": "VARA", "beskrivelse": "Varamedlem" },
+          "person": {
+            "fodselsdato": "1978-03-06",
+            "erDoed": false,
+            "navn": { "fornavn": "Nora", "etternavn": "Lie" }
+          },
+          "avregistrert": false,
+          "rekkefolge": 4
+        }
+      ]
+    },
+    {
+      "type": { "kode": "REVI", "beskrivelse": "Revisor" },
+      "sistEndret": "2019-07-12",
+      "roller": [
+        {
+          "type": { "kode": "REVI", "beskrivelse": "Revisor" },
+          "enhet": {
+            "organisasjonsnummer": "987654321",
+            "navn": ["NORDLYS REVISJON AS"],
+            "erSlettet": false
+          },
+          "avregistrert": false,
+          "rekkefolge": 0
+        }
+      ]
+    }
+  ]
+}
