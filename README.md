@@ -1,5 +1,7 @@
 # Leverandørvakt
 
+_Last updated: 09.11.2026_
+
 > ⚠️ **Under active development** — the backend foundation (company lookup, authentication, database migrations) is in place. The watchlist and change-detection features are being built next. See the [Roadmap](#-roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
