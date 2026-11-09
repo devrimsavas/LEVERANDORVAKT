@@ -30,16 +30,16 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 
 ## 🛠 Tech Stack
 
-| Area | Technology |
-|---|---|
-| Runtime | Node.js, TypeScript (strict mode, ES modules) |
-| Framework | Express 5 |
-| Database | PostgreSQL |
-| ORM | Sequelize with `sequelize-typescript` (decorator models) |
-| Migrations | Umzug |
-| Authentication | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs` |
-| API docs | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`) |
-| Data source | [Brønnøysund Register Centre open API](https://data.brreg.no) (free, no API key) |
+| Area           | Technology                                                                       |
+| -------------- | -------------------------------------------------------------------------------- |
+| Runtime        | Node.js, TypeScript (strict mode, ES modules)                                    |
+| Framework      | Express 5                                                                        |
+| Database       | PostgreSQL                                                                       |
+| ORM            | Sequelize with `sequelize-typescript` (decorator models)                         |
+| Migrations     | Umzug                                                                            |
+| Authentication | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs`               |
+| API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                   |
+| Data source    | [Brønnøysund Register Centre open API](https://data.brreg.no) (free, no API key) |
 
 ## 🏗 Architecture
 
@@ -78,35 +78,47 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 
 ### Companies
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/api/companies/{orgNumber}` | Get a company by its 9-digit organization number |
-| GET | `/api/companies/search?name=...` | Search companies by name (at least 2 characters) |
+| Method | Endpoint                         | Description                                      |
+| ------ | -------------------------------- | ------------------------------------------------ |
+| GET    | `/api/companies/{orgNumber}`     | Get a company by its 9-digit organization number |
+| GET    | `/api/companies/search?name=...` | Search companies by name (at least 2 characters) |
 
 ### Authentication
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/auth/register` | Create an account (`firstName`, `lastName`, `email`, `password`) |
-| POST | `/api/auth/login` | Log in and receive a JWT together with the user's public data |
+| Method | Endpoint             | Description                                                      |
+| ------ | -------------------- | ---------------------------------------------------------------- |
+| POST   | `/api/auth/register` | Create an account (`firstName`, `lastName`, `email`, `password`) |
+| POST   | `/api/auth/login`    | Log in and receive a JWT together with the user's public data    |
+| GET    | `/api/auth/me`       | Get the logged-in user's profile (requires token)                |
 
 ## 🗄 Data Model
 
 ### `users`
 
-| Column | Type | Notes |
-|---|---|---|
-| `id` | integer | Internal primary key, never exposed |
-| `public_id` | UUID | Public user number, used in the API and in tokens |
-| `first_name` | varchar(100) | Required |
-| `last_name` | varchar(100) | Required |
-| `email` | varchar(255) | Required, unique, stored in lower case |
-| `password_hash` | varchar | bcrypt hash, never returned by the API |
-| `role` | varchar(20) | `user` (default) or `admin` |
-| `last_login_at` | timestamp | Updated on every successful login |
-| `created_at`, `updated_at` | timestamp | Managed automatically |
+| Column                     | Type         | Notes                                             |
+| -------------------------- | ------------ | ------------------------------------------------- |
+| `id`                       | integer      | Internal primary key, never exposed               |
+| `public_id`                | UUID         | Public user number, used in the API and in tokens |
+| `first_name`               | varchar(100) | Required                                          |
+| `last_name`                | varchar(100) | Required                                          |
+| `email`                    | varchar(255) | Required, unique, stored in lower case            |
+| `password_hash`            | varchar      | bcrypt hash, never returned by the API            |
+| `role`                     | varchar(20)  | `user` (default) or `admin`                       |
+| `last_login_at`            | timestamp    | Updated on every successful login                 |
+| `created_at`, `updated_at` | timestamp    | Managed automatically                             |
 
 Applied migrations are recorded in the `migrations` table.
+
+### Watchlist
+
+All watchlist endpoints require a token (`Authorization: Bearer <token>`). Each user sees and changes only their own watchlist.
+
+| Method | Endpoint                     | Description                                          |
+| ------ | ---------------------------- | ---------------------------------------------------- |
+| GET    | `/api/watchlist`             | List the companies on your watchlist, sorted by name |
+| POST   | `/api/watchlist`             | Follow a company (`orgNumber`, optional `note`)      |
+| PATCH  | `/api/watchlist/{orgNumber}` | Change or remove your note on a followed company     |
+| DELETE | `/api/watchlist/{orgNumber}` | Stop following a company                             |
 
 ## 📂 Project Structure
 
@@ -202,16 +214,17 @@ On startup the app connects to the database and applies any pending migrations a
 
 ### Available scripts
 
-| Script | What it does |
-|---|---|
-| `npm run dev` | Compiles TypeScript in watch mode and restarts the server on every change |
-| `npm run build` | Compiles TypeScript into `dist/` |
-| `npm start` | Runs the compiled app |
-| `npm run swagger` | Generates `swagger_output.json` from the compiled routes |
+| Script            | What it does                                                              |
+| ----------------- | ------------------------------------------------------------------------- |
+| `npm run dev`     | Compiles TypeScript in watch mode and restarts the server on every change |
+| `npm run build`   | Compiles TypeScript into `dist/`                                          |
+| `npm start`       | Runs the compiled app                                                     |
+| `npm run swagger` | Generates `swagger_output.json` from the compiled routes                  |
 
 ## 🗺 Roadmap
 
 ### Foundation
+
 - [x] Express 5 + TypeScript project setup
 - [x] Brønnøysund API integration: lookup by organization number and search by name
 - [x] Layered architecture: routes, controllers, services, mappers
@@ -220,6 +233,7 @@ On startup the app connects to the database and applies any pending migrations a
 - [x] Versioned migrations with Umzug, applied on startup
 
 ### Authentication and users
+
 - [x] User registration and login (bcrypt + JWT)
 - [x] Internal ID + public UUID, roles (`user` / `admin`)
 - [x] `requireAuth` middleware for protected endpoints
@@ -227,21 +241,25 @@ On startup the app connects to the database and applies any pending migrations a
 - [x] Admin account created once on startup from environment variables
 
 ### Watchlist and change detection
-- [ ] Data model design: `companies`, `watchlist_entries`, `company_changes`
-- [ ] Add and remove companies from a user's watchlist
+
+- [x] Data model design: `companies`, `watchlist_entries`, `company_changes`
+- [x] Add and remove companies from a user's watchlist
 - [ ] Scheduled change detection using the Brønnøysund update feed
 - [ ] Change history per company
 - [ ] Notifications for followed companies
 
 ### Insights
+
 - [ ] Role network (board members and management across companies)
 - [ ] Risk signals score
 - [ ] Regional trends by municipality and industry
 
 ### AI
+
 - [ ] AI assistant with tool calling, using the existing service functions
 
 ### Quality and delivery
+
 - [ ] Automated tests (Jest + Supertest)
 - [ ] GitHub Actions CI
 - [ ] Docker Compose for local development
