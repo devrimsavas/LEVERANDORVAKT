@@ -1,11 +1,15 @@
 import { UniqueConstraintError } from "sequelize";
-import { User } from "../models/User.js";
 import { CompanyRecord } from "../models/CompanyRecord.js";
 import { WatchlistEntry } from "../models/WatchlistEntry.js";
+import { CompanyChange } from "../models/CompanyChange.js";
 import { getCompany } from "./brregService.js";
+import { getInternalUserId } from "./userService.js";
+import { toChangeItem } from "../mappers/changeMapper.js"; 
+import type { ChangeItem } from "../mappers/changeMapper.js";
+import { toOffset, toPaginated } from "../utils/pagination.js";
+import type { Pagination, Paginated } from "../utils/pagination.js";
 import type { Company } from "../types/company.js";
 
-export class UserNotFoundError extends Error {}
 export class CompanyNotFoundError extends Error {}
 export class AlreadyWatchingError extends Error {}
 export class NotWatchingError extends Error {}
@@ -34,18 +38,6 @@ function toWatchlistItem(entry: WatchlistEntry): WatchlistItem {
     deletedFromRegistryAt: record.deletedFromRegistryAt,
     company: record.snapshot,
   };
-}
-
-// Tokens carry the public user id; the tables are linked by the internal id.
-async function getInternalUserId(userPublicId: string): Promise<number> {
-  const user = await User.findOne({
-    where: { publicId: userPublicId },
-    attributes: ["id"],
-  });
-  if (!user) {
-    throw new UserNotFoundError("User not found");
-  }
-  return user.id;
 }
 
 // Returns the stored company, or fetches it from Brreg and stores it
@@ -164,4 +156,27 @@ export async function removeFromWatchlist(
   const userId = await getInternalUserId(userPublicId);
   const entry = await findEntry(userId, orgNumber);
   await entry.destroy();
+}
+
+// Lists the detected changes of a company on the user's watchlist, newest first.
+// Includes changes from before the user started following the company.
+export async function getCompanyChanges(
+  userPublicId: string,
+  orgNumber: string,
+  pagination: Pagination,
+): Promise<Paginated<ChangeItem>> {
+  const userId = await getInternalUserId(userPublicId);
+  const entry = await findEntry(userId, orgNumber);
+
+  const { rows, count } = await CompanyChange.findAndCountAll({
+    where: { companyId: entry.companyId },
+    order: [
+      ["detectedAt", "DESC"],
+      ["id", "DESC"],
+    ],
+    limit: pagination.pageSize,
+    offset: toOffset(pagination),
+  });
+
+  return toPaginated(rows.map(toChangeItem), count, pagination);
 }

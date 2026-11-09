@@ -4,12 +4,14 @@ import {
   addToWatchlist,
   updateWatchlistNote,
   removeFromWatchlist,
-  UserNotFoundError,
+  getCompanyChanges,
   CompanyNotFoundError,
   AlreadyWatchingError,
   NotWatchingError,
 } from "../services/watchlistService.js";
+import { UserNotFoundError } from "../services/userService.js";
 import { isValidOrgNumber } from "../utils/orgNumber.js";
+import { parsePagination } from "../utils/pagination.js";
 
 const MAX_NOTE_LENGTH = 500;
 
@@ -161,5 +163,42 @@ export const removeCompany = async (
     if (sendKnownError(error, res)) return;
     console.error(error);
     res.status(500).json({ error: "Could not remove the company" });
+  }
+};
+
+// GET /api/watchlist/:orgNumber/changes
+export const listCompanyChanges = async (
+  req: Request<{ orgNumber: string }>,
+  res: Response,
+) => {
+  // #swagger.tags = ["Watchlist"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.parameters["page"] = { in: "query", type: "integer", description: "Page number, starting at 1 (default 1)" }
+     #swagger.parameters["pageSize"] = { in: "query", type: "integer", description: "Items per page, 1-100 (default 20)" }
+     #swagger.responses[404] = { description: "Company is not on the watchlist" } */
+  const { orgNumber } = req.params;
+
+  if (!isValidOrgNumber(orgNumber)) {
+    res.status(400).json({ error: "Organization number must be 9 digits" });
+    return;
+  }
+
+  const pagination = parsePagination(req.query);
+  if (!pagination.ok) {
+    res.status(400).json({ error: pagination.error });
+    return;
+  }
+
+  try {
+    const result = await getCompanyChanges(
+      req.auth!.userId,
+      orgNumber,
+      pagination,
+    );
+    res.json(result);
+  } catch (error) {
+    if (sendKnownError(error, res)) return;
+    console.error(error);
+    res.status(500).json({ error: "Could not load the change history" });
   }
 };
