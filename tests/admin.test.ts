@@ -6,7 +6,7 @@ import { ensureAdmin } from "../src/config/ensureAdmin.js";
 import { User } from "../src/models/User.js";
 import { BrregSyncState } from "../src/models/BrregSyncState.js";
 import { lukas, registerAndLogin } from "./helpers/users.js";
-import { useFakeBrreg } from "./helpers/fakeBrreg.js";
+import { brregEnhet, useFakeBrreg } from "./helpers/fakeBrreg.js";
 
 const brreg = useFakeBrreg();
 
@@ -163,5 +163,61 @@ describe("POST /api/admin/change-detection/run", () => {
     const res = await request(app).post(path).set(auth);
 
     expect(res.status).toBe(502);
+  });
+});
+
+describe("POST /api/admin/accounts-check/run", () => {
+  const path = "/api/admin/accounts-check/run";
+
+  // A followed company whose accounts could not be fetched when it was
+  // followed, so the accounts check has one company to do
+  async function followCompanyWithUncheckedAccounts() {
+    brreg.setActive(brregEnhet("912345678", "ALTA TOURS AS"));
+    brreg.setAccountsError("912345678", 503, "Service Unavailable");
+    const { auth } = await registerAndLogin(lukas);
+    await request(app)
+      .post("/api/watchlist")
+      .set(auth)
+      .send({ orgNumber: "912345678" })
+      .expect(201);
+    brreg.accounts.delete("912345678");
+  }
+
+  it("returns 403 for a normal user", async () => {
+    const { auth } = await registerAndLogin(lukas);
+
+    const res = await request(app).post(path).set(auth);
+
+    expect(res.status).toBe(403);
+  });
+
+  it("runs the accounts check for an admin and returns the summary", async () => {
+    const auth = await loginAsAdmin();
+    await followCompanyWithUncheckedAccounts();
+
+    const res = await request(app).post(path).set(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      companiesChecked: 1,
+      changesFound: 0,
+      failedCompanies: 0,
+    });
+  });
+
+  it("returns 409 when a run is already in progress", async () => {
+    const auth = await loginAsAdmin();
+    await followCompanyWithUncheckedAccounts();
+    brreg.delayMs = 300;
+
+    const [first, second] = await Promise.all([
+      request(app).post(path).set(auth),
+      new Promise((resolve) => setTimeout(resolve, 50)).then(() =>
+        request(app).post(path).set(auth),
+      ),
+    ]);
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(409);
   });
 });

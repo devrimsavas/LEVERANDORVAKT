@@ -5,6 +5,7 @@ import {
   updateWatchlistNote,
   removeFromWatchlist,
   getCompanyChanges,
+  getCompanyAccounts,
   CompanyNotFoundError,
   AlreadyWatchingError,
   NotWatchingError,
@@ -200,5 +201,30 @@ export const listCompanyChanges = async (
     if (sendKnownError(error, res)) return;
     console.error(error);
     res.status(500).json({ error: "Could not load the change history" });
+  }
+};
+
+// GET /api/watchlist/:orgNumber/accounts
+export const listCompanyAccounts = async (
+  req: Request<{ orgNumber: string }>,
+  res: Response,
+) => {
+  // #swagger.tags = ["Watchlist"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.responses[404] = { description: "Company is not on the watchlist" } */
+  const { orgNumber } = req.params;
+
+  if (!isValidOrgNumber(orgNumber)) {
+    res.status(400).json({ error: "Organization number must be 9 digits" });
+    return;
+  }
+
+  try {
+    const result = await getCompanyAccounts(req.auth!.userId, orgNumber);
+    res.json(result);
+  } catch (error) {
+    if (sendKnownError(error, res)) return;
+    console.error(error);
+    res.status(500).json({ error: "Could not load the annual accounts" });
   }
 };

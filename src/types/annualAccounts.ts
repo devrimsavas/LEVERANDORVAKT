@@ -46,10 +46,12 @@ export interface AnnualAccounts {
   figures: AnnualAccountsFigures;
 }
 
-// Result of asking for a company's annual accounts.
 // "unsupported": the API does not give figures for this kind of company
 // (e.g. banks and insurance companies). This is permanent, not an error.
+export type AccountsStatus = "available" | "unsupported";
+
+// Result of asking for a company's annual accounts.
 export interface AnnualAccountsResult {
-  status: "available" | "unsupported";
+  status: AccountsStatus;
   accounts: AnnualAccounts[];
 }

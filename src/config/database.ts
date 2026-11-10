@@ -5,6 +5,7 @@ import { WatchlistEntry } from "../models/WatchlistEntry.js";
 import { CompanyChange } from "../models/CompanyChange.js";
 import { BrregSyncState } from "../models/BrregSyncState.js";
 import { Notification } from "../models/Notification.js";
+import { AnnualAccountsRecord } from "../models/AnnualAccountsRecord.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -22,5 +23,6 @@ export const sequelize = new Sequelize(databaseUrl, {
     CompanyChange,
     BrregSyncState,
     Notification,
+    AnnualAccountsRecord,
   ],
 });

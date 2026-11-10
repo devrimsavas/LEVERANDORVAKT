@@ -1,19 +1,40 @@
-import { UniqueConstraintError } from "sequelize";
+import { Op, UniqueConstraintError } from "sequelize";
 import { CompanyRecord } from "../models/CompanyRecord.js";
 import { WatchlistEntry } from "../models/WatchlistEntry.js";
 import { CompanyChange } from "../models/CompanyChange.js";
+import { AnnualAccountsRecord } from "../models/AnnualAccountsRecord.js";
 import { getCompany, getCompanyRoles } from "./brregService.js";
 import { getInternalUserId } from "./userService.js";
+import { checkCompanyAccounts, getStoredAccounts } from "./accountsService.js";
 import { toChangeItem } from "../mappers/changeMapper.js";
+import { fromAnnualAccountsRecord } from "../mappers/annualAccountsMapper.js";
 import type { ChangeItem } from "../mappers/changeMapper.js";
 import { toOffset, toPaginated } from "../utils/pagination.js";
 import type { Pagination, Paginated } from "../utils/pagination.js";
 import type { Company } from "../types/company.js";
 import type { CompanyRoles } from "../types/companyRoles.js";
+import type {
+  AccountsStatus,
+  AnnualAccounts,
+} from "../types/annualAccounts.js";
 
 export class CompanyNotFoundError extends Error {}
 export class AlreadyWatchingError extends Error {}
 export class NotWatchingError extends Error {}
+
+// The annual accounts of a company on the watchlist.
+// status is null until the accounts have been checked for the first time.
+export interface WatchlistAccounts {
+  status: AccountsStatus | null;
+  // The company's own latest accounts (the full list has its own endpoint)
+  latest: AnnualAccounts | null;
+}
+
+// All stored annual accounts of a followed company, newest first
+export interface CompanyAccounts {
+  status: AccountsStatus | null;
+  accounts: AnnualAccounts[];
+}
 
 // One company on the user's watchlist, as sent to clients.
 export interface WatchlistItem {
@@ -26,9 +47,13 @@ export interface WatchlistItem {
   deletedFromRegistryAt: Date | null;
   company: Company;
   roles: CompanyRoles | null;
+  accounts: WatchlistAccounts;
 }
 
-function toWatchlistItem(entry: WatchlistEntry): WatchlistItem {
+function toWatchlistItem(
+  entry: WatchlistEntry,
+  latestAccounts: AnnualAccounts | null,
+): WatchlistItem {
   const record = entry.company;
   return {
     orgNumber: record.orgNumber,
@@ -40,7 +65,50 @@ function toWatchlistItem(entry: WatchlistEntry): WatchlistItem {
     deletedFromRegistryAt: record.deletedFromRegistryAt,
     company: record.snapshot,
     roles: record.roles,
+    accounts: { status: record.accountsStatus, latest: latestAccounts },
   };
+}
+
+// The latest accounts of each company, preferring the company's own
+// accounts over the group's for the same period
+async function latestAccountsByCompany(
+  companyIds: number[],
+): Promise<Map<number, AnnualAccounts>> {
+  const latest = new Map<number, AnnualAccounts>();
+  if (companyIds.length === 0) {
+    return latest;
+  }
+
+  const rows = await AnnualAccountsRecord.findAll({
+    where: { companyId: { [Op.in]: companyIds } },
+    order: [
+      ["periodEnd", "DESC"],
+      ["type", "ASC"],
+    ],
+  });
+
+  for (const row of rows) {
+    if (!latest.has(row.companyId)) {
+      latest.set(row.companyId, fromAnnualAccountsRecord(row));
+    }
+  }
+  return latest;
+}
+
+// Checks the accounts of a company whose accounts were never checked.
+// The accounts register may be unavailable or shut down; following a company
+// must still work, so a failure is only logged and the daily check retries it.
+async function checkAccountsIfNeverChecked(
+  record: CompanyRecord,
+): Promise<void> {
+  if (record.accountsCheckedAt !== null) {
+    return;
+  }
+  try {
+    await checkCompanyAccounts(record);
+  } catch (error) {
+    console.error(`Could not fetch the accounts of ${record.orgNumber}`, error);
+  }
 }
 
 // Returns the stored company, or fetches it and its roles from Brreg
@@ -106,7 +174,13 @@ export async function getWatchlist(
     order: [["company", "name", "ASC"]],
   });
 
-  return entries.map(toWatchlistItem);
+  const latest = await latestAccountsByCompany(
+    entries.map((entry) => entry.companyId),
+  );
+
+  return entries.map((entry) =>
+    toWatchlistItem(entry, latest.get(entry.companyId) ?? null),
+  );
 }
 
 // Adds a company to the user's watchlist.
@@ -125,7 +199,10 @@ export async function addToWatchlist(
       note,
     });
     entry.company = record;
-    return toWatchlistItem(entry);
+
+    await checkAccountsIfNeverChecked(record);
+    const latest = await latestAccountsByCompany([record.id]);
+    return toWatchlistItem(entry, latest.get(record.id) ?? null);
   } catch (error) {
     if (error instanceof UniqueConstraintError) {
       throw new AlreadyWatchingError(
@@ -148,7 +225,8 @@ export async function updateWatchlistNote(
   entry.note = note;
   await entry.save();
 
-  return toWatchlistItem(entry);
+  const latest = await latestAccountsByCompany([entry.companyId]);
+  return toWatchlistItem(entry, latest.get(entry.companyId) ?? null);
 }
 
 // Removes a company from the user's watchlist.
@@ -183,4 +261,19 @@ export async function getCompanyChanges(
   });
 
   return toPaginated(rows.map(toChangeItem), count, pagination);
+}
+
+// Lists every stored set of annual accounts of a company on the user's
+// watchlist, newest first, including years Brreg no longer shows.
+export async function getCompanyAccounts(
+  userPublicId: string,
+  orgNumber: string,
+): Promise<CompanyAccounts> {
+  const userId = await getInternalUserId(userPublicId);
+  const entry = await findEntry(userId, orgNumber);
+
+  return {
+    status: entry.company.accountsStatus,
+    accounts: await getStoredAccounts(entry.companyId),
+  };
 }

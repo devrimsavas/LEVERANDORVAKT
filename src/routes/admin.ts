@@ -1,5 +1,8 @@
 import express from "express";
-import { runChangeDetectionNow } from "../controllers/adminController.js";
+import {
+  runAccountsCheckNow,
+  runChangeDetectionNow,
+} from "../controllers/adminController.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 import { requireRole } from "../middlewares/requireRole.js";
 
@@ -9,5 +12,6 @@ const router = express.Router();
 router.use(requireAuth, requireRole("admin"));
 
 router.post("/change-detection/run", runChangeDetectionNow);
+router.post("/accounts-check/run", runAccountsCheckNow);
 
 export default router;

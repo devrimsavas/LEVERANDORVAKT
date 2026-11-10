@@ -1,6 +1,7 @@
 import { Table, Column, Model, DataType } from "sequelize-typescript";
 import type { Company } from "../types/company.js";
 import type { CompanyRoles } from "../types/companyRoles.js";
+import type { AccountsStatus } from "../types/annualAccounts.js";
 
 // A followed company and its last known state.
 // Named CompanyRecord to avoid a clash with the Company type in types/company.ts.
@@ -24,6 +25,14 @@ export class CompanyRecord extends Model {
   // Last known roles. null means they have not been fetched yet.
   @Column({ type: DataType.JSONB, allowNull: true })
   declare roles: CompanyRoles | null;
+
+  // null means the annual accounts have never been checked
+  @Column({ type: DataType.STRING(20), allowNull: true })
+  declare accountsStatus: AccountsStatus | null;
+
+  // When the annual accounts were last checked
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare accountsCheckedAt: Date | null;
 
   @Column({ type: DataType.DATE, allowNull: true })
   declare deletedFromRegistryAt: Date | null;

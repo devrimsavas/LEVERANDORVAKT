@@ -1,5 +1,6 @@
 import type { BrregRegnskap } from "../types/regnskap.js";
 import type { AnnualAccounts } from "../types/annualAccounts.js";
+import type { AnnualAccountsRecord } from "../models/AnnualAccountsRecord.js";
 
 // Converts one set of accounts from Brreg's format into the app's own shape.
 export function toAnnualAccounts(regnskap: BrregRegnskap): AnnualAccounts {
@@ -56,4 +57,23 @@ export function toAnnualAccountsList(list: BrregRegnskap[]): AnnualAccounts[] {
         b.periodEnd.localeCompare(a.periodEnd) ||
         typeOrder[a.type] - typeOrder[b.type],
     );
+}
+
+// Converts stored accounts back into the app's shape.
+export function fromAnnualAccountsRecord(
+  record: AnnualAccountsRecord,
+): AnnualAccounts {
+  return {
+    brregId: Number(record.brregId),
+    year: record.year,
+    periodStart: record.periodStart,
+    periodEnd: record.periodEnd,
+    type: record.type,
+    currency: record.currency,
+    accountingRules: record.accountingRules,
+    audited: record.audited,
+    auditOptedOut: record.auditOptedOut,
+    liquidation: record.liquidation,
+    figures: record.figures,
+  };
 }

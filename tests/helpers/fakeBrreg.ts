@@ -129,6 +129,41 @@ export function brregRoller(roles: FakeRoles): BrregRollerResponse {
   return { rollegrupper: groups };
 }
 
+export interface FakeAccounts {
+  // Brreg's id for the accounts; a corrected filing gets a new one
+  id: number;
+  year: number;
+  type?: "company" | "group";
+  equity?: number;
+  audited?: boolean;
+  auditOptedOut?: boolean;
+  liquidation?: boolean;
+}
+
+// Builds one set of annual accounts with the same structure as the real
+// accounts register, for a calendar year, in NOK.
+export function brregRegnskap(accounts: FakeAccounts): BrregRegnskap {
+  return {
+    id: accounts.id,
+    regnskapstype: accounts.type === "group" ? "KONSERN" : "SELSKAP",
+    regnskapsperiode: {
+      fraDato: `${accounts.year}-01-01`,
+      tilDato: `${accounts.year}-12-31`,
+    },
+    valuta: "NOK",
+    avviklingsregnskap: accounts.liquidation ?? false,
+    revisjon: {
+      ikkeRevidertAarsregnskap: !(accounts.audited ?? true),
+      fravalgRevisjon: accounts.auditOptedOut ?? false,
+    },
+    regnkapsprinsipper: { smaaForetak: false, regnskapsregler: "NGAAP" },
+    egenkapitalGjeld: {
+      egenkapital: { sumEgenkapital: accounts.equity ?? 5000000 },
+    },
+    resultatregnskapResultat: { aarsresultat: 1000000 },
+  };
+}
+
 // Builds a realistic active company. Fields can be overridden per test.
 export function brregEnhet(
   orgNumber: string,
