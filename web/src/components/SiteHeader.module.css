@@ -1,0 +1,117 @@
+.header {
+  border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
+  background: var(--ds-color-neutral-background-default);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-6);
+  min-height: var(--ds-size-18);
+}
+
+.home {
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--ds-border-radius-md);
+}
+
+.home:focus-visible {
+  outline: var(--dsc-focus-outline);
+  outline-offset: 4px;
+}
+
+.nav ul {
+  display: flex;
+  gap: var(--ds-size-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav a {
+  color: var(--ds-color-neutral-text-default);
+  text-decoration: none;
+  font-weight: var(--ds-font-weight-medium);
+  border-radius: var(--ds-border-radius-sm);
+}
+
+.nav a:hover {
+  color: var(--ds-color-accent-text-subtle);
+  text-decoration: underline;
+}
+
+.nav a:focus-visible {
+  outline: var(--dsc-focus-outline);
+  outline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-2);
+  margin-left: auto;
+}
+
+/* The moon is shown in light mode (click to go dark), the sun in dark mode */
+.sun {
+  display: none;
+}
+
+:global([data-color-scheme="dark"]) .moon {
+  display: none;
+}
+
+:global([data-color-scheme="dark"]) .sun {
+  display: inline;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global([data-color-scheme="auto"]) .moon {
+    display: none;
+  }
+
+  :global([data-color-scheme="auto"]) .sun {
+    display: inline;
+  }
+}
+
+.mobileMenu {
+  display: none;
+}
+
+/* Small screens: links move into the menu, "Get started" stays visible */
+@media (max-width: 52rem) {
+  .nav,
+  .logIn {
+    display: none;
+  }
+
+  .mobileMenu {
+    display: block;
+  }
+}
+
+/* Phones: only the logo, language, light/dark and the menu button fit */
+@media (max-width: 36rem) {
+  .inner {
+    gap: var(--ds-size-2);
+  }
+
+  .actions {
+    gap: 0;
+  }
+
+  .getStarted,
+  .languageIcon,
+  .menuText {
+    display: none;
+  }
+
+  .home :global(.logo-text) {
+    font-size: var(--ds-heading-2xs-font-size);
+  }
+}

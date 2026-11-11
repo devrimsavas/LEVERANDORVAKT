@@ -1,0 +1,51 @@
+/* Global styles. Colors, sizes and spacing come from the Designsystemet
+   tokens (--ds-*); app-specific rules stay small and use those tokens. */
+
+body {
+  margin: 0;
+  font-family: "Inter Variable", sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+/* Centers page content and keeps lines readable on wide screens */
+.container {
+  width: 100%;
+  max-width: 76rem;
+  margin-inline: auto;
+  padding-inline: var(--ds-size-6);
+  box-sizing: border-box;
+}
+
+@media (max-width: 36rem) {
+  .container {
+    padding-inline: var(--ds-size-4);
+  }
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-size-2);
+}
+
+.logo-text {
+  font-size: var(--ds-heading-xs-font-size);
+  font-weight: var(--ds-font-weight-semibold);
+  letter-spacing: -0.01em;
+}
+
+/* Hidden on screen, read by screen readers */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

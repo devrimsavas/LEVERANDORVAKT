@@ -12,6 +12,7 @@ swagger_output.json
 .git
 .github
 tests
+web
 vitest.config.ts
 *.log
 program_notes

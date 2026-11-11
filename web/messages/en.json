@@ -1,0 +1,133 @@
+{
+  "metadata": {
+    "title": "Leverandørvakt – early warnings about your suppliers",
+    "description": "Follow your suppliers and customers and get notified when something changes for the worse: new roles, annual accounts, bankruptcy and risk signals, from open data in the Brønnøysund Register Centre."
+  },
+  "header": {
+    "skipLink": "Skip to main content",
+    "home": "Leverandørvakt, home",
+    "about": "About",
+    "contact": "Contact",
+    "logIn": "Log in",
+    "getStarted": "Get started",
+    "menu": "Menu",
+    "switchLanguage": "Norsk",
+    "switchLanguageLabel": "Bytt til norsk",
+    "colorScheme": "Switch between light and dark mode"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Supplier monitoring for Norwegian businesses",
+      "title": "Know when a supplier changes for the worse, before it costs you",
+      "lead": "Follow your suppliers and customers. Leverandørvakt checks the Brønnøysund registers around the clock and tells you when a CEO leaves, an auditor resigns, accounts are late or a company goes bankrupt.",
+      "primary": "Get started for free",
+      "secondary": "See how it works"
+    },
+    "preview": {
+      "title": "Your watchlist",
+      "caption": "Example notifications with made-up companies",
+      "items": {
+        "bankruptcy": {
+          "tag": "Critical",
+          "company": "Eksempel Transport AS",
+          "text": "Bankruptcy registered",
+          "time": "12 minutes ago"
+        },
+        "auditor": {
+          "tag": "Warning",
+          "company": "Eksempel Bygg AS",
+          "text": "The auditor has resigned",
+          "time": "Today"
+        },
+        "accounts": {
+          "tag": "Warning",
+          "company": "Eksempel Data AS",
+          "text": "Equity turned negative in the 2025 accounts",
+          "time": "Yesterday"
+        },
+        "address": {
+          "tag": "Info",
+          "company": "Eksempel Reiser AS",
+          "text": "New business address",
+          "time": "3 days ago"
+        }
+      }
+    },
+    "features": {
+      "title": "What Leverandørvakt watches for you",
+      "lead": "Everything is based on official, open data. Every warning says what changed, when and why it matters.",
+      "changes": {
+        "title": "Changes in the register",
+        "text": "New CEO, board or auditor, a new address, bankruptcy or liquidation. Brønnøysund's update feeds are checked every ten minutes."
+      },
+      "accounts": {
+        "title": "Annual accounts",
+        "text": "New and corrected filings, equity turning negative and audits being dropped, compared year by year."
+      },
+      "risk": {
+        "title": "Risk signals you can explain",
+        "text": "A check before you sign: every signal with its weight and reason, and what could not be checked. Support for your own assessment, not a credit rating."
+      },
+      "connections": {
+        "title": "Connections",
+        "text": "See when the same people or audit firm hold roles across your suppliers and customers, or in a company you are considering."
+      },
+      "trends": {
+        "title": "Regional trends",
+        "text": "New companies per month by municipality and industry, compared with the same period a year earlier."
+      },
+      "assistant": {
+        "title": "AI assistant",
+        "text": "Ask in plain language, in English or Norwegian: “Which of my suppliers have the highest risk?” It only reads your data, it never changes it."
+      }
+    },
+    "steps": {
+      "title": "How it works",
+      "search": {
+        "title": "Search",
+        "text": "Find a company by name or organization number."
+      },
+      "follow": {
+        "title": "Follow",
+        "text": "Add your suppliers and customers to your watchlist, with a private note for each."
+      },
+      "notified": {
+        "title": "Get notified",
+        "text": "You are notified when something changes, rated as critical, warning or info."
+      }
+    },
+    "sources": {
+      "title": "Built on open public data",
+      "lead": "Leverandørvakt reads open data from Norwegian public agencies. Nothing is bought, scraped or guessed.",
+      "brreg": {
+        "name": "The Brønnøysund Register Centre",
+        "text": "The Central Coordinating Register for Legal Entities, roles, update feeds and the Register of Company Accounts"
+      },
+      "kartverket": {
+        "name": "The Norwegian Mapping Authority",
+        "text": "Municipality names and numbers"
+      },
+      "ssb": {
+        "name": "Statistics Norway",
+        "text": "Industry names from the Standard Industrial Classification"
+      }
+    },
+    "cta": {
+      "title": "Start watching your suppliers today",
+      "text": "Create an account, follow your first company and let Leverandørvakt keep watch.",
+      "button": "Create an account"
+    }
+  },
+  "footer": {
+    "tagline": "Early warnings about your suppliers and customers.",
+    "product": "Leverandørvakt",
+    "dataSources": "Data sources",
+    "brreg": "The Brønnøysund Register Centre",
+    "kartverket": "The Norwegian Mapping Authority",
+    "ssb": "Statistics Norway",
+    "license": "Contains data under the Norwegian licence for Open Government data (NLOD) distributed by the Brønnøysund Register Centre, the Norwegian Mapping Authority and Statistics Norway.",
+    "independent": "Leverandørvakt is an independent project and is not affiliated with these agencies.",
+    "sourceCode": "Source code on GitHub",
+    "opensInNewTab": "(opens in a new tab)"
+  }
+}

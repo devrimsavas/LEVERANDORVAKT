@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/@digdir/designsystemet/dist/config.schema.json",
+  "output": [
+    { "type": "css", "dir": "./src/theme", "cleanDir": true },
+    { "type": "types", "dir": "./src/theme", "cleanDir": true }
+  ],
+  "themes": {
+    "leverandorvakt": {
+      "colors": {
+        "accent": "#0062BA",
+        "neutral": "#24272B"
+      }
+    }
+  }
+}

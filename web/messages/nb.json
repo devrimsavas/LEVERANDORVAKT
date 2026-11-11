@@ -1,0 +1,133 @@
+{
+  "metadata": {
+    "title": "Leverandørvakt – tidlig varsel om leverandørene dine",
+    "description": "Følg leverandører og kunder og få varsel når noe endrer seg til det verre: nye roller, årsregnskap, konkurs og risikosignaler, fra åpne data i Brønnøysundregistrene."
+  },
+  "header": {
+    "skipLink": "Hopp til hovedinnhold",
+    "home": "Leverandørvakt, forsiden",
+    "about": "Om",
+    "contact": "Kontakt",
+    "logIn": "Logg inn",
+    "getStarted": "Kom i gang",
+    "menu": "Meny",
+    "switchLanguage": "English",
+    "switchLanguageLabel": "Switch to English",
+    "colorScheme": "Bytt mellom lys og mørk modus"
+  },
+  "home": {
+    "hero": {
+      "eyebrow": "Leverandøroppfølging for norske virksomheter",
+      "title": "Få vite når en leverandør endrer seg til det verre, før det koster deg",
+      "lead": "Følg leverandørene og kundene dine. Leverandørvakt sjekker Brønnøysundregistrene døgnet rundt og sier fra når en daglig leder går av, en revisor trer ut, regnskapet er forsinket eller et selskap går konkurs.",
+      "primary": "Kom i gang gratis",
+      "secondary": "Se hvordan det fungerer"
+    },
+    "preview": {
+      "title": "Din overvåkingsliste",
+      "caption": "Eksempler på varsler med oppdiktede selskaper",
+      "items": {
+        "bankruptcy": {
+          "tag": "Kritisk",
+          "company": "Eksempel Transport AS",
+          "text": "Konkurs registrert",
+          "time": "for 12 minutter siden"
+        },
+        "auditor": {
+          "tag": "Advarsel",
+          "company": "Eksempel Bygg AS",
+          "text": "Revisor har trådt ut",
+          "time": "I dag"
+        },
+        "accounts": {
+          "tag": "Advarsel",
+          "company": "Eksempel Data AS",
+          "text": "Negativ egenkapital i årsregnskapet for 2025",
+          "time": "I går"
+        },
+        "address": {
+          "tag": "Info",
+          "company": "Eksempel Reiser AS",
+          "text": "Ny forretningsadresse",
+          "time": "for 3 dager siden"
+        }
+      }
+    },
+    "features": {
+      "title": "Dette holder Leverandørvakt øye med for deg",
+      "lead": "Alt bygger på offisielle, åpne data. Hvert varsel forteller hva som endret seg, når og hvorfor det betyr noe.",
+      "changes": {
+        "title": "Endringer i registeret",
+        "text": "Ny daglig leder, styre eller revisor, ny adresse, konkurs eller avvikling. Brønnøysunds oppdateringsstrømmer sjekkes hvert tiende minutt."
+      },
+      "accounts": {
+        "title": "Årsregnskap",
+        "text": "Nye og korrigerte regnskap, egenkapital som blir negativ og revisjon som faller bort, sammenlignet år for år."
+      },
+      "risk": {
+        "title": "Risikosignaler som kan forklares",
+        "text": "En sjekk før du signerer: hvert signal med vekt og begrunnelse, og hva som ikke kunne sjekkes. Støtte til din egen vurdering, ikke en kredittvurdering."
+      },
+      "connections": {
+        "title": "Forbindelser",
+        "text": "Se når de samme personene eller det samme revisjonsselskapet har roller hos flere av leverandørene og kundene dine, eller i et selskap du vurderer."
+      },
+      "trends": {
+        "title": "Regionale trender",
+        "text": "Nye selskaper per måned etter kommune og bransje, sammenlignet med samme periode året før."
+      },
+      "assistant": {
+        "title": "KI-assistent",
+        "text": "Spør med vanlige ord, på norsk eller engelsk: «Hvilke av leverandørene mine har høyest risiko?» Den leser bare dataene dine, den endrer dem aldri."
+      }
+    },
+    "steps": {
+      "title": "Slik fungerer det",
+      "search": {
+        "title": "Søk",
+        "text": "Finn et selskap på navn eller organisasjonsnummer."
+      },
+      "follow": {
+        "title": "Følg",
+        "text": "Legg leverandører og kunder i overvåkingslisten, med et privat notat for hver."
+      },
+      "notified": {
+        "title": "Få varsel",
+        "text": "Du får varsel når noe endrer seg, merket som kritisk, advarsel eller info."
+      }
+    },
+    "sources": {
+      "title": "Bygget på åpne offentlige data",
+      "lead": "Leverandørvakt leser åpne data fra norske offentlige etater. Ingenting er kjøpt, skrapet eller gjettet.",
+      "brreg": {
+        "name": "Brønnøysundregistrene",
+        "text": "Enhetsregisteret, roller, oppdateringsstrømmer og Regnskapsregisteret"
+      },
+      "kartverket": {
+        "name": "Kartverket",
+        "text": "Kommunenavn og kommunenummer"
+      },
+      "ssb": {
+        "name": "Statistisk sentralbyrå",
+        "text": "Bransjenavn fra Standard for næringsgruppering"
+      }
+    },
+    "cta": {
+      "title": "Begynn å følge leverandørene dine i dag",
+      "text": "Opprett en konto, følg ditt første selskap og la Leverandørvakt holde vakt.",
+      "button": "Opprett konto"
+    }
+  },
+  "footer": {
+    "tagline": "Tidlig varsel om leverandørene og kundene dine.",
+    "product": "Leverandørvakt",
+    "dataSources": "Datakilder",
+    "brreg": "Brønnøysundregistrene",
+    "kartverket": "Kartverket",
+    "ssb": "Statistisk sentralbyrå",
+    "license": "Inneholder data under Norsk lisens for offentlige data (NLOD) tilgjengeliggjort av Brønnøysundregistrene, Kartverket og Statistisk sentralbyrå.",
+    "independent": "Leverandørvakt er et uavhengig prosjekt og er ikke tilknyttet disse etatene.",
+    "sourceCode": "Kildekode på GitHub",
+    "opensInNewTab": "(åpnes i ny fane)"
+  }
+}

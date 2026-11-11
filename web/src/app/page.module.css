@@ -1,0 +1,234 @@
+/* Hero */
+
+.hero {
+  background: linear-gradient(
+    180deg,
+    var(--ds-color-accent-background-tinted) 0%,
+    var(--ds-color-neutral-background-default) 100%
+  );
+  padding-block: var(--ds-size-18) var(--ds-size-15);
+}
+
+.heroInner {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: var(--ds-size-12);
+  align-items: center;
+}
+
+.heroText {
+  display: grid;
+  gap: var(--ds-size-5);
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--ds-color-accent-text-subtle);
+  font-weight: var(--ds-font-weight-semibold);
+}
+
+.lead {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-size-3);
+  margin-top: var(--ds-size-2);
+}
+
+/* Product preview */
+
+.preview {
+  margin: 0;
+}
+
+.previewCard {
+  box-shadow: var(--ds-shadow-lg);
+}
+
+.previewHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-2);
+  font-size: var(--ds-heading-xs-font-size);
+  color: var(--ds-color-accent-text-subtle);
+}
+
+.previewHeader h2 {
+  color: var(--ds-color-neutral-text-default);
+}
+
+.previewList {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.previewItem {
+  display: grid;
+  grid-template-columns: 6rem 1fr auto;
+  gap: var(--ds-size-3);
+  align-items: start;
+  padding-block: var(--ds-size-3);
+  border-top: 1px solid var(--ds-color-neutral-border-subtle);
+}
+
+.previewItem p {
+  margin: 0;
+}
+
+.previewItem > :first-child {
+  justify-self: start;
+}
+
+.previewCompany {
+  font-weight: var(--ds-font-weight-semibold);
+}
+
+.previewTime {
+  font-size: var(--ds-body-xs-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+  white-space: nowrap;
+}
+
+.previewCaption {
+  margin-top: var(--ds-size-2);
+  font-size: var(--ds-body-xs-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+  text-align: center;
+}
+
+/* Sections */
+
+.section {
+  padding-block: var(--ds-size-15);
+}
+
+.sectionLead {
+  max-width: 48rem;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ds-size-5);
+  margin: var(--ds-size-8) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.featureIcon {
+  display: inline-grid;
+  place-items: center;
+  width: var(--ds-size-11);
+  height: var(--ds-size-11);
+  border-radius: var(--ds-border-radius-md);
+  background: var(--ds-color-accent-surface-tinted);
+  color: var(--ds-color-accent-text-subtle);
+  font-size: var(--ds-heading-sm-font-size);
+}
+
+.band {
+  background: var(--ds-color-neutral-background-tinted);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ds-size-8);
+  margin: var(--ds-size-8) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.step {
+  display: grid;
+  gap: var(--ds-size-2);
+  align-content: start;
+}
+
+.stepNumber {
+  display: inline-grid;
+  place-items: center;
+  width: var(--ds-size-10);
+  height: var(--ds-size-10);
+  border-radius: var(--ds-border-radius-full);
+  background: var(--ds-color-accent-base-default);
+  color: var(--ds-color-accent-base-contrast-default);
+  font-weight: var(--ds-font-weight-semibold);
+}
+
+.sources {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--ds-size-5);
+  margin: var(--ds-size-8) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.source {
+  padding: var(--ds-size-5);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: var(--ds-border-radius-lg);
+}
+
+.cta {
+  display: grid;
+  justify-items: center;
+  gap: var(--ds-size-4);
+  padding: var(--ds-size-12) var(--ds-size-6);
+  text-align: center;
+  border-radius: var(--ds-border-radius-xl);
+  background: var(--ds-color-accent-surface-tinted);
+}
+
+/* Smaller screens */
+
+@media (max-width: 60rem) {
+  .heroInner {
+    grid-template-columns: 1fr;
+  }
+
+  .features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 40rem) {
+  .hero {
+    padding-block: var(--ds-size-12);
+  }
+
+  .heroText h1 {
+    font-size: var(--ds-heading-md-font-size);
+  }
+
+  .section h2 {
+    font-size: var(--ds-heading-sm-font-size);
+  }
+
+  .features,
+  .steps,
+  .sources {
+    grid-template-columns: 1fr;
+  }
+
+  .previewItem {
+    grid-template-columns: 1fr auto;
+  }
+
+  .previewItem > :nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
