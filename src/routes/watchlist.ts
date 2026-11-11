@@ -7,6 +7,7 @@ import {
   listCompanyChanges,
   listCompanyAccounts,
   getCompanyRiskReport,
+  listConnections,
 } from "../controllers/watchlistController.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 
@@ -16,6 +17,7 @@ const router = express.Router();
 router.use(requireAuth);
 
 router.get("/", listWatchlist);
+router.get("/connections", listConnections);
 router.post("/", addCompany);
 router.patch("/:orgNumber", updateNote);
 router.delete("/:orgNumber", removeCompany);

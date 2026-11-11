@@ -9,10 +9,12 @@ import type {
 } from "../types/brreg.js";
 import type { Company } from "../types/company.js";
 import type { CompanyRoles } from "../types/companyRoles.js";
+import type { RoleHolder } from "../types/connections.js";
 import type { BrregRegnskap, BrregRegnskapError } from "../types/regnskap.js";
 import type { AnnualAccountsResult } from "../types/annualAccounts.js";
 import { toCompany } from "../mappers/companyMapper.js";
 import { toCompanyRoles } from "../mappers/companyRolesMapper.js";
+import { toRoleHolders } from "../mappers/roleHoldersMapper.js";
 import { toAnnualAccountsList } from "../mappers/annualAccountsMapper.js";
 
 const BRREG_BASE_URL = "https://data.brreg.no/enhetsregisteret/api";
@@ -135,9 +137,10 @@ export async function getUpdatesSince(
 
 // Fetches the current roles of a company.
 // Returns null if the company does not exist or has been removed from the register.
-export async function getCompanyRoles(
+// Fetches the raw roles of a company; null if Brreg has none for it
+async function fetchRoles(
   orgNumber: string,
-): Promise<CompanyRoles | null> {
+): Promise<BrregRollerResponse | null> {
   const response = await fetch(`${BRREG_BASE_URL}/enheter/${orgNumber}/roller`);
 
   if (response.status === 404 || response.status === 410) {
@@ -148,8 +151,24 @@ export async function getCompanyRoles(
     throw brregError(response);
   }
 
-  const data = (await response.json()) as BrregRollerResponse;
-  return toCompanyRoles(data);
+  return (await response.json()) as BrregRollerResponse;
+}
+
+export async function getCompanyRoles(
+  orgNumber: string,
+): Promise<CompanyRoles | null> {
+  const data = await fetchRoles(orgNumber);
+  return data ? toCompanyRoles(data) : null;
+}
+
+// Who currently holds the roles of a company, with the keys used to
+// find the same person or organization in other companies.
+// The keys include birth dates: they are only used in memory.
+export async function getRoleHolders(
+  orgNumber: string,
+): Promise<RoleHolder[] | null> {
+  const data = await fetchRoles(orgNumber);
+  return data ? toRoleHolders(data) : null;
 }
 
 // The role feed accepts at most this many events per request

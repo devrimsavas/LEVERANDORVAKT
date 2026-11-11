@@ -64,13 +64,19 @@ export interface FakeRoles {
   auditor?: string;
   // Board members who are still listed but marked as deregistered
   deregisteredMembers?: string[];
+  // Birth date per person; 1970-01-01 when not given, null for none at all
+  birthDates?: Record<string, string | null>;
+  // Organization number of the audit firm
+  auditorOrgNumber?: string;
 }
 
-function person(fullName: string) {
+function person(fullName: string, birthDates: FakeRoles["birthDates"] = {}) {
   const parts = fullName.split(" ");
+  const birthDate =
+    fullName in birthDates ? birthDates[fullName] : "1970-01-01";
   return {
     erDoed: false,
-    fodselsdato: "1970-01-01",
+    ...(birthDate ? { fodselsdato: birthDate } : {}),
     navn: {
       fornavn: parts.slice(0, -1).join(" "),
       etternavn: parts.at(-1)!,
@@ -99,21 +105,29 @@ export function brregRoller(roles: FakeRoles): BrregRollerResponse {
   if (roles.ceo) {
     groups.push({
       type: { kode: "DAGL", beskrivelse: "Daglig leder" },
-      roller: [role("DAGL", { person: person(roles.ceo) }, 0)],
+      roller: [
+        role("DAGL", { person: person(roles.ceo, roles.birthDates) }, 0),
+      ],
     });
   }
   const board = [
     ...(roles.boardChair
-      ? [role("LEDE", { person: person(roles.boardChair) }, 0)]
+      ? [
+          role(
+            "LEDE",
+            { person: person(roles.boardChair, roles.birthDates) },
+            0,
+          ),
+        ]
       : []),
     ...(roles.boardMembers ?? []).map((name, i) =>
-      role("MEDL", { person: person(name) }, i + 1),
+      role("MEDL", { person: person(name, roles.birthDates) }, i + 1),
     ),
     ...(roles.deregisteredMembers ?? []).map((name, i) =>
-      role("MEDL", { person: person(name) }, i + 50, true),
+      role("MEDL", { person: person(name, roles.birthDates) }, i + 50, true),
     ),
     ...(roles.deputyMembers ?? []).map((name, i) =>
-      role("VARA", { person: person(name) }, i + 100),
+      role("VARA", { person: person(name, roles.birthDates) }, i + 100),
     ),
   ];
   if (board.length > 0) {
@@ -129,7 +143,10 @@ export function brregRoller(roles: FakeRoles): BrregRollerResponse {
         role(
           "REVI",
           {
-            enhet: { organisasjonsnummer: "976389387", navn: [roles.auditor] },
+            enhet: {
+              organisasjonsnummer: roles.auditorOrgNumber ?? "976389387",
+              navn: [roles.auditor],
+            },
           },
           0,
         ),

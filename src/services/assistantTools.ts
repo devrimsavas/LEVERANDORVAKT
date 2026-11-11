@@ -4,6 +4,7 @@ import {
   getCompanyRisk,
   getWatchlist,
   NotWatchingError,
+  CompanyNotFoundError,
 } from "./watchlistService.js";
 import { getNotifications } from "./notificationService.js";
 import {
@@ -13,6 +14,7 @@ import {
   searchCompanies,
 } from "./brregService.js";
 import { assessCompanyLive } from "./riskService.js";
+import { findConnections } from "./connectionsService.js";
 import { isValidOrgNumber } from "../utils/orgNumber.js";
 import type { AnnualAccounts } from "../types/annualAccounts.js";
 import type { RiskAssessment } from "../types/risk.js";
@@ -103,6 +105,21 @@ export const ASSISTANT_TOOLS: ToolDefinition[] = [
       type: "object",
       properties: { orgNumber: ORG_NUMBER_PARAMETER },
       required: ["orgNumber"],
+    },
+  },
+  {
+    name: "find_connections",
+    description:
+      "Find people and organizations (e.g. an audit firm) that hold roles in two or more of the user's followed companies. With orgNumber, only the connections between that company and the followed companies.",
+    parameters: {
+      type: "object",
+      properties: {
+        orgNumber: {
+          type: "string",
+          description:
+            "Optional: a company the user is considering, to compare with the followed companies",
+        },
+      },
     },
   },
   {
@@ -280,6 +297,25 @@ async function runTool(
     case "get_company_roles": {
       const roles = await getCompanyRoles(orgNumberArgument(args));
       return roles ?? { error: "No roles registered for this company" };
+    }
+
+    case "find_connections": {
+      const candidate =
+        args.orgNumber === undefined || args.orgNumber === ""
+          ? null
+          : orgNumberArgument(args);
+      let result;
+      try {
+        result = await findConnections(userPublicId, candidate);
+      } catch (error) {
+        if (error instanceof CompanyNotFoundError) {
+          return { error: "No company with this organization number" };
+        }
+        throw error;
+      }
+      return result.connections.length === 0 && result.limitations.length === 0
+        ? { connections: [], note: "No shared people or organizations found" }
+        : result;
     }
 
     case "get_notifications": {

@@ -14,6 +14,7 @@ import {
 import { UserNotFoundError } from "../services/userService.js";
 import { isValidOrgNumber } from "../utils/orgNumber.js";
 import { parsePagination } from "../utils/pagination.js";
+import { findConnections } from "../services/connectionsService.js";
 
 const MAX_NOTE_LENGTH = 500;
 
@@ -260,5 +261,33 @@ export const getCompanyRiskReport = async (
     if (sendKnownError(error, res)) return;
     console.error(error);
     res.status(500).json({ error: "Could not assess the risk" });
+  }
+};
+
+// GET /api/watchlist/connections
+export const listConnections = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Watchlist"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.parameters["with"] = { in: "query", type: "string", description: "Organization number of a company you are considering: only its connections to your watchlist are returned" }
+     #swagger.responses[404] = { description: "The company given in 'with' was not found" } */
+  const candidate = req.query.with;
+
+  if (
+    candidate !== undefined &&
+    (typeof candidate !== "string" || !isValidOrgNumber(candidate))
+  ) {
+    res
+      .status(400)
+      .json({ error: "with must be a 9-digit organization number" });
+    return;
+  }
+
+  try {
+    const result = await findConnections(req.auth!.userId, candidate ?? null);
+    res.json(result);
+  } catch (error) {
+    if (sendKnownError(error, res)) return;
+    console.error(error);
+    res.status(502).json({ error: "Could not reach the Brreg API" });
   }
 };

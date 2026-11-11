@@ -20,6 +20,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Annual accounts** — key figures from the last three annual accounts (company and group), in the currency they were reported in, with warning signs such as unaudited accounts
 - **Annual accounts history and checks** — every set of accounts seen is stored, including years Brreg no longer shows; a daily check records new and corrected filings, liquidation accounts, equity turning negative and audits being dropped, and notifies followers
 - **Risk signals** — an explainable "check before you sign" assessment for any company: every signal with its points and reason, and what could not be checked; followers are notified when a company's risk level rises (see [Risk Signals](#risk-signals))
+- **Connections** — people and organizations (e.g. an audit firm) that hold roles in two or more of your companies, or in a company you are considering and your current ones; people are matched on name and birth date in memory, and birth dates are never stored or returned
 - **Clean company model** — the raw registry format is mapped into the app's own English data shape, so the rest of the app never depends on the external API format
 - **User registration and login** — bcrypt-hashed passwords, JWT authentication, role-based users (`user` / `admin`)
 - **Public user IDs** — users are identified externally by a UUID; the internal database ID is never exposed
@@ -34,7 +35,6 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 ### Planned
 
 - **Ownership** — shareholders from Skatteetaten's shareholder register, imported by a separate Python service
-- **Role network** — how people and companies are connected through board and management roles
 - **Regional trends** — new companies over time by municipality and industry code
 
 ## Tech Stack
@@ -92,6 +92,7 @@ Services do not know about HTTP, so the same functions can be reused by the sche
 - **Warnings for changes for the worse, not for known states.** A small company that has never been audited, or whose equity was already negative, does not trigger a new warning every year; only the step from audited to unaudited, or from positive to negative equity, does.
 - **The assistant only reads.** Its tools wrap the existing service functions and change nothing; following, notes and notifications are changed by the user through the normal API. The user's identity comes from the login token, never from the model, and private notes are never sent to the model.
 - **Provider-independent assistant.** One `LlmProvider` interface with Ollama (local or cloud) and Gemini behind it, chosen in `.env`. Development runs free on a local model; the deployed demo can use a hosted one without code changes. Tests use a fake model server, so CI never calls a real model.
+- **Connections without storing personal data.** Telling two people with the same name apart needs their birth date, which is not stored. Connections are therefore computed on request from live role data, matched in memory, and returned with names and roles only. Only the user's own companies are compared, so nobody learns what others follow.
 - **Risk that explains itself.** The assessment lists every signal with its points and reason, and every limitation (e.g. no change history for an unfollowed company, no key figures for a bank), so a "low" level is never mistaken for a full check. All weights live in one `RISK_RULES` object.
 - **The rules are a pure function of the data and the date.** `assessRisk(input, now)` touches no database or network, so every rule is tested on a fixed day; the tests never break because the calendar moved past a deadline.
 - **Clear error status codes.** `400` invalid input, `401` missing or invalid token / credentials, `403` not allowed (e.g. not an admin), `404` not found, `409` conflict (email already registered, change detection already running), `502` the Brønnøysund API could not be reached.
@@ -145,15 +146,16 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 
 All watchlist endpoints require a token (`Authorization: Bearer <token>`). Each user sees and changes only their own watchlist.
 
-| Method | Endpoint                              | Description                                                                                                                        |
-| ------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| GET    | `/api/watchlist`                      | List the companies on your watchlist with their roles, latest annual accounts and risk level; `sort=name` (default) or `sort=risk` |
-| POST   | `/api/watchlist`                      | Follow a company (`orgNumber`, optional `note`)                                                                                    |
-| PATCH  | `/api/watchlist/{orgNumber}`          | Change or remove your note on a followed company                                                                                   |
-| DELETE | `/api/watchlist/{orgNumber}`          | Stop following a company                                                                                                           |
-| GET    | `/api/watchlist/{orgNumber}/changes`  | Change history of a followed company, newest first (`page`, `pageSize`)                                                            |
-| GET    | `/api/watchlist/{orgNumber}/risk`     | Full risk report of a followed company, including its change history                                                               |
-| GET    | `/api/watchlist/{orgNumber}/accounts` | Every stored set of annual accounts of a followed company, newest first, including years Brreg no longer shows                     |
+| Method | Endpoint                              | Description                                                                                                                                            |
+| ------ | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GET    | `/api/watchlist`                      | List the companies on your watchlist with their roles, latest annual accounts and risk level; `sort=name` (default) or `sort=risk`                     |
+| POST   | `/api/watchlist`                      | Follow a company (`orgNumber`, optional `note`)                                                                                                        |
+| PATCH  | `/api/watchlist/{orgNumber}`          | Change or remove your note on a followed company                                                                                                       |
+| DELETE | `/api/watchlist/{orgNumber}`          | Stop following a company                                                                                                                               |
+| GET    | `/api/watchlist/{orgNumber}/changes`  | Change history of a followed company, newest first (`page`, `pageSize`)                                                                                |
+| GET    | `/api/watchlist/connections`          | People and organizations holding roles in two or more of your companies; `with=<orgNumber>` compares a company you are considering with your watchlist |
+| GET    | `/api/watchlist/{orgNumber}/risk`     | Full risk report of a followed company, including its change history                                                                                   |
+| GET    | `/api/watchlist/{orgNumber}/accounts` | Every stored set of annual accounts of a followed company, newest first, including years Brreg no longer shows                                         |
 
 ### Notifications
 
@@ -247,6 +249,7 @@ LEVERANDORVAKT/
 │   │   ├── watchlistService.ts   # Following companies, notes, change history
 │   │   ├── companyDiff.ts        # Compares two company states and rates each change
 │   │   ├── roleDiff.ts           # Compares two sets of roles and rates each change
+│   │   ├── connectionsService.ts # Finds shared people and organizations across companies, from live role data
 │   │   ├── changeDetectionService.ts  # Reads both update feeds and records changes
 │   │   ├── accountsDiff.ts       # Compares stored and current annual accounts and rates each change
 │   │   ├── accountsService.ts    # Stores annual accounts and runs the daily accounts check
@@ -260,7 +263,7 @@ LEVERANDORVAKT/
 │   ├── jobs/
 │   │   ├── changeDetectionJob.ts # Runs change detection on a timer, never two runs at once
 │   │   └── accountsCheckJob.ts   # Runs the accounts check once a day, never two runs at once
-│   ├── mappers/                  # Brreg / database shapes → API shapes (company, roles, accounts, changes)
+│   ├── mappers/                  # Brreg / database shapes → API shapes (company, roles, role holders, accounts, changes)
 │   ├── types/
 │   │   ├── brreg.ts              # Shapes of the Brønnøysund API responses
 │   │   ├── regnskap.ts           # Shapes of the Register of Company Accounts API responses
@@ -268,6 +271,7 @@ LEVERANDORVAKT/
 │   │   ├── companyRoles.ts       # The app's own CompanyRoles type
 │   │   ├── annualAccounts.ts     # The app's own AnnualAccounts type
 │   │   ├── risk.ts               # Risk assessment types
+│   │   ├── connections.ts        # Role holders and connections between companies
 │   │   ├── llm.ts                # Provider-independent chat messages, tools and errors
 │   │   └── express.d.ts          # Adds the authenticated user to Express requests
 │   └── utils/                    # Validation and pagination helpers
@@ -420,6 +424,7 @@ Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. 
 | `tests/risk.test.ts`            | Every risk rule on a fixed date (critical signals, the 31 July filing deadline, company forms and founding dates, key figures from the company's own accounts, change history within 12 months), limitations, score cap and level thresholds, live assessment of unfollowed and struck-off companies, watchlist report and sorting, risk rising by time alone is notified, falling risk recorded without notification                                                                                                                                     |
 | `tests/assistant.test.ts`       | The agent loop against a fake Ollama server: answers with and without tools, tool calls and results sent back in Ollama's format, private notes never sent to the model, tools limited to the asking user's data, invalid tool input and unknown tools returned to the model as errors, unfollowed companies, Brreg errors, the step limit, conversation history, daily limit per user (not reset by deleting), unavailable / missing / slow models storing nothing, validation, private conversations                                                    |
 | `tests/geminiProvider.test.ts`  | Gemini request format (system instruction, contents, function declarations, API key header), tool calls sent back unchanged with their thought signature, parallel tool results in one turn, quota errors                                                                                                                                                                                                                                                                                                                                                 |
+| `tests/connections.test.ts`     | People matched on name and birth date (same name with a different birth date is not a connection, no birth date is not matched), shared audit firms, deregistered roles and several roles in one company ignored, most connected first, comparing a candidate company, other users' companies never compared, a company whose roles cannot be fetched, birth dates never returned                                                                                                                                                                         |
 | `tests/notifications.test.ts`   | Notifications created end to end from detected changes, unread filter, pagination, unread count, marking one or all as read (first read time is kept), users cannot read or change each other's notifications                                                                                                                                                                                                                                                                                                                                             |
 | `tests/admin.test.ts`           | Admin account created once from environment variables (never by promoting an existing user), admin-only change detection endpoint (`401` / `403` / `200`), `409` when a run is already in progress, `502` when Brreg cannot be reached; admin-only accounts check endpoint (`403` / `200` / `409`)                                                                                                                                                                                                                                                        |
 
@@ -494,7 +499,7 @@ GitHub Actions runs two jobs on every push: the type check and all tests against
 
 ### Insights
 
-- [ ] Role network (board members and management across companies)
+- [x] Role network: shared people and audit firms across your companies, matched on name and birth date without storing them
 - [x] Risk signals: explainable assessment, stored levels and early warning
 - [ ] Regional trends by municipality and industry
 

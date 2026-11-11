@@ -5,7 +5,7 @@ import { MAX_STEPS } from "../src/services/assistantService.js";
 import { AssistantMessage } from "../src/models/AssistantMessage.js";
 import { AssistantUsage } from "../src/models/AssistantUsage.js";
 import { kari, lukas, registerAndLogin } from "./helpers/users.js";
-import { brregEnhet, useFakeBrreg } from "./helpers/fakeBrreg.js";
+import { brregEnhet, brregRoller, useFakeBrreg } from "./helpers/fakeBrreg.js";
 import { useFakeOllama } from "./helpers/fakeLlm.js";
 
 const brreg = useFakeBrreg();
@@ -67,6 +67,7 @@ describe("POST /api/assistant/messages", () => {
       "get_company_changes",
       "get_company_accounts",
       "get_company_roles",
+      "find_connections",
       "get_notifications",
     ]);
   });
@@ -204,6 +205,32 @@ describe("POST /api/assistant/messages", () => {
       "get_company_risk",
       "get_company_changes",
     ]);
+  });
+
+  it("finds connections between the user's companies with the connections tool", async () => {
+    const { auth } = await registerAndLogin(lukas);
+    const roles = brregRoller({ ceo: "Ingrid Solberg" });
+    brreg.setRoles(ALTA_TOURS, roles);
+    brreg.setRoles(ARCTIC_FISH, roles);
+    await follow(auth, ALTA_TOURS, "ALTA TOURS AS");
+    await follow(auth, ARCTIC_FISH, "ARCTIC FISH AS");
+    ollama.callTools({ name: "find_connections" });
+    ollama.callTools({
+      name: "find_connections",
+      arguments: { orgNumber: "999999999" },
+    });
+    ollama.reply("Ingrid Solberg is the CEO of both.");
+
+    await ask(auth, "Are my suppliers connected?");
+
+    expect(ollama.toolResults(1)).toEqual([
+      expect.objectContaining({
+        connections: [expect.objectContaining({ name: "Ingrid Solberg" })],
+      }),
+    ]);
+    expect(ollama.toolResults(2)[1]).toEqual({
+      error: "No company with this organization number",
+    });
   });
 
   it("tells the model when Brreg cannot be reached, and still answers", async () => {
