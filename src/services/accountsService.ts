@@ -13,7 +13,7 @@ import type { AnnualAccounts } from "../types/annualAccounts.js";
 
 // A company's accounts are checked again when the last check is older than this.
 // A little under a day, so a daily run never skips a company by a few minutes.
-const RECHECK_AFTER_HOURS = 20;
+export const RECHECK_AFTER_HOURS = 20;
 // How many companies are checked per run; the rest wait for the next run
 const COMPANIES_PER_RUN = 200;
 

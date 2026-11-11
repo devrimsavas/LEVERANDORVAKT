@@ -5,6 +5,11 @@ const DEFAULT_INTERVAL_MINUTES = 10;
 
 let isRunning = false;
 
+// Whether a run is in progress right now, for the admin status page
+export function isChangeDetectionRunning(): boolean {
+  return isRunning;
+}
+
 // Runs change detection unless a run is already in progress.
 // Both the timer and the admin endpoint go through here, so two runs never overlap.
 // Returns null if a run was already in progress.

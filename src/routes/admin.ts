@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  getStatus,
+  listUsersHandler,
   runAccountsCheckNow,
   runChangeDetectionNow,
 } from "../controllers/adminController.js";
@@ -11,6 +13,8 @@ const router = express.Router();
 // Every admin endpoint requires a logged-in admin
 router.use(requireAuth, requireRole("admin"));
 
+router.get("/status", getStatus);
+router.get("/users", listUsersHandler);
 router.post("/change-detection/run", runChangeDetectionNow);
 router.post("/accounts-check/run", runAccountsCheckNow);
 
