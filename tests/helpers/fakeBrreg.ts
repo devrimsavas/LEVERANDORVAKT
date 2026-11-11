@@ -349,6 +349,17 @@ function handle(fake: FakeBrreg, url: URL, headers: Headers): Response {
     const size = Number(params.get("size") ?? 20);
     const page = Number(params.get("page") ?? 0);
 
+    // Like Brreg, refuse dates that do not exist (e.g. 2027-02-29)
+    const isRealDate = (date: string | null) =>
+      date === null ||
+      new Date(`${date}T00:00:00Z`).toISOString().slice(0, 10) === date;
+    if (!isRealDate(from) || !isRealDate(to)) {
+      return Response.json(
+        { error: "Bad Request" },
+        { status: 400, statusText: "Bad Request" },
+      );
+    }
+
     // Brreg only pages through the first 10,000 results
     if (size * (page + 1) > 10000) {
       return Response.json(

@@ -186,11 +186,11 @@ Errors: `429` daily question limit reached, `503` assistant not configured or mo
 
 Public, like the company endpoints. All parameters are optional: `municipality` (4-digit number, e.g. `5601` for Alta), `industry` (a code or its start, e.g. `55` for accommodation), `form` (e.g. `AS`), `from` and `to` (months like `2026-03`; default: the last 12 months, at most 36).
 
-| Method | Endpoint                     | Description                                                                                 |
-| ------ | ---------------------------- | ------------------------------------------------------------------------------------------- |
-| GET    | `/api/trends/registrations`  | New companies per month, each with the same month a year earlier, and the change in percent |
-| GET    | `/api/trends/industries`     | The ten most common industries of new companies in the period (at most 5,000 registrations) |
-| GET    | `/api/trends/municipalities` | All municipalities with their numbers, from Kartverket                                      |
+| Method | Endpoint                     | Description                                                                                                                                   |
+| ------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/trends/registrations`  | New companies per month, each with the same month a year earlier (for the current month, only the same days of it), and the change in percent |
+| GET    | `/api/trends/industries`     | The ten most common industries of new companies in the period (at most 5,000 registrations)                                                   |
+| GET    | `/api/trends/municipalities` | All municipalities with their numbers, from Kartverket                                                                                        |
 
 ### Admin
 

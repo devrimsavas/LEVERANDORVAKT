@@ -139,6 +139,41 @@ describe("GET /api/trends/registrations", () => {
     expect(res.body.changePercent).toBeNull();
   });
 
+  it("compares the current month with the same days a year earlier, not the whole month", async () => {
+    brreg.addRegistrations(2, { date: "2026-11-03" });
+    brreg.addRegistrations(3, { date: "2025-11-05" });
+    // Today is the 11th: the 11th itself counts, the 12th does not
+    brreg.addRegistrations(1, { date: "2025-11-11" });
+    brreg.addRegistrations(4, { date: "2025-11-12" });
+
+    const res = await request(app).get(
+      "/api/trends/registrations?from=2026-10&to=2026-11",
+    );
+
+    expect(res.body.months[1]).toEqual({
+      month: "2026-11",
+      count: 2,
+      previousYear: 4,
+      partial: true,
+    });
+    expect(res.body.changePercent).toBe(-50);
+  });
+
+  it("compares the whole month a year earlier when it has fewer days than today's date", async () => {
+    // 29 February 2028: February 2027 has only 28 days
+    vi.setSystemTime(new Date("2028-02-29T12:00:00Z"));
+    brreg.addRegistrations(1, { date: "2027-02-28" });
+
+    const res = await request(app).get(
+      "/api/trends/registrations?from=2028-02&to=2028-02",
+    );
+
+    expect(res.body.months[0]).toMatchObject({
+      previousYear: 1,
+      partial: true,
+    });
+  });
+
   it("answers the same question again from the cache, without calling Brreg", async () => {
     brreg.addRegistrations(1, { date: "2026-03-05" });
     await request(app).get("/api/trends/registrations?from=2026-01&to=2026-03");

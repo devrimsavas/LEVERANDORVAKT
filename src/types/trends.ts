@@ -14,7 +14,8 @@ export interface RegistrationFilters {
 export interface MonthCount {
   month: string; // "2026-03"
   count: number;
-  // The same month one year earlier, for a fair comparison of seasons
+  // The same month one year earlier, for a fair comparison of seasons.
+  // For the current month only the same days are counted (e.g. 1-11 November).
   previousYear: number;
   // The month is not over yet
   partial: boolean;

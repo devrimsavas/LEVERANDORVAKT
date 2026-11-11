@@ -150,18 +150,27 @@ function ttlFor(month: string, now: Date): number {
   return month < monthOf(now) ? PAST_MONTH_TTL : CURRENT_MONTH_TTL;
 }
 
+// Registrations in a month, or only up to a given day of it
 function countForMonth(
   filters: RegistrationFilters,
   month: string,
   now: Date,
+  untilDay: number | null = null,
 ): Promise<number> {
-  return cached(
-    `count:${filtersKey(filters)}|${month}`,
-    ttlFor(month, now),
-    () => {
-      const { first, last } = monthDates(month);
-      return countRegistrations(filters, first, last);
-    },
+  const { first, last } = monthDates(month);
+  // A day after the end of the month (e.g. the 30th in February) means
+  // the whole month
+  const end =
+    untilDay === null || untilDay >= Number(last.slice(8))
+      ? last
+      : `${month}-${String(untilDay).padStart(2, "0")}`;
+  const key =
+    end === last
+      ? `count:${filtersKey(filters)}|${month}`
+      : `count:${filtersKey(filters)}|${month}|until:${end}`;
+
+  return cached(key, ttlFor(month, now), () =>
+    countRegistrations(filters, first, end),
   );
 }
 
@@ -176,10 +185,20 @@ export async function getRegistrationTrend(
   const months = monthsBetween(from, to);
   const current = monthOf(now);
 
+  // The current month is not over: a year earlier only the same days are
+  // counted (1-11 November against 1-11 November), or the comparison would
+  // set a part of a month against a whole one
+  const today = now.getUTCDate();
   const counts = await mapWithLimit(
-    months.flatMap((month) => [month, addMonths(month, -12)]),
+    months.flatMap((month) => [
+      { month, untilDay: null },
+      {
+        month: addMonths(month, -12),
+        untilDay: month === current ? today : null,
+      },
+    ]),
     CONCURRENT_REQUESTS,
-    (month) => countForMonth(filters, month, now),
+    ({ month, untilDay }) => countForMonth(filters, month, now, untilDay),
   );
 
   const series: MonthCount[] = months.map((month, i) => ({
