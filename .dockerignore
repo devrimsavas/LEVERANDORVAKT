@@ -1,0 +1,22 @@
+# Keep the build context small and free of secrets.
+# Dependencies and build output are created inside the image.
+node_modules
+dist
+swagger_output.json
+
+# Secrets and local settings: passed in at runtime, never baked into the image
+.env
+.env.*
+
+# Not needed to build or run the app
+.git
+.github
+tests
+vitest.config.ts
+*.log
+program_notes
+docs
+equinor-regnskap.json
+README.md
+Dockerfile
+docker-compose.yml

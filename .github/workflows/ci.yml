@@ -55,3 +55,38 @@ jobs:
       # (e.g. decorator metadata in an import cycle) fail the build.
       - name: Check that the compiled app loads
         run: node --input-type=module -e "await import('./dist/app.js')"
+
+  # Builds the Docker image and starts the whole stack with Docker Compose,
+  # the same way as on a developer's machine, then checks that the API answers.
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      # Compose reads .env; the example values are enough for this check.
+      # The scheduled jobs are turned off so CI does not call Brreg.
+      - name: Create .env from the example
+        run: |
+          cp envexample .env
+          sed -i 's/^JWT_SECRET=.*/JWT_SECRET=ci_docker_secret/' .env
+          sed -i 's/^CHANGE_DETECTION_INTERVAL_MINUTES=.*/CHANGE_DETECTION_INTERVAL_MINUTES=0/' .env
+          sed -i 's/^ACCOUNTS_CHECK_INTERVAL_HOURS=.*/ACCOUNTS_CHECK_INTERVAL_HOURS=0/' .env
+
+      # --wait returns when both containers report healthy, or fails
+      - name: Build and start the containers
+        run: docker compose up --build --detach --wait --wait-timeout 120
+
+      - name: Check that the API and its docs answer
+        run: |
+          curl --fail --silent --show-error http://localhost:3000/
+          curl --fail --silent --show-error --output /dev/null http://localhost:3000/api/docs/
+
+      - name: Show the container logs
+        if: failure()
+        run: docker compose logs
+
+      - name: Stop the containers
+        if: always()
+        run: docker compose down --volumes
