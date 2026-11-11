@@ -6,6 +6,7 @@ import {
   removeFromWatchlist,
   getCompanyChanges,
   getCompanyAccounts,
+  getCompanyRisk,
   CompanyNotFoundError,
   AlreadyWatchingError,
   NotWatchingError,
@@ -54,9 +55,17 @@ function sendKnownError(error: unknown, res: Response): boolean {
 // GET /api/watchlist
 export const listWatchlist = async (req: Request, res: Response) => {
   // #swagger.tags = ["Watchlist"]
-  /* #swagger.security = [{ "bearerAuth": [] }] */
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.parameters["sort"] = { in: "query", description: "name (default) or risk (highest risk first)", type: "string" } */
+  const sort = req.query.sort ?? "name";
+
+  if (sort !== "name" && sort !== "risk") {
+    res.status(400).json({ error: "sort must be 'name' or 'risk'" });
+    return;
+  }
+
   try {
-    const items = await getWatchlist(req.auth!.userId);
+    const items = await getWatchlist(req.auth!.userId, sort);
     res.json(items);
   } catch (error) {
     if (sendKnownError(error, res)) return;
@@ -226,5 +235,30 @@ export const listCompanyAccounts = async (
     if (sendKnownError(error, res)) return;
     console.error(error);
     res.status(500).json({ error: "Could not load the annual accounts" });
+  }
+};
+
+// GET /api/watchlist/:orgNumber/risk
+export const getCompanyRiskReport = async (
+  req: Request<{ orgNumber: string }>,
+  res: Response,
+) => {
+  // #swagger.tags = ["Watchlist"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.responses[404] = { description: "Company is not on the watchlist" } */
+  const { orgNumber } = req.params;
+
+  if (!isValidOrgNumber(orgNumber)) {
+    res.status(400).json({ error: "Organization number must be 9 digits" });
+    return;
+  }
+
+  try {
+    const report = await getCompanyRisk(req.auth!.userId, orgNumber);
+    res.json(report);
+  } catch (error) {
+    if (sendKnownError(error, res)) return;
+    console.error(error);
+    res.status(500).json({ error: "Could not assess the risk" });
   }
 };

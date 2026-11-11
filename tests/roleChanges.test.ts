@@ -300,6 +300,7 @@ describe("detecting role changes", () => {
     expect((await changesOf(ALTA_TOURS)).map((c) => c.field)).toEqual([
       "isBankrupt",
       "roles.ceo",
+      "riskLevel",
     ]);
   });
 

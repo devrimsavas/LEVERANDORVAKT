@@ -2,6 +2,7 @@ import { Table, Column, Model, DataType } from "sequelize-typescript";
 import type { Company } from "../types/company.js";
 import type { CompanyRoles } from "../types/companyRoles.js";
 import type { AccountsStatus } from "../types/annualAccounts.js";
+import type { RiskLevel } from "../types/risk.js";
 
 // A followed company and its last known state.
 // Named CompanyRecord to avoid a clash with the Company type in types/company.ts.
@@ -33,6 +34,20 @@ export class CompanyRecord extends Model {
   // When the annual accounts were last checked
   @Column({ type: DataType.DATE, allowNull: true })
   declare accountsCheckedAt: Date | null;
+
+  // The latest risk assessment; null until the company has been assessed
+  @Column({
+    type: DataType.STRING(10),
+    allowNull: true,
+    validate: { isIn: [["low", "medium", "high"]] },
+  })
+  declare riskLevel: RiskLevel | null;
+
+  @Column({ type: DataType.INTEGER, allowNull: true })
+  declare riskScore: number | null;
+
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare riskAssessedAt: Date | null;
 
   @Column({ type: DataType.DATE, allowNull: true })
   declare deletedFromRegistryAt: Date | null;

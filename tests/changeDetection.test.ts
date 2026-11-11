@@ -70,9 +70,11 @@ describe("detecting changes", () => {
 
     expect(summary).toMatchObject({ companiesChecked: 1, changesFound: 2, failedCompanies: 0 });
     const changes = await changesOf(ALTA_TOURS);
+    // The bankruptcy also raises the risk level, which is recorded after the changes
     expect(changes.map((c) => [c.field, c.severity])).toEqual([
       ["address", "warning"],
       ["isBankrupt", "critical"],
+      ["riskLevel", "critical"],
     ]);
     expect(changes[1]).toMatchObject({ oldValue: false, newValue: true, sourceUpdateId: String(updateId) });
   });
@@ -91,7 +93,8 @@ describe("detecting changes", () => {
     const record = await CompanyRecord.findOne({ where: { orgNumber: ALTA_TOURS }, rejectOnEmpty: true });
     expect(record.snapshot.isBankrupt).toBe(true);
     expect(record.lastChangedAt).not.toBeNull();
-    expect(await CompanyChange.count()).toBe(1);
+    // The bankruptcy and the risk level it raised, each recorded once
+    expect(await CompanyChange.count()).toBe(2);
   });
 
   it("records nothing when an update does not touch any tracked field", async () => {
@@ -198,8 +201,8 @@ describe("when Brreg fails", () => {
     const recovered = await runChangeDetection();
 
     expect(recovered).toMatchObject({ changesFound: 1, failedCompanies: 0 });
-    expect((await changesOf(ARCTIC_FISH)).map((c) => c.field)).toEqual(["isUnderLiquidation"]);
-    expect(await changesOf(ALTA_TOURS)).toHaveLength(1);
+    expect((await changesOf(ARCTIC_FISH)).map((c) => c.field)).toEqual(["isUnderLiquidation", "riskLevel"]);
+    expect((await changesOf(ALTA_TOURS)).map((c) => c.field)).toEqual(["isBankrupt", "riskLevel"]);
     expect(await lastUpdateId()).toBe(fishUpdate);
   });
 });
@@ -245,7 +248,9 @@ describe("notifications", () => {
 
     await runChangeDetection();
 
-    expect(await CompanyChange.count()).toBe(1);
+    // The bankruptcy and the risk level; only the bankruptcy is notified,
+    // so the follower does not get the same news twice
+    expect(await CompanyChange.count()).toBe(2);
     expect(await Notification.count()).toBe(1);
   });
 });

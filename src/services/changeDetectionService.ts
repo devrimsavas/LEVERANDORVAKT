@@ -13,6 +13,7 @@ import {
 import { detectChanges } from "./companyDiff.js";
 import { detectRoleChanges } from "./roleDiff.js";
 import { notifyFollowers } from "./notificationService.js";
+import { reassessRisk } from "./riskService.js";
 import type { ChangeSeverity } from "../models/CompanyChange.js";
 
 // Brreg accepts a list of organization numbers in one request; keep URLs short
@@ -202,6 +203,9 @@ async function checkCompany(record: CompanyRecord, events: CompanyEvents): Promi
       record.lastCheckedAt = now;
       record.lastChangedAt = now;
       await record.save({ transaction });
+
+      // The followers were just notified; the risk rise is only recorded
+      await reassessRisk(record, transaction, { notifyRise: false });
     });
 
     return 1;
@@ -247,6 +251,9 @@ async function checkCompany(record: CompanyRecord, events: CompanyEvents): Promi
     }
     record.lastCheckedAt = now;
     await record.save({ transaction });
+
+    // A rise in risk is notified only if this check had no other news
+    await reassessRisk(record, transaction, { notifyRise: changes.length === 0 });
   });
 
   return changes.length;

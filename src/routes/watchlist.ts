@@ -6,6 +6,7 @@ import {
   removeCompany,
   listCompanyChanges,
   listCompanyAccounts,
+  getCompanyRiskReport,
 } from "../controllers/watchlistController.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 
@@ -20,5 +21,6 @@ router.patch("/:orgNumber", updateNote);
 router.delete("/:orgNumber", removeCompany);
 router.get("/:orgNumber/changes", listCompanyChanges);
 router.get("/:orgNumber/accounts", listCompanyAccounts);
+router.get("/:orgNumber/risk", getCompanyRiskReport);
 
 export default router;

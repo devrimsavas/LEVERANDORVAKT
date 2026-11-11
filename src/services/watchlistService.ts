@@ -5,7 +5,10 @@ import { CompanyChange } from "../models/CompanyChange.js";
 import { AnnualAccountsRecord } from "../models/AnnualAccountsRecord.js";
 import { getCompany, getCompanyRoles } from "./brregService.js";
 import { getInternalUserId } from "./userService.js";
-import { checkCompanyAccounts, getStoredAccounts } from "./accountsService.js";
+import { checkCompanyAccounts } from "./accountsService.js";
+import { getStoredAccounts } from "./storedAccounts.js";
+import { assessFollowedCompany, reassessRisk } from "./riskService.js";
+import { sequelize } from "../config/database.js";
 import { toChangeItem } from "../mappers/changeMapper.js";
 import { fromAnnualAccountsRecord } from "../mappers/annualAccountsMapper.js";
 import type { ChangeItem } from "../mappers/changeMapper.js";
@@ -17,6 +20,7 @@ import type {
   AccountsStatus,
   AnnualAccounts,
 } from "../types/annualAccounts.js";
+import type { RiskAssessment, RiskLevel } from "../types/risk.js";
 
 export class CompanyNotFoundError extends Error {}
 export class AlreadyWatchingError extends Error {}
@@ -29,6 +33,17 @@ export interface WatchlistAccounts {
   // The company's own latest accounts (the full list has its own endpoint)
   latest: AnnualAccounts | null;
 }
+
+// The stored risk level of a company on the watchlist; null until assessed.
+// The full report has its own endpoint.
+export interface WatchlistRisk {
+  level: RiskLevel | null;
+  score: number | null;
+  assessedAt: Date | null;
+}
+
+// How the watchlist can be sorted
+export type WatchlistSort = "name" | "risk";
 
 // All stored annual accounts of a followed company, newest first
 export interface CompanyAccounts {
@@ -48,6 +63,7 @@ export interface WatchlistItem {
   company: Company;
   roles: CompanyRoles | null;
   accounts: WatchlistAccounts;
+  risk: WatchlistRisk;
 }
 
 function toWatchlistItem(
@@ -66,6 +82,11 @@ function toWatchlistItem(
     company: record.snapshot,
     roles: record.roles,
     accounts: { status: record.accountsStatus, latest: latestAccounts },
+    risk: {
+      level: record.riskLevel,
+      score: record.riskScore,
+      assessedAt: record.riskAssessedAt,
+    },
   };
 }
 
@@ -108,6 +129,21 @@ async function checkAccountsIfNeverChecked(
     await checkCompanyAccounts(record);
   } catch (error) {
     console.error(`Could not fetch the accounts of ${record.orgNumber}`, error);
+  }
+}
+
+// Assesses the risk of a newly followed company, as the starting point.
+// Following must still work if this fails; the daily check assesses it then.
+async function assessRiskIfNeverAssessed(record: CompanyRecord): Promise<void> {
+  if (record.riskLevel !== null) {
+    return;
+  }
+  try {
+    await sequelize.transaction((transaction) =>
+      reassessRisk(record, transaction, { notifyRise: false }),
+    );
+  } catch (error) {
+    console.error(`Could not assess the risk of ${record.orgNumber}`, error);
   }
 }
 
@@ -162,16 +198,24 @@ async function findEntry(
   return entry;
 }
 
-// Lists the user's watchlist, sorted by company name.
+// Lists the user's watchlist, sorted by company name or by risk.
 export async function getWatchlist(
   userPublicId: string,
+  sort: WatchlistSort = "name",
 ): Promise<WatchlistItem[]> {
   const userId = await getInternalUserId(userPublicId);
 
   const entries = await WatchlistEntry.findAll({
     where: { userId },
     include: [CompanyRecord],
-    order: [["company", "name", "ASC"]],
+    // By risk: highest score first, companies not assessed yet last
+    order:
+      sort === "risk"
+        ? [
+            ["company", "riskScore", "DESC NULLS LAST"],
+            ["company", "name", "ASC"],
+          ]
+        : [["company", "name", "ASC"]],
   });
 
   const latest = await latestAccountsByCompany(
@@ -201,6 +245,7 @@ export async function addToWatchlist(
     entry.company = record;
 
     await checkAccountsIfNeverChecked(record);
+    await assessRiskIfNeverAssessed(record);
     const latest = await latestAccountsByCompany([record.id]);
     return toWatchlistItem(entry, latest.get(record.id) ?? null);
   } catch (error) {
@@ -276,4 +321,15 @@ export async function getCompanyAccounts(
     status: entry.company.accountsStatus,
     accounts: await getStoredAccounts(entry.companyId),
   };
+}
+
+// The full risk report of a company on the user's watchlist, from stored
+// data including the company's change history.
+export async function getCompanyRisk(
+  userPublicId: string,
+  orgNumber: string,
+): Promise<RiskAssessment> {
+  const userId = await getInternalUserId(userPublicId);
+  const entry = await findEntry(userId, orgNumber);
+  return assessFollowedCompany(entry.company);
 }

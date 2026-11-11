@@ -326,6 +326,8 @@ describe("the daily accounts check", () => {
     ).toEqual([
       ["annualAccounts.filed", "info", null],
       ["annualAccounts.negativeEquity", "warning", null],
+      // Negative equity raises the risk from low to medium
+      ["riskLevel", "warning", null],
     ]);
     const notifications = await request(app)
       .get("/api/notifications")

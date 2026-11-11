@@ -6,8 +6,9 @@ import { CompanyChange } from "../models/CompanyChange.js";
 import { AnnualAccountsRecord } from "../models/AnnualAccountsRecord.js";
 import { getAnnualAccounts } from "./brregService.js";
 import { compareAccounts } from "./accountsDiff.js";
+import { getStoredAccounts } from "./storedAccounts.js";
 import { notifyFollowers } from "./notificationService.js";
-import { fromAnnualAccountsRecord } from "../mappers/annualAccountsMapper.js";
+import { reassessRisk } from "./riskService.js";
 import type { AnnualAccounts } from "../types/annualAccounts.js";
 
 // A company's accounts are checked again when the last check is older than this.
@@ -20,23 +21,6 @@ export interface AccountsCheckSummary {
   companiesChecked: number;
   changesFound: number;
   failedCompanies: number;
-}
-
-// The stored accounts of a company, newest first,
-// the company's own accounts before the group's
-export async function getStoredAccounts(
-  companyId: number,
-  transaction?: Transaction,
-): Promise<AnnualAccounts[]> {
-  const rows = await AnnualAccountsRecord.findAll({
-    where: { companyId },
-    order: [
-      ["periodEnd", "DESC"],
-      ["type", "ASC"],
-    ],
-    ...(transaction ? { transaction } : {}),
-  });
-  return rows.map(fromAnnualAccountsRecord);
 }
 
 // Inserts new accounts and replaces the stored row of a corrected filing
@@ -119,6 +103,12 @@ export async function checkCompanyAccounts(
     record.accountsStatus = result.status;
     record.accountsCheckedAt = now;
     await record.save({ transaction });
+
+    // Also runs when nothing changed: an overdue filing raises the risk
+    // just by time passing
+    await reassessRisk(record, transaction, {
+      notifyRise: changeCount === 0,
+    });
 
     return changeCount;
   });

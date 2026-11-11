@@ -6,6 +6,7 @@ import {
   lookupCompany,
   searchCompanies,
 } from "../services/brregService.js";
+import { assessCompanyLive } from "../services/riskService.js";
 
 import { isValidOrgNumber } from "../utils/orgNumber.js";
 
@@ -123,6 +124,34 @@ export const getAccountsByOrgNumber = async (
 
     const result = await getAnnualAccounts(orgNumber);
     res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(502).json({ error: "Could not reach the Brreg API" });
+  }
+};
+
+// GET /api/companies/:orgNumber/risk
+export const getRiskByOrgNumber = async (
+  req: Request<{ orgNumber: string }>,
+  res: Response,
+) => {
+  // #swagger.tags = ["Companies"]
+  /* #swagger.responses[200] = { description: "Risk assessment from live register data. The change history is unknown for a company that is not followed; see limitations." } */
+  /* #swagger.responses[404] = { description: "Company not found in the Brønnøysund Register" } */
+  const { orgNumber } = req.params;
+
+  if (!isValidOrgNumber(orgNumber)) {
+    res.status(400).json({ error: "Organization number must be 9 digits" });
+    return;
+  }
+
+  try {
+    const assessment = await assessCompanyLive(orgNumber);
+    if (!assessment) {
+      res.status(404).json({ error: "Company not found" });
+      return;
+    }
+    res.json(assessment);
   } catch (error) {
     console.error(error);
     res.status(502).json({ error: "Could not reach the Brreg API" });

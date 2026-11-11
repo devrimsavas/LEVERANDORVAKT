@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml/badge.svg)](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml)
 
-_Last updated: 10.11.2026_
+_Last updated: 11.11.2026_
 
-> ⚠️ **Under active development** — the backend for following companies, detecting changes (company data, roles and annual accounts) and notifying users is in place and covered by tests. Risk signals and the AI assistant are next. See the [Roadmap](#roadmap).
+> ⚠️ **Under active development** — the backend for following companies, detecting changes (company data, roles and annual accounts) and notifying users, and an explainable risk assessment are in place and covered by tests. The AI assistant is next. See the [Roadmap](#roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
 
@@ -19,6 +19,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Company roles** — the current CEO, board, auditor and accountant of a company
 - **Annual accounts** — key figures from the last three annual accounts (company and group), in the currency they were reported in, with warning signs such as unaudited accounts
 - **Annual accounts history and checks** — every set of accounts seen is stored, including years Brreg no longer shows; a daily check records new and corrected filings, liquidation accounts, equity turning negative and audits being dropped, and notifies followers
+- **Risk signals** — an explainable "check before you sign" assessment for any company: every signal with its points and reason, and what could not be checked; followers are notified when a company's risk level rises (see [Risk Signals](#risk-signals))
 - **Clean company model** — the raw registry format is mapped into the app's own English data shape, so the rest of the app never depends on the external API format
 - **User registration and login** — bcrypt-hashed passwords, JWT authentication, role-based users (`user` / `admin`)
 - **Public user IDs** — users are identified externally by a UUID; the internal database ID is never exposed
@@ -33,7 +34,6 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 
 - **Ownership** — shareholders from Skatteetaten's shareholder register, imported by a separate Python service
 - **Role network** — how people and companies are connected through board and management roles
-- **Risk signals** — a "check before you sign" score based on bankruptcy/liquidation flags, company age, late or missing annual accounts, weak key figures and frequent management changes
 - **Regional trends** — new companies over time by municipality and industry code
 - **AI assistant** — ask questions about followed companies in plain language, using the same service functions as the API
 
@@ -88,7 +88,32 @@ Services do not know about HTTP, so the same functions can be reused by the sche
 - **"Not covered" is not an error.** The accounts register answers banks and insurance companies with a `500` and a message; the app recognises that message and returns `status: "unsupported"`, so these companies are not retried as failures.
 - **Two jobs, two failure strategies.** Change detection follows feeds, so it stops at the first failed company to keep its feed position. The accounts check has no feed: each company has its own check time, so a failed company is skipped and retried on the next run while the others go on.
 - **Warnings for changes for the worse, not for known states.** A small company that has never been audited, or whose equity was already negative, does not trigger a new warning every year; only the step from audited to unaudited, or from positive to negative equity, does.
+- **Risk that explains itself.** The assessment lists every signal with its points and reason, and every limitation (e.g. no change history for an unfollowed company, no key figures for a bank), so a "low" level is never mistaken for a full check. All weights live in one `RISK_RULES` object.
+- **The rules are a pure function of the data and the date.** `assessRisk(input, now)` touches no database or network, so every rule is tested on a fixed day; the tests never break because the calendar moved past a deadline.
 - **Clear error status codes.** `400` invalid input, `401` missing or invalid token / credentials, `403` not allowed (e.g. not an admin), `404` not found, `409` conflict (email already registered, change detection already running), `502` the Brønnøysund API could not be reached.
+
+## Risk Signals
+
+A transparent "check before you sign" assessment, built only from public register data. **It is not a credit rating.**
+
+| Signal                                                                                      | When                                                                    | Points                    |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------- |
+| `BANKRUPT`, `UNDER_LIQUIDATION`, `FORCED_LIQUIDATION`, `STRUCK_OFF`, `LIQUIDATION_ACCOUNTS` | The register or the latest accounts say so                              | critical: level is `high` |
+| `ACCOUNTS_MISSING_TWO_YEARS`                                                                | No accounts for the last two due years (AS, ASA, SA)                    | 40                        |
+| `NEGATIVE_EQUITY`                                                                           | Equity below zero in the latest own accounts                            | 30                        |
+| `ACCOUNTS_OVERDUE`                                                                          | Accounts for a year not filed by 31 July of the next year (AS, ASA, SA) | 25                        |
+| `LOSS_TWO_YEARS`                                                                            | Losses in the two latest consecutive years                              | 20                        |
+| `AUDITOR_LEFT`                                                                              | The auditor left or was replaced in the last 12 months                  | 15                        |
+| `FREQUENT_CEO_CHANGES`                                                                      | Two or more CEO changes in the last 12 months                           | 15                        |
+| `LOW_EQUITY_RATIO`                                                                          | Equity below 10 % of total assets                                       | 10                        |
+| `LOSS_LAST_YEAR`                                                                            | A loss in the latest year only                                          | 10                        |
+| `FREQUENT_ADDRESS_CHANGES`                                                                  | Two or more address changes in the last 12 months                       | 10                        |
+| `YOUNG_COMPANY`                                                                             | Founded less than 12 months ago                                         | 10                        |
+| `AUDIT_OPTED_OUT`                                                                           | The company has opted out of audit                                      | info, 0                   |
+
+The score is the sum of the points, at most 100. The level is `high` with any critical signal or a score of 40 or more, `medium` from 20, otherwise `low`. Key figures come from the company's own accounts, not the group's. Change-history signals need the company to be followed.
+
+For followed companies the level is stored and re-assessed after every check. A rise is recorded and notified (unless the same check already notified the followers of the change behind it); a fall is recorded without a notification.
 
 ## API Endpoints
 
@@ -101,6 +126,7 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 | GET    | `/api/companies/{orgNumber}`          | Get a company by its 9-digit organization number                                                                                                                |
 | GET    | `/api/companies/search?name=...`      | Search companies by name (at least 2 characters)                                                                                                                |
 | GET    | `/api/companies/{orgNumber}/roles`    | Get the current CEO, board, auditor and accountant from Brreg                                                                                                   |
+| GET    | `/api/companies/{orgNumber}/risk`     | Risk assessment from live register data, also for companies you do not follow                                                                                   |
 | GET    | `/api/companies/{orgNumber}/accounts` | Key figures from the latest annual accounts (up to three years), newest first; `status` is `unsupported` for companies the register does not cover (e.g. banks) |
 
 ### Authentication
@@ -115,14 +141,15 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 
 All watchlist endpoints require a token (`Authorization: Bearer <token>`). Each user sees and changes only their own watchlist.
 
-| Method | Endpoint                              | Description                                                                                                    |
-| ------ | ------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| GET    | `/api/watchlist`                      | List the companies on your watchlist with their roles and latest annual accounts, sorted by name               |
-| POST   | `/api/watchlist`                      | Follow a company (`orgNumber`, optional `note`)                                                                |
-| PATCH  | `/api/watchlist/{orgNumber}`          | Change or remove your note on a followed company                                                               |
-| DELETE | `/api/watchlist/{orgNumber}`          | Stop following a company                                                                                       |
-| GET    | `/api/watchlist/{orgNumber}/changes`  | Change history of a followed company, newest first (`page`, `pageSize`)                                        |
-| GET    | `/api/watchlist/{orgNumber}/accounts` | Every stored set of annual accounts of a followed company, newest first, including years Brreg no longer shows |
+| Method | Endpoint                              | Description                                                                                                                        |
+| ------ | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/watchlist`                      | List the companies on your watchlist with their roles, latest annual accounts and risk level; `sort=name` (default) or `sort=risk` |
+| POST   | `/api/watchlist`                      | Follow a company (`orgNumber`, optional `note`)                                                                                    |
+| PATCH  | `/api/watchlist/{orgNumber}`          | Change or remove your note on a followed company                                                                                   |
+| DELETE | `/api/watchlist/{orgNumber}`          | Stop following a company                                                                                                           |
+| GET    | `/api/watchlist/{orgNumber}/changes`  | Change history of a followed company, newest first (`page`, `pageSize`)                                                            |
+| GET    | `/api/watchlist/{orgNumber}/risk`     | Full risk report of a followed company, including its change history                                                               |
+| GET    | `/api/watchlist/{orgNumber}/accounts` | Every stored set of annual accounts of a followed company, newest first, including years Brreg no longer shows                     |
 
 ### Notifications
 
@@ -166,7 +193,7 @@ List endpoints return `{ items, page, pageSize, totalItems, totalPages }` (defau
 
 | Table               | What it holds                                                                                                                                                       |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `companies`         | One row per followed company: organization number, last known state (`snapshot`) and roles (JSONB), accounts status, check times                                    |
+| `companies`         | One row per followed company: organization number, last known state (`snapshot`) and roles (JSONB), accounts status, latest risk level and score, check times       |
 | `annual_accounts`   | Every set of annual accounts seen: period, type (company / group), currency, audit and liquidation flags, key figures (JSONB); one row per company, type and period |
 | `watchlist_entries` | Which user follows which company, with the user's note (unique per user and company)                                                                                |
 | `company_changes`   | Every detected change: field, old and new value, severity, and the feed event that revealed it                                                                      |
@@ -204,6 +231,9 @@ LEVERANDORVAKT/
 │   │   ├── changeDetectionService.ts  # Reads both update feeds and records changes
 │   │   ├── accountsDiff.ts       # Compares stored and current annual accounts and rates each change
 │   │   ├── accountsService.ts    # Stores annual accounts and runs the daily accounts check
+│   │   ├── storedAccounts.ts     # Reads stored annual accounts (shared by several services)
+│   │   ├── riskAssessment.ts     # The risk rules: weights, thresholds and the pure assessRisk function
+│   │   ├── riskService.ts        # Builds the risk input from live or stored data, stores levels, records rises
 │   │   └── notificationService.ts     # Creates and serves notifications
 │   ├── jobs/
 │   │   ├── changeDetectionJob.ts # Runs change detection on a timer, never two runs at once
@@ -215,6 +245,7 @@ LEVERANDORVAKT/
 │   │   ├── company.ts            # The app's own Company type
 │   │   ├── companyRoles.ts       # The app's own CompanyRoles type
 │   │   ├── annualAccounts.ts     # The app's own AnnualAccounts type
+│   │   ├── risk.ts               # Risk assessment types
 │   │   └── express.d.ts          # Adds the authenticated user to Express requests
 │   └── utils/                    # Validation and pagination helpers
 ├── tests/
@@ -326,6 +357,7 @@ Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. 
 | `tests/roleChanges.test.ts`     | Role changes (CEO, auditor, board) with severity and source event, deregistered members, ordering-only changes ignored, starting points in both feeds (also for existing installations), filling in missing roles, one check per company across both feeds, stopping before a failed company in both feeds and catching up                                                                                                                                                                                                                                |
 | `tests/accounts.test.ts`        | Accounts mapped from a real-shaped response (missing figures, other currencies, warning signs, year from the period end), newest first with company before group, companies without accounts, unsupported companies (banks), struck-off companies, unknown companies, Brreg errors                                                                                                                                                                                                                                                                        |
 | `tests/accountsCheck.test.ts`   | One filing per period for company and group together, corrected filings, warning signs only when things get worse (liquidation, equity turning negative, audit dropped), group accounts ignored for warnings, two years filed at once, accounts stored when following (also when the register is down or does not cover the company), daily check: no re-check within a day, no duplicates, history kept after Brreg drops a year, other companies checked when one fails, struck-off companies skipped, full rollback when notifications cannot be saved |
+| `tests/risk.test.ts`            | Every risk rule on a fixed date (critical signals, the 31 July filing deadline, company forms and founding dates, key figures from the company's own accounts, change history within 12 months), limitations, score cap and level thresholds, live assessment of unfollowed and struck-off companies, watchlist report and sorting, risk rising by time alone is notified, falling risk recorded without notification                                                                                                                                     |
 | `tests/notifications.test.ts`   | Notifications created end to end from detected changes, unread filter, pagination, unread count, marking one or all as read (first read time is kept), users cannot read or change each other's notifications                                                                                                                                                                                                                                                                                                                                             |
 | `tests/admin.test.ts`           | Admin account created once from environment variables (never by promoting an existing user), admin-only change detection endpoint (`401` / `403` / `200`), `409` when a run is already in progress, `502` when Brreg cannot be reached; admin-only accounts check endpoint (`403` / `200` / `409`)                                                                                                                                                                                                                                                        |
 
@@ -401,7 +433,7 @@ GitHub Actions runs the type check and all tests on every push, against a tempor
 ### Insights
 
 - [ ] Role network (board members and management across companies)
-- [ ] Risk signals score
+- [x] Risk signals: explainable assessment, stored levels and early warning
 - [ ] Regional trends by municipality and industry
 
 ### AI

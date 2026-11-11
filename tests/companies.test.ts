@@ -52,7 +52,10 @@ describe("toCompanyRoles", () => {
 describe("GET /api/companies/:orgNumber", () => {
   it("returns the company in the app's own shape", async () => {
     brreg.setActive(
-      brregEnhet(ALTA_TOURS, "ALTA TOURS AS", { antallAnsatte: 12 }),
+      brregEnhet(ALTA_TOURS, "ALTA TOURS AS", {
+        antallAnsatte: 12,
+        sisteInnsendteAarsregnskap: "2025",
+      }),
     );
 
     const res = await request(app).get(`/api/companies/${ALTA_TOURS}`);

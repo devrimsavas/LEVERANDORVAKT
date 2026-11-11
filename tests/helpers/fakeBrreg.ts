@@ -7,6 +7,7 @@ import type {
   BrregUpdate,
 } from "../../src/types/brreg.js";
 import type { BrregRegnskap } from "../../src/types/regnskap.js";
+import { latestDueAccountsYear } from "../../src/services/riskAssessment.js";
 
 // What the fake register answers for one organization number
 export type FakeCompany =
@@ -189,7 +190,9 @@ export function brregEnhet(
     konkurs: false,
     underAvvikling: false,
     underTvangsavviklingEllerTvangsopplosning: false,
-    sisteInnsendteAarsregnskap: "2025",
+    // Always up to date with its filing, whatever day the tests run on,
+    // so no test gets an "accounts overdue" risk signal by accident
+    sisteInnsendteAarsregnskap: String(latestDueAccountsYear(new Date())),
     ...overrides,
   };
 }

@@ -5,6 +5,7 @@ import {
   getCompanyByOrgNumber,
   getRolesByOrgNumber,
   getAccountsByOrgNumber,
+  getRiskByOrgNumber,
 } from "../controllers/companyController.js";
 
 const router = express.Router();
@@ -14,5 +15,6 @@ router.get("/search", searchCompaniesByName); // must stay above /:orgNumber
 router.get("/:orgNumber", getCompanyByOrgNumber);
 router.get("/:orgNumber/roles", getRolesByOrgNumber);
 router.get("/:orgNumber/accounts", getAccountsByOrgNumber);
+router.get("/:orgNumber/risk", getRiskByOrgNumber);
 
 export default router;
