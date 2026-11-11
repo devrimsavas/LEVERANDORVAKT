@@ -24,8 +24,26 @@ export type ExtraHandler = (
   init: RequestInit | undefined,
 ) => Promise<Response | null> | Response | null;
 
+export interface FakeRegistration {
+  // Registration date, e.g. "2026-03-14"
+  date: string;
+  municipality?: string;
+  industry?: { kode: string; beskrivelse: string } | null;
+  form?: string;
+}
+
+export interface FakeMunicipality {
+  kommunenummer: string;
+  kommunenavnNorsk: string;
+}
+
 export interface FakeBrreg {
   companies: Map<string, FakeCompany>;
+  // Companies only used for registration searches (trends)
+  registrations: BrregEnhet[];
+  // Kartverket's municipality list; null makes Kartverket answer 503
+  municipalities: FakeMunicipality[] | null;
+  addRegistrations(count: number, registration: FakeRegistration): void;
   updates: BrregUpdate[];
   // Roles per company: the Brreg response, or an HTTP status to fail with
   roles: Map<string, BrregRollerResponse | { errorStatus: number }>;
@@ -312,22 +330,58 @@ function handle(fake: FakeBrreg, url: URL, headers: Headers): Response {
     return Response.json({ ...company.enhet, respons_klasse: "Enhet" });
   }
 
+  if (url.hostname === "ws.geonorge.no") {
+    return fake.municipalities
+      ? Response.json(fake.municipalities)
+      : new Response(null, { status: 503, statusText: "Service Unavailable" });
+  }
+
+  // Company search: by name, or by registration date, municipality,
+  // industry (a code or its start) and organization form, like Brreg
   if (url.pathname.endsWith("/enhetsregisteret/api/enheter")) {
-    const name = (url.searchParams.get("navn") ?? "").toLowerCase();
-    const matches = [...fake.companies.values()]
+    const params = url.searchParams;
+    const name = (params.get("navn") ?? "").toLowerCase();
+    const from = params.get("fraRegistreringsdatoEnhetsregisteret");
+    const to = params.get("tilRegistreringsdatoEnhetsregisteret");
+    const municipality = params.get("kommunenummer");
+    const industry = params.get("naeringskode");
+    const form = params.get("organisasjonsform");
+    const size = Number(params.get("size") ?? 20);
+    const page = Number(params.get("page") ?? 0);
+
+    // Brreg only pages through the first 10,000 results
+    if (size * (page + 1) > 10000) {
+      return Response.json(
+        { error: "Bad Request" },
+        { status: 400, statusText: "Bad Request" },
+      );
+    }
+
+    const activeCompanies = [...fake.companies.values()]
       .filter(
         (c): c is Extract<FakeCompany, { kind: "active" }> =>
           c.kind === "active",
       )
-      .map((c) => c.enhet)
-      .filter((e) => e.navn.toLowerCase().includes(name));
+      .map((c) => c.enhet);
+    const matches = [...activeCompanies, ...fake.registrations].filter(
+      (e) =>
+        e.navn.toLowerCase().includes(name) &&
+        (!from || (e.registreringsdatoEnhetsregisteret ?? "") >= from) &&
+        (!to || (e.registreringsdatoEnhetsregisteret ?? "9999") <= to) &&
+        (!municipality ||
+          e.forretningsadresse?.kommunenummer === municipality) &&
+        (!industry || (e.naeringskode1?.kode ?? "").startsWith(industry)) &&
+        (!form || e.organisasjonsform.kode === form),
+    );
+    const pageItems = matches.slice(page * size, (page + 1) * size);
+
     return Response.json({
-      ...(matches.length > 0 ? { _embedded: { enheter: matches } } : {}),
+      ...(pageItems.length > 0 ? { _embedded: { enheter: pageItems } } : {}),
       page: {
-        size: matches.length,
+        size,
         totalElements: matches.length,
-        totalPages: 1,
-        number: 0,
+        totalPages: Math.ceil(matches.length / size),
+        number: page,
       },
     });
   }
@@ -383,6 +437,28 @@ export function useFakeBrreg(): FakeBrreg {
     requests: [],
     delayMs: 0,
     extraHandlers: [],
+    registrations: [],
+    municipalities: null,
+    addRegistrations(count, registration) {
+      for (let i = 0; i < count; i++) {
+        const orgNumber = String(800000000 + fake.registrations.length);
+        const enhet = brregEnhet(orgNumber, `REGISTERED ${orgNumber} AS`, {
+          registreringsdatoEnhetsregisteret: registration.date,
+          organisasjonsform: {
+            kode: registration.form ?? "AS",
+            beskrivelse: registration.form ?? "Aksjeselskap",
+          },
+        });
+        enhet.forretningsadresse!.kommunenummer =
+          registration.municipality ?? "5601";
+        if (registration.industry === null) {
+          delete enhet.naeringskode1;
+        } else if (registration.industry) {
+          enhet.naeringskode1 = registration.industry;
+        }
+        fake.registrations.push(enhet);
+      }
+    },
 
     setActive(enhet) {
       fake.companies.set(enhet.organisasjonsnummer, { kind: "active", enhet });
@@ -440,6 +516,12 @@ export function useFakeBrreg(): FakeBrreg {
     fake.updates.length = 0;
     fake.delayMs = 0;
     fake.extraHandlers.length = 0;
+    fake.registrations.length = 0;
+    fake.municipalities = [
+      { kommunenummer: "0301", kommunenavnNorsk: "Oslo" },
+      { kommunenummer: "5601", kommunenavnNorsk: "Alta" },
+      { kommunenummer: "5501", kommunenavnNorsk: "Tromsø" },
+    ];
     fake.addUpdate("000000000", "Ny");
 
     vi.stubGlobal(

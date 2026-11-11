@@ -68,6 +68,7 @@ describe("POST /api/assistant/messages", () => {
       "get_company_accounts",
       "get_company_roles",
       "find_connections",
+      "get_registration_trends",
       "get_notifications",
     ]);
   });
@@ -231,6 +232,30 @@ describe("POST /api/assistant/messages", () => {
     expect(ollama.toolResults(2)[1]).toEqual({
       error: "No company with this organization number",
     });
+  });
+
+  it("finds a municipality by name for the trends tool", async () => {
+    const { auth } = await registerAndLogin(lukas);
+    const month = new Date().toISOString().slice(0, 7);
+    brreg.addRegistrations(2, { date: `${month}-01`, municipality: "5601" });
+    brreg.addRegistrations(1, { date: `${month}-01`, municipality: "5501" });
+    ollama.callTools(
+      {
+        name: "get_registration_trends",
+        arguments: { municipality: "alta", from: month, to: month },
+      },
+      {
+        name: "get_registration_trends",
+        arguments: { municipality: "Atlantis" },
+      },
+    );
+    ollama.reply("Two new companies in Alta this month.");
+
+    await ask(auth, "How many companies were registered in Alta this month?");
+
+    const [alta, unknown] = ollama.toolResults();
+    expect(alta).toMatchObject({ total: 2, from: month, to: month });
+    expect(unknown).toEqual({ error: "Unknown municipality: Atlantis" });
   });
 
   it("tells the model when Brreg cannot be reached, and still answers", async () => {

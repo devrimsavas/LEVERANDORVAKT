@@ -87,7 +87,7 @@ describe("Gemini provider", () => {
     expect(sent!.body.contents).toEqual([
       { role: "user", parts: [{ text: "Hi" }] },
     ]);
-    expect(sent!.body.tools[0]!.functionDeclarations).toHaveLength(9);
+    expect(sent!.body.tools[0]!.functionDeclarations).toHaveLength(10);
   });
 
   it("sends Gemini's tool call back unchanged, with its signature, followed by the result", async () => {

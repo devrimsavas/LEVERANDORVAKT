@@ -15,6 +15,13 @@ import {
 } from "./brregService.js";
 import { assessCompanyLive } from "./riskService.js";
 import { findConnections } from "./connectionsService.js";
+import {
+  getIndustryBreakdown,
+  getMunicipalities,
+  getRegistrationTrend,
+  parseTrendParams,
+  TrendInputError,
+} from "./trendsService.js";
 import { isValidOrgNumber } from "../utils/orgNumber.js";
 import type { AnnualAccounts } from "../types/annualAccounts.js";
 import type { RiskAssessment } from "../types/risk.js";
@@ -118,6 +125,32 @@ export const ASSISTANT_TOOLS: ToolDefinition[] = [
           type: "string",
           description:
             "Optional: a company the user is considering, to compare with the followed companies",
+        },
+      },
+    },
+  },
+  {
+    name: "get_registration_trends",
+    description:
+      "Count new companies registered per month, compared with the same months a year earlier. Can be filtered by municipality, industry and organization form, and can list the most common industries.",
+    parameters: {
+      type: "object",
+      properties: {
+        municipality: {
+          type: "string",
+          description: 'Municipality name (e.g. "Alta") or 4-digit number',
+        },
+        industry: {
+          type: "string",
+          description:
+            'Industry code or its start, e.g. "55" for accommodation, "56" for food service, "79" for travel agencies',
+        },
+        form: { type: "string", description: 'Organization form, e.g. "AS"' },
+        from: { type: "string", description: "First month, e.g. 2026-01" },
+        to: { type: "string", description: "Last month, e.g. 2026-10" },
+        includeIndustries: {
+          type: "boolean",
+          description: "Also list the most common industries",
         },
       },
     },
@@ -316,6 +349,47 @@ async function runTool(
       return result.connections.length === 0 && result.limitations.length === 0
         ? { connections: [], note: "No shared people or organizations found" }
         : result;
+    }
+
+    case "get_registration_trends": {
+      // Models usually know the municipality by name, not by number
+      let municipality = args.municipality;
+      if (
+        typeof municipality === "string" &&
+        !/^\d{4}$/.test(municipality.trim())
+      ) {
+        const name = municipality.trim().toLocaleLowerCase("nb");
+        const match = (await getMunicipalities()).find(
+          (m) => m.name.toLocaleLowerCase("nb") === name,
+        );
+        if (!match) {
+          throw new ToolInputError(`Unknown municipality: ${municipality}`);
+        }
+        municipality = match.number;
+      }
+
+      let params;
+      try {
+        params = parseTrendParams({ ...args, municipality });
+      } catch (error) {
+        if (error instanceof TrendInputError) {
+          throw new ToolInputError(error.message);
+        }
+        throw error;
+      }
+
+      const trend = await getRegistrationTrend(params);
+      return {
+        from: trend.from,
+        to: trend.to,
+        months: trend.months,
+        total: trend.total,
+        previousYearTotal: trend.previousYearTotal,
+        changePercent: trend.changePercent,
+        ...(args.includeIndustries === true
+          ? { industries: await getIndustryBreakdown(params) }
+          : {}),
+      };
     }
 
     case "get_notifications": {

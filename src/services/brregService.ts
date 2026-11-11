@@ -10,6 +10,7 @@ import type {
 import type { Company } from "../types/company.js";
 import type { CompanyRoles } from "../types/companyRoles.js";
 import type { RoleHolder } from "../types/connections.js";
+import type { RegistrationFilters } from "../types/trends.js";
 import type { BrregRegnskap, BrregRegnskapError } from "../types/regnskap.js";
 import type { AnnualAccountsResult } from "../types/annualAccounts.js";
 import { toCompany } from "../mappers/companyMapper.js";
@@ -273,4 +274,83 @@ export async function getAnnualAccounts(
 
   const data = (await response.json()) as BrregRegnskap[];
   return { status: "available", accounts: toAnnualAccountsList(data) };
+}
+
+// Search URL for companies registered between two dates (both included),
+// with the optional municipality, industry and organization form filters
+function registrationsUrl(
+  filters: RegistrationFilters,
+  fromDate: string,
+  toDate: string,
+): URL {
+  const url = new URL(`${BRREG_BASE_URL}/enheter`);
+  url.searchParams.set("fraRegistreringsdatoEnhetsregisteret", fromDate);
+  url.searchParams.set("tilRegistreringsdatoEnhetsregisteret", toDate);
+  if (filters.municipality) {
+    url.searchParams.set("kommunenummer", filters.municipality);
+  }
+  // A short code ("55") matches every industry under it
+  if (filters.industry) {
+    url.searchParams.set("naeringskode", filters.industry);
+  }
+  if (filters.form) {
+    url.searchParams.set("organisasjonsform", filters.form);
+  }
+  return url;
+}
+
+// Number of companies registered between two dates. One request: only the
+// total is read, the companies themselves are not downloaded.
+export async function countRegistrations(
+  filters: RegistrationFilters,
+  fromDate: string,
+  toDate: string,
+): Promise<number> {
+  const url = registrationsUrl(filters, fromDate, toDate);
+  url.searchParams.set("size", "1");
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw brregError(response);
+  }
+  const data = (await response.json()) as BrregSearchResponse;
+  return data.page.totalElements;
+}
+
+// Page size when downloading registrations; Brreg only pages through the
+// first 10,000 results of a query, so callers keep date ranges small
+const REGISTRATIONS_PAGE_SIZE = 100;
+
+// The industry of every company registered between two dates
+export async function listRegisteredIndustries(
+  filters: RegistrationFilters,
+  fromDate: string,
+  toDate: string,
+): Promise<({ code: string; description: string } | null)[]> {
+  const industries: ({ code: string; description: string } | null)[] = [];
+
+  for (let page = 0; ; page++) {
+    const url = registrationsUrl(filters, fromDate, toDate);
+    url.searchParams.set("size", String(REGISTRATIONS_PAGE_SIZE));
+    url.searchParams.set("page", String(page));
+
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw brregError(response);
+    }
+    const data = (await response.json()) as BrregSearchResponse;
+    for (const enhet of data._embedded?.enheter ?? []) {
+      industries.push(
+        enhet.naeringskode1
+          ? {
+              code: enhet.naeringskode1.kode,
+              description: enhet.naeringskode1.beskrivelse,
+            }
+          : null,
+      );
+    }
+    if (page + 1 >= data.page.totalPages) {
+      return industries;
+    }
+  }
 }

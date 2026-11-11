@@ -9,6 +9,7 @@ import { AnnualAccountsRecord } from "../models/AnnualAccountsRecord.js";
 import { AssistantConversation } from "../models/AssistantConversation.js";
 import { AssistantMessage } from "../models/AssistantMessage.js";
 import { AssistantUsage } from "../models/AssistantUsage.js";
+import { TrendCache } from "../models/TrendCache.js";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -30,5 +31,6 @@ export const sequelize = new Sequelize(databaseUrl, {
     AssistantConversation,
     AssistantMessage,
     AssistantUsage,
+    TrendCache,
   ],
 });

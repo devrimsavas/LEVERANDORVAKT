@@ -1,5 +1,6 @@
 import { getRoleHolders, lookupCompany } from "./brregService.js";
 import { CompanyNotFoundError, getWatchlist } from "./watchlistService.js";
+import { mapWithLimit } from "../utils/concurrency.js";
 import type {
   Connection,
   ConnectionLimitation,
@@ -15,28 +16,6 @@ const CONCURRENT_REQUESTS = 5;
 interface CompanyToCheck {
   orgNumber: string;
   name: string;
-}
-
-// Runs fn for every item, at most `limit` at a time, keeping the order
-async function mapWithLimit<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>,
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let next = 0;
-
-  async function worker(): Promise<void> {
-    while (next < items.length) {
-      const index = next++;
-      results[index] = await fn(items[index]!);
-    }
-  }
-
-  await Promise.all(
-    Array.from({ length: Math.min(limit, items.length) }, worker),
-  );
-  return results;
 }
 
 // Finds people and organizations that hold roles in two or more of the

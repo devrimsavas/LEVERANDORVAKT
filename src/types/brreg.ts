@@ -33,6 +33,8 @@ export interface BrregEnhet {
   // Size and age
   antallAnsatte?: number;
   stiftelsesdato?: string;
+  // When the company was entered in the Central Coordinating Register
+  registreringsdatoEnhetsregisteret?: string;
 
   // Risk flags
   konkurs: boolean;
