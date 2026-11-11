@@ -349,6 +349,9 @@ export async function getIndustryBreakdown(
 
   return {
     ...result,
+    // Counted from the downloaded companies, so the parts always add up to
+    // the total even if the cached monthly counts are a few hours older
+    total: detailed.reduce((sum, d) => sum + d.count, 0),
     industries: industries.slice(0, TOP_INDUSTRIES),
     otherCount: industries
       .slice(TOP_INDUSTRIES)

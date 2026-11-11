@@ -358,6 +358,22 @@ describe("GET /api/trends/industries", () => {
     expect(res.body.limitations[0]).toContain("could not be loaded from SSB");
   });
 
+  it("gives a total that the industries add up to, even when the monthly count in the cache is older", async () => {
+    brreg.addRegistrations(1, { date: "2026-11-02", industry: HOTELS });
+    // Caches the current month's count as 1
+    await request(app).get("/api/trends/registrations?from=2026-11&to=2026-11");
+    brreg.addRegistrations(1, { date: "2026-11-10", industry: HOTELS });
+
+    const res = await request(app).get(
+      "/api/trends/industries?from=2026-11&to=2026-11",
+    );
+
+    expect(res.body.total).toBe(2);
+    expect(res.body.industries).toEqual([
+      { code: "55", description: "Overnattingsvirksomhet", count: 2 },
+    ]);
+  });
+
   it("does not download a period with too many registrations, and says why", async () => {
     brreg.addRegistrations(MAX_BREAKDOWN_REGISTRATIONS + 1, {
       date: "2026-03-10",
