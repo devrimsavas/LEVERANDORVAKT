@@ -50,6 +50,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 | AI             | Ollama (`ollama` client, local or Ollama Cloud) or the Gemini API, behind one provider interface                                                 |
 | API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                                                                                   |
 | Testing        | Vitest + Supertest, GitHub Actions CI                                                                                                            |
+| Containers     | Docker (multi-stage image) and Docker Compose for the API and PostgreSQL                                                                         |
 | Data source    | [Brønnøysund Register Centre open API](https://data.brreg.no) (Central Coordinating Register and Register of Company Accounts; free, no API key) |
 
 ## Architecture
@@ -279,7 +280,12 @@ LEVERANDORVAKT/
 │   │   └── setup.ts              # Empties all tables before every test
 │   ├── fixtures/                 # Fictional data shaped like real Brreg responses
 │   └── *.test.ts                 # One test file per area (auth, companies, watchlist, ...)
-├── .github/workflows/ci.yml      # GitHub Actions: type check and tests on every push
+├── .github/workflows/
+│   ├── ci.yml                    # Type check, tests and a Docker Compose smoke test on every push
+│   └── portfolio-rebuild.yml     # Rebuilds the portfolio site when the README changes
+├── Dockerfile                    # Multi-stage image: build with all dependencies, run with production ones only
+├── docker-compose.yml            # The API and PostgreSQL for local development
+├── .dockerignore
 ├── vitest.config.ts
 ├── envexample
 ├── package.json
@@ -288,31 +294,50 @@ LEVERANDORVAKT/
 
 ## Getting Started
 
-### Prerequisites
+There are two ways to run the project: with Docker, which needs nothing else installed, or directly with Node.js for development.
+
+### Quick start with Docker
+
+Requires [Docker Desktop](https://www.docker.com/products/docker-desktop/) (or Docker Engine with Compose).
+
+```bash
+git clone https://github.com/devrimsavas/LEVERANDORVAKT.git
+cd LEVERANDORVAKT
+cp envexample .env        # then set JWT_SECRET (and the ADMIN_* values) in .env
+docker compose up --build
+```
+
+The API runs at `http://localhost:3000` and the docs at `http://localhost:3000/api/docs`. Compose starts PostgreSQL, waits until it accepts connections, then starts the API, which applies the migrations itself. The database is also reachable from your machine on port `5433` (e.g. for pgAdmin), and its data is kept in a Docker volume between runs; `docker compose down --volumes` deletes it.
+
+Inside Docker the database address and the Ollama address are set by `docker-compose.yml`, so the `DATABASE_URL` and `OLLAMA_HOST` in `.env` are not used there. The assistant reaches Ollama running on your machine through `host.docker.internal`.
+
+### Development setup
+
+#### Prerequisites
 
 - Node.js 22+
 - PostgreSQL
 
-### 1. Clone the repository
+#### 1. Clone the repository
 
 ```bash
 git clone https://github.com/devrimsavas/LEVERANDORVAKT.git
 cd LEVERANDORVAKT
 ```
 
-### 2. Install dependencies
+#### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Create the database
+#### 3. Create the database
 
 ```sql
 CREATE DATABASE leverandorvakt;
 ```
 
-### 4. Create a `.env` file
+#### 4. Create a `.env` file
 
 Copy `envexample` to `.env` and fill in your own values:
 
@@ -351,14 +376,14 @@ Generate a strong `JWT_SECRET` with:
 node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ```
 
-### 5. Build and generate the API docs
+#### 5. Build and generate the API docs
 
 ```bash
 npm run build
 npm run swagger
 ```
 
-### 6. Run in development mode
+#### 6. Run in development mode
 
 ```bash
 npm run dev
@@ -366,7 +391,7 @@ npm run dev
 
 On startup the app connects to the database and applies any pending migrations automatically. The server runs at `http://localhost:3000` and the API docs at `http://localhost:3000/api/docs`.
 
-### Available scripts
+#### Available scripts
 
 | Script               | What it does                                                              |
 | -------------------- | ------------------------------------------------------------------------- |
@@ -424,7 +449,7 @@ Migrations are applied to the test database automatically.
 
 ### Continuous integration
 
-GitHub Actions runs the type check and all tests on every push, against a temporary PostgreSQL database.
+GitHub Actions runs two jobs on every push: the type check and all tests against a temporary PostgreSQL database, and a Docker job that builds the image, starts the stack with Docker Compose and checks that the API and its docs answer.
 
 ## Roadmap
 
@@ -479,7 +504,7 @@ GitHub Actions runs the type check and all tests on every push, against a tempor
 
 ### Delivery
 
-- [ ] Docker Compose for local development
+- [x] Docker Compose for local development
 - [ ] Deployment (Render + Aiven PostgreSQL)
 - [ ] Frontend
 - [ ] Usage guide with scenarios
