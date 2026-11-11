@@ -3,6 +3,7 @@ import {
   getIndustryBreakdown,
   getMunicipalities,
   getRegistrationTrend,
+  parseIndustryLevel,
   parseTrendParams,
   TrendInputError,
 } from "../services/trendsService.js";
@@ -47,12 +48,24 @@ export const industryBreakdown = async (req: Request, res: Response) => {
      #swagger.parameters["industry"] = { in: "query", type: "string", description: "Industry code or its start, e.g. 55" }
      #swagger.parameters["form"] = { in: "query", type: "string", description: "Organization form, e.g. AS" }
      #swagger.parameters["from"] = { in: "query", type: "string", description: "First month, e.g. 2025-11" }
-     #swagger.parameters["to"] = { in: "query", type: "string", description: "Last month, e.g. 2026-10" } */
+     #swagger.parameters["to"] = { in: "query", type: "string", description: "Last month, e.g. 2026-10" }
+     #swagger.parameters["level"] = { in: "query", type: "string", description: "division (default): main industries, e.g. 62 IT; detailed: full codes, e.g. 62.100" } */
   const params = parse(req, res);
   if (!params) return;
 
+  let level;
   try {
-    res.json(await getIndustryBreakdown(params));
+    level = parseIndustryLevel(req.query.level);
+  } catch (error) {
+    if (error instanceof TrendInputError) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    throw error;
+  }
+
+  try {
+    res.json(await getIndustryBreakdown(params, level));
   } catch (error) {
     console.error(error);
     res.status(502).json({ error: "Could not reach the Brreg API" });

@@ -5,10 +5,12 @@ import {
   listRegisteredIndustries,
 } from "./brregService.js";
 import { fetchMunicipalities } from "./kartverketService.js";
+import { fetchIndustryDivisions } from "./ssbService.js";
 import { mapWithLimit } from "../utils/concurrency.js";
 import type {
   IndustryBreakdown,
   IndustryCount,
+  IndustryLevel,
   MonthCount,
   Municipality,
   RegistrationFilters,
@@ -20,6 +22,7 @@ const HOUR_MS = 60 * 60 * 1000;
 const PAST_MONTH_TTL = 30 * 24 * HOUR_MS; // past months hardly change
 const CURRENT_MONTH_TTL = 6 * HOUR_MS; // the current month still grows
 const MUNICIPALITIES_TTL = 24 * HOUR_MS;
+const INDUSTRY_NAMES_TTL = 30 * 24 * HOUR_MS; // the standard changes rarely
 
 export const MAX_MONTHS = 36;
 // Industry breakdowns download every company; above this it is too slow
@@ -114,6 +117,17 @@ export function parseTrendParams(
   }
 
   return { filters: { municipality, industry, form }, from, to };
+}
+
+// The level of an industry breakdown; main industries by default
+export function parseIndustryLevel(value: unknown): IndustryLevel {
+  if (value === undefined || value === "" || value === "division") {
+    return "division";
+  }
+  if (value === "detailed") {
+    return "detailed";
+  }
+  throw new TrendInputError('level must be "division" or "detailed"');
 }
 
 // ---- Cache ----
@@ -226,12 +240,55 @@ export async function getRegistrationTrend(
   };
 }
 
-// The industries new companies were registered in, most common first.
+// Registrations per full industry code; code null means no code at all
+interface DetailedCount {
+  code: string | null;
+  description: string;
+  count: number;
+}
+
+// "00.000 Uoppgitt" is Brreg's placeholder for "not given": not an industry
+function isUnspecified(code: string | null): boolean {
+  return code === null || code.startsWith("00");
+}
+
+// Adds up the detailed counts per main industry (the first two digits)
+async function byDivision(
+  detailed: DetailedCount[],
+  limitations: string[],
+): Promise<IndustryCount[]> {
+  let names: Record<string, string> = {};
+  try {
+    names = await getIndustryDivisionNames();
+  } catch (error) {
+    console.error("Trends: could not load industry names from SSB", error);
+    limitations.push(
+      "The names of the main industries could not be loaded from SSB; they are shown by code.",
+    );
+  }
+
+  const divisions = new Map<string, IndustryCount>();
+  for (const { code, count } of detailed) {
+    const division = code!.slice(0, 2);
+    const entry = divisions.get(division) ?? {
+      code: division,
+      description: names[division] ?? `Industry ${division}`,
+      count: 0,
+    };
+    entry.count += count;
+    divisions.set(division, entry);
+  }
+  return [...divisions.values()];
+}
+
+// The industries new companies were registered in, most common first:
+// by main industry (level "division") or by full code ("detailed").
 // Brreg cannot count by industry, so the companies are downloaded month
 // by month and counted here; very large periods are refused with a
 // limitation instead of taking minutes.
 export async function getIndustryBreakdown(
   { filters, from, to }: TrendParams,
+  level: IndustryLevel = "division",
   now = new Date(),
 ): Promise<IndustryBreakdown> {
   const months = monthsBetween(from, to);
@@ -239,20 +296,22 @@ export async function getIndustryBreakdown(
     countForMonth(filters, month, now),
   );
   const total = counts.reduce((sum, c) => sum + c, 0);
-  const result = { filters, from, to, total };
+  const result = { filters, from, to, level, total };
 
   if (total > MAX_BREAKDOWN_REGISTRATIONS) {
     return {
       ...result,
       industries: [],
       otherCount: 0,
+      unspecifiedCount: 0,
       limitations: [
         `${total} registrations are too many to break down by industry (at most ${MAX_BREAKDOWN_REGISTRATIONS}). Choose a shorter period, a municipality or an industry.`,
       ],
     };
   }
 
-  const industries = await cached(
+  // Cached per full code; the main industries are added up from it
+  const detailed = await cached<DetailedCount[]>(
     `industries:${filtersKey(filters)}|${from}|${to}`,
     ttlFor(to, now),
     async () => {
@@ -261,7 +320,7 @@ export async function getIndustryBreakdown(
         return listRegisteredIndustries(filters, first, last);
       });
 
-      const byCode = new Map<string, IndustryCount>();
+      const byCode = new Map<string, DetailedCount>();
       for (const industry of perMonth.flat()) {
         const key = industry?.code ?? "";
         const entry = byCode.get(key) ?? {
@@ -272,22 +331,38 @@ export async function getIndustryBreakdown(
         entry.count += 1;
         byCode.set(key, entry);
       }
-      return [...byCode.values()].sort(
-        (a, b) =>
-          b.count - a.count || (a.code ?? "").localeCompare(b.code ?? ""),
-      );
+      return [...byCode.values()];
     },
   );
 
-  const top = industries.slice(0, TOP_INDUSTRIES);
+  const limitations: string[] = [];
+  const specified = detailed.filter((d) => !isUnspecified(d.code));
+  const unspecifiedCount = detailed
+    .filter((d) => isUnspecified(d.code))
+    .reduce((sum, d) => sum + d.count, 0);
+
+  const industries = (
+    level === "division"
+      ? await byDivision(specified, limitations)
+      : specified.map((d) => ({ ...d, code: d.code! }))
+  ).sort((a, b) => b.count - a.count || a.code.localeCompare(b.code));
+
   return {
     ...result,
-    industries: top,
+    industries: industries.slice(0, TOP_INDUSTRIES),
     otherCount: industries
       .slice(TOP_INDUSTRIES)
       .reduce((sum, i) => sum + i.count, 0),
-    limitations: [],
+    unspecifiedCount,
+    limitations,
   };
+}
+
+// Names of the main industries in the current standard
+function getIndustryDivisionNames(): Promise<Record<string, string>> {
+  return cached("industry-divisions", INDUSTRY_NAMES_TTL, () =>
+    fetchIndustryDivisions(new Date()),
+  );
 }
 
 // All municipalities, for choosing one in a list

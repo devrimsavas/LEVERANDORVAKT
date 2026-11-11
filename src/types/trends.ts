@@ -33,8 +33,12 @@ export interface RegistrationTrend {
   changePercent: number | null;
 }
 
+// "division": by main industry, the first two digits of the code (62 = IT),
+// "detailed": by the full code (62.100 = computer programming)
+export type IndustryLevel = "division" | "detailed";
+
 export interface IndustryCount {
-  code: string | null; // null: no industry code registered
+  code: string;
   description: string;
   count: number;
 }
@@ -43,11 +47,14 @@ export interface IndustryBreakdown {
   filters: RegistrationFilters;
   from: string;
   to: string;
+  level: IndustryLevel;
   total: number;
   // The ten most common industries, most first
   industries: IndustryCount[];
   // Registrations in the remaining industries
   otherCount: number;
+  // Registrations without an industry ("00.000 Uoppgitt" or none at all)
+  unspecifiedCount: number;
   limitations: string[];
 }
 

@@ -225,24 +225,80 @@ describe("GET /api/trends/registrations", () => {
 });
 
 describe("GET /api/trends/industries", () => {
-  it("lists the industries new companies were registered in, most common first", async () => {
-    brreg.addRegistrations(3, { date: "2026-03-10", industry: HOTELS });
-    brreg.addRegistrations(2, { date: "2026-04-10", industry: RESTAURANTS });
-    brreg.addRegistrations(1, { date: "2026-04-11", industry: null });
+  it("groups new companies by main industry, with names from SSB", async () => {
+    brreg.addRegistrations(2, { date: "2026-03-10", industry: HOTELS });
+    brreg.addRegistrations(1, {
+      date: "2026-03-10",
+      industry: { kode: "55.201", beskrivelse: "Drift av vandrerhjem" },
+    });
+    brreg.addRegistrations(2, {
+      date: "2026-04-10",
+      industry: { kode: "62.100", beskrivelse: "Dataprogrammeringstjenester" },
+    });
+    brreg.addRegistrations(2, {
+      date: "2026-04-10",
+      industry: {
+        kode: "62.200",
+        beskrivelse: "Konsulentvirksomhet tilknyttet IT",
+      },
+    });
 
     const res = await request(app).get(
       "/api/trends/industries?from=2026-03&to=2026-04",
     );
 
     expect(res.body).toMatchObject({
-      total: 6,
+      level: "division",
+      total: 7,
+      industries: [
+        {
+          code: "62",
+          description:
+            "Dataprogrammering, konsulentvirksomhet og andre tjenester tilknyttet informasjonsteknologi",
+          count: 4,
+        },
+        { code: "55", description: "Overnattingsvirksomhet", count: 3 },
+      ],
+      otherCount: 0,
+      unspecifiedCount: 0,
+      limitations: [],
+    });
+  });
+
+  it("lists full industry codes with level=detailed", async () => {
+    brreg.addRegistrations(3, { date: "2026-03-10", industry: HOTELS });
+    brreg.addRegistrations(2, { date: "2026-04-10", industry: RESTAURANTS });
+
+    const res = await request(app).get(
+      "/api/trends/industries?from=2026-03&to=2026-04&level=detailed",
+    );
+
+    expect(res.body).toMatchObject({
+      level: "detailed",
       industries: [
         { code: "55.100", description: "Drift av hoteller", count: 3 },
         { code: "56.101", description: "Drift av restauranter", count: 2 },
-        { code: null, description: "No industry code registered", count: 1 },
       ],
+    });
+  });
+
+  it('counts companies without an industry apart, also Brreg\'s "00.000 Uoppgitt"', async () => {
+    brreg.addRegistrations(2, { date: "2026-03-10", industry: HOTELS });
+    brreg.addRegistrations(3, {
+      date: "2026-03-10",
+      industry: { kode: "00.000", beskrivelse: "Uoppgitt" },
+    });
+    brreg.addRegistrations(1, { date: "2026-03-10", industry: null });
+
+    const res = await request(app).get(
+      "/api/trends/industries?from=2026-03&to=2026-03",
+    );
+
+    expect(res.body).toMatchObject({
+      total: 6,
+      industries: [{ code: "55", count: 2 }],
       otherCount: 0,
-      limitations: [],
+      unspecifiedCount: 4,
     });
   });
 
@@ -255,7 +311,7 @@ describe("GET /api/trends/industries", () => {
     }
 
     const res = await request(app).get(
-      "/api/trends/industries?from=2026-03&to=2026-03",
+      "/api/trends/industries?from=2026-03&to=2026-03&level=detailed",
     );
 
     expect(res.body.industries).toHaveLength(10);
@@ -272,8 +328,34 @@ describe("GET /api/trends/industries", () => {
     );
 
     expect(res.body.industries).toEqual([
-      { code: "55.100", description: "Drift av hoteller", count: 150 },
+      { code: "55", description: "Overnattingsvirksomhet", count: 150 },
     ]);
+  });
+
+  it("loads the industry names from SSB once", async () => {
+    brreg.addRegistrations(1, { date: "2026-03-10", industry: HOTELS });
+
+    await request(app).get("/api/trends/industries?from=2026-03&to=2026-03");
+    await request(app).get("/api/trends/industries?from=2026-02&to=2026-03");
+
+    expect(
+      brreg.requests.filter((url) => url.hostname === "data.ssb.no"),
+    ).toHaveLength(1);
+  });
+
+  it("shows main industries by code when SSB cannot be reached", async () => {
+    brreg.industryDivisions = null;
+    brreg.addRegistrations(2, { date: "2026-03-10", industry: HOTELS });
+
+    const res = await request(app).get(
+      "/api/trends/industries?from=2026-03&to=2026-03",
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body.industries).toEqual([
+      { code: "55", description: "Industry 55", count: 2 },
+    ]);
+    expect(res.body.limitations[0]).toContain("could not be loaded from SSB");
   });
 
   it("does not download a period with too many registrations, and says why", async () => {
@@ -294,6 +376,12 @@ describe("GET /api/trends/industries", () => {
     expect(
       searches().every((url) => url.searchParams.get("size") === "1"),
     ).toBe(true);
+  });
+
+  it("returns 400 for an unknown level", async () => {
+    const res = await request(app).get("/api/trends/industries?level=sector");
+
+    expect(res.status).toBe(400);
   });
 });
 

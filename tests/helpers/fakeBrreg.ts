@@ -43,6 +43,8 @@ export interface FakeBrreg {
   registrations: BrregEnhet[];
   // Kartverket's municipality list; null makes Kartverket answer 503
   municipalities: FakeMunicipality[] | null;
+  // SSB's names of the main industries; null makes SSB answer 503
+  industryDivisions: Record<string, string> | null;
   addRegistrations(count: number, registration: FakeRegistration): void;
   updates: BrregUpdate[];
   // Roles per company: the Brreg response, or an HTTP status to fail with
@@ -330,6 +332,18 @@ function handle(fake: FakeBrreg, url: URL, headers: Headers): Response {
     return Response.json({ ...company.enhet, respons_klasse: "Enhet" });
   }
 
+  if (url.hostname === "data.ssb.no") {
+    return fake.industryDivisions
+      ? Response.json({
+          codes: Object.entries(fake.industryDivisions).map(([code, name]) => ({
+            code,
+            name,
+            level: "2",
+          })),
+        })
+      : new Response(null, { status: 503, statusText: "Service Unavailable" });
+  }
+
   if (url.hostname === "ws.geonorge.no") {
     return fake.municipalities
       ? Response.json(fake.municipalities)
@@ -450,6 +464,7 @@ export function useFakeBrreg(): FakeBrreg {
     extraHandlers: [],
     registrations: [],
     municipalities: null,
+    industryDivisions: null,
     addRegistrations(count, registration) {
       for (let i = 0; i < count; i++) {
         const orgNumber = String(800000000 + fake.registrations.length);
@@ -528,6 +543,12 @@ export function useFakeBrreg(): FakeBrreg {
     fake.delayMs = 0;
     fake.extraHandlers.length = 0;
     fake.registrations.length = 0;
+    fake.industryDivisions = {
+      "41": "Oppføring av bygninger",
+      "55": "Overnattingsvirksomhet",
+      "56": "Serveringsvirksomhet",
+      "62": "Dataprogrammering, konsulentvirksomhet og andre tjenester tilknyttet informasjonsteknologi",
+    };
     fake.municipalities = [
       { kommunenummer: "0301", kommunenavnNorsk: "Oslo" },
       { kommunenummer: "5601", kommunenavnNorsk: "Alta" },
