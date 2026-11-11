@@ -4,7 +4,7 @@
 
 _Last updated: 11.11.2026_
 
-> ⚠️ **Under active development** — the backend for following companies, detecting changes (company data, roles and annual accounts) and notifying users, and an explainable risk assessment are in place and covered by tests. The AI assistant is next. See the [Roadmap](#roadmap).
+> ⚠️ **Under active development** — the backend for following companies, detecting changes (company data, roles and annual accounts) and notifying users, an explainable risk assessment and an AI assistant with tool calling are in place and covered by tests. Deployment and the frontend are next. See the [Roadmap](#roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
 
@@ -27,6 +27,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Change detection** — a scheduled job reads the Brønnøysund company and role update feeds and records every change with a severity (`critical` / `warning` / `info`)
 - **Notifications** — followers of a company are notified of every recorded change
 - **Versioned database migrations** — schema changes are tracked as numbered migration files and applied automatically on startup
+- **AI assistant** — questions in plain language ("Which of my suppliers have the highest risk?") answered with tool calling over the app's own service functions; read-only, per-user conversations, a daily question limit, and a choice of model provider (local Ollama, Ollama Cloud or Gemini) in `.env`
 - **Interactive API documentation** — Swagger UI at `/api/docs`
 - **Automated tests and CI** — Vitest + Supertest against a real PostgreSQL database, run by GitHub Actions on every push
 
@@ -35,7 +36,6 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Ownership** — shareholders from Skatteetaten's shareholder register, imported by a separate Python service
 - **Role network** — how people and companies are connected through board and management roles
 - **Regional trends** — new companies over time by municipality and industry code
-- **AI assistant** — ask questions about followed companies in plain language, using the same service functions as the API
 
 ## Tech Stack
 
@@ -47,6 +47,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 | ORM            | Sequelize with `sequelize-typescript` (decorator models)                                                                                         |
 | Migrations     | Umzug                                                                                                                                            |
 | Authentication | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs`                                                                               |
+| AI             | Ollama (`ollama` client, local or Ollama Cloud) or the Gemini API, behind one provider interface                                                 |
 | API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                                                                                   |
 | Testing        | Vitest + Supertest, GitHub Actions CI                                                                                                            |
 | Data source    | [Brønnøysund Register Centre open API](https://data.brreg.no) (Central Coordinating Register and Register of Company Accounts; free, no API key) |
@@ -88,6 +89,8 @@ Services do not know about HTTP, so the same functions can be reused by the sche
 - **"Not covered" is not an error.** The accounts register answers banks and insurance companies with a `500` and a message; the app recognises that message and returns `status: "unsupported"`, so these companies are not retried as failures.
 - **Two jobs, two failure strategies.** Change detection follows feeds, so it stops at the first failed company to keep its feed position. The accounts check has no feed: each company has its own check time, so a failed company is skipped and retried on the next run while the others go on.
 - **Warnings for changes for the worse, not for known states.** A small company that has never been audited, or whose equity was already negative, does not trigger a new warning every year; only the step from audited to unaudited, or from positive to negative equity, does.
+- **The assistant only reads.** Its tools wrap the existing service functions and change nothing; following, notes and notifications are changed by the user through the normal API. The user's identity comes from the login token, never from the model, and private notes are never sent to the model.
+- **Provider-independent assistant.** One `LlmProvider` interface with Ollama (local or cloud) and Gemini behind it, chosen in `.env`. Development runs free on a local model; the deployed demo can use a hosted one without code changes. Tests use a fake model server, so CI never calls a real model.
 - **Risk that explains itself.** The assessment lists every signal with its points and reason, and every limitation (e.g. no change history for an unfollowed company, no key figures for a bank), so a "low" level is never mistaken for a full check. All weights live in one `RISK_RULES` object.
 - **The rules are a pure function of the data and the date.** `assessRisk(input, now)` touches no database or network, so every rule is tested on a fixed day; the tests never break because the calendar moved past a deadline.
 - **Clear error status codes.** `400` invalid input, `401` missing or invalid token / credentials, `403` not allowed (e.g. not an admin), `404` not found, `409` conflict (email already registered, change detection already running), `502` the Brønnøysund API could not be reached.
@@ -162,6 +165,19 @@ All notification endpoints require a token. Each user sees and changes only thei
 | PATCH  | `/api/notifications/{id}/read`    | Mark one notification as read                               |
 | POST   | `/api/notifications/read-all`     | Mark all notifications as read                              |
 
+### Assistant
+
+All assistant endpoints require a token. Each user sees only their own conversations.
+
+| Method | Endpoint                            | Description                                                                                                                 |
+| ------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/api/assistant/messages`           | Ask a question (`message`, optional `conversationId`); returns the answer, the tools it is based on and the conversation id |
+| GET    | `/api/assistant/conversations`      | Your conversations, most recently used first (`page`, `pageSize`)                                                           |
+| GET    | `/api/assistant/conversations/{id}` | One conversation with all its messages                                                                                      |
+| DELETE | `/api/assistant/conversations/{id}` | Delete a conversation                                                                                                       |
+
+Errors: `429` daily question limit reached, `503` assistant not configured or model not reachable, `504` model did not answer in time, `502` model returned an error.
+
 ### Admin
 
 Admin endpoints require a token from an admin account. Regular users get `403 Forbidden`.
@@ -191,14 +207,16 @@ List endpoints return `{ items, page, pageSize, totalItems, totalPages }` (defau
 
 ### Other tables
 
-| Table               | What it holds                                                                                                                                                       |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `companies`         | One row per followed company: organization number, last known state (`snapshot`) and roles (JSONB), accounts status, latest risk level and score, check times       |
-| `annual_accounts`   | Every set of annual accounts seen: period, type (company / group), currency, audit and liquidation flags, key figures (JSONB); one row per company, type and period |
-| `watchlist_entries` | Which user follows which company, with the user's note (unique per user and company)                                                                                |
-| `company_changes`   | Every detected change: field, old and new value, severity, and the feed event that revealed it                                                                      |
-| `notifications`     | One row per follower per change, with a public UUID and the time it was read                                                                                        |
-| `brreg_sync_state`  | Where change detection stopped in each Brønnøysund feed                                                                                                             |
+| Table                                           | What it holds                                                                                                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `companies`                                     | One row per followed company: organization number, last known state (`snapshot`) and roles (JSONB), accounts status, latest risk level and score, check times       |
+| `annual_accounts`                               | Every set of annual accounts seen: period, type (company / group), currency, audit and liquidation flags, key figures (JSONB); one row per company, type and period |
+| `assistant_conversations`, `assistant_messages` | The user's conversations with the assistant: questions, answers and the tools each answer used (tool calls themselves are not stored)                               |
+| `assistant_usage`                               | One row per question, for the daily limit; holds no content and is kept when a conversation is deleted                                                              |
+| `watchlist_entries`                             | Which user follows which company, with the user's note (unique per user and company)                                                                                |
+| `company_changes`                               | Every detected change: field, old and new value, severity, and the feed event that revealed it                                                                      |
+| `notifications`                                 | One row per follower per change, with a public UUID and the time it was read                                                                                        |
+| `brreg_sync_state`                              | Where change detection stopped in each Brønnøysund feed                                                                                                             |
 
 Applied migrations are recorded in the `migrations` table.
 
@@ -215,8 +233,8 @@ LEVERANDORVAKT/
 │   │   ├── migrator.ts           # Umzug migration runner
 │   │   └── ensureAdmin.ts        # Creates the admin account once from environment variables
 │   ├── migrations/               # Numbered schema changes (0001-create-users.ts, ...), applied on startup
-│   ├── models/                   # User, CompanyRecord, WatchlistEntry, CompanyChange, Notification, BrregSyncState, AnnualAccountsRecord
-│   ├── routes/                   # URL → controller mapping: index, auth, companies, watchlist, notifications, admin
+│   ├── models/                   # User, CompanyRecord, WatchlistEntry, CompanyChange, Notification, BrregSyncState, AnnualAccountsRecord, Assistant*
+│   ├── routes/                   # URL → controller mapping: index, auth, companies, watchlist, notifications, assistant, admin
 │   ├── middlewares/
 │   │   ├── requireAuth.ts        # Verifies the JWT and adds the user to the request
 │   │   └── requireRole.ts        # Allows only the given roles (e.g. admin)
@@ -234,6 +252,9 @@ LEVERANDORVAKT/
 │   │   ├── storedAccounts.ts     # Reads stored annual accounts (shared by several services)
 │   │   ├── riskAssessment.ts     # The risk rules: weights, thresholds and the pure assessRisk function
 │   │   ├── riskService.ts        # Builds the risk input from live or stored data, stores levels, records rises
+│   │   ├── assistantService.ts   # The agent loop, conversations and the daily limit
+│   │   ├── assistantTools.ts     # The read-only tools the model can call, over the existing services
+│   │   ├── llm/                  # LlmProvider implementations: Ollama (local or cloud) and Gemini, chosen in .env
 │   │   └── notificationService.ts     # Creates and serves notifications
 │   ├── jobs/
 │   │   ├── changeDetectionJob.ts # Runs change detection on a timer, never two runs at once
@@ -246,11 +267,13 @@ LEVERANDORVAKT/
 │   │   ├── companyRoles.ts       # The app's own CompanyRoles type
 │   │   ├── annualAccounts.ts     # The app's own AnnualAccounts type
 │   │   ├── risk.ts               # Risk assessment types
+│   │   ├── llm.ts                # Provider-independent chat messages, tools and errors
 │   │   └── express.d.ts          # Adds the authenticated user to Express requests
 │   └── utils/                    # Validation and pagination helpers
 ├── tests/
 │   ├── helpers/
 │   │   ├── fakeBrreg.ts          # In-memory stand-in for the Brønnøysund API
+│   │   ├── fakeLlm.ts            # Fake Ollama server with scripted model replies
 │   │   ├── users.ts              # Test users and register/login helper
 │   │   ├── globalSetup.ts        # Applies migrations to the test database once
 │   │   └── setup.ts              # Empties all tables before every test
@@ -306,9 +329,21 @@ ADMIN_LAST_NAME=User
 
 CHANGE_DETECTION_INTERVAL_MINUTES=10
 ACCOUNTS_CHECK_INTERVAL_HOURS=24
+
+# AI assistant: "ollama" or "gemini"; leave empty to turn it off
+AI_PROVIDER=ollama
+AI_TIMEOUT_SECONDS=60
+ASSISTANT_DAILY_LIMIT=20
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=qwen3
+OLLAMA_API_KEY=
+GEMINI_API_KEY=
+GEMINI_MODEL=
 ```
 
 The admin account is created once on the first startup from the `ADMIN_*` values; an existing user is never promoted to admin. Setting `CHANGE_DETECTION_INTERVAL_MINUTES` or `ACCOUNTS_CHECK_INTERVAL_HOURS` to `0` turns that job off.
+
+For the assistant with a local model, install [Ollama](https://ollama.com), pull a model that supports tool calling (e.g. `ollama pull qwen3`) and set `OLLAMA_MODEL` to its name. For Ollama Cloud, set `OLLAMA_HOST=https://ollama.com` and an `OLLAMA_API_KEY`. For Gemini, set `AI_PROVIDER=gemini` with a key from Google AI Studio.
 
 Generate a strong `JWT_SECRET` with:
 
@@ -358,6 +393,8 @@ Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. 
 | `tests/accounts.test.ts`        | Accounts mapped from a real-shaped response (missing figures, other currencies, warning signs, year from the period end), newest first with company before group, companies without accounts, unsupported companies (banks), struck-off companies, unknown companies, Brreg errors                                                                                                                                                                                                                                                                        |
 | `tests/accountsCheck.test.ts`   | One filing per period for company and group together, corrected filings, warning signs only when things get worse (liquidation, equity turning negative, audit dropped), group accounts ignored for warnings, two years filed at once, accounts stored when following (also when the register is down or does not cover the company), daily check: no re-check within a day, no duplicates, history kept after Brreg drops a year, other companies checked when one fails, struck-off companies skipped, full rollback when notifications cannot be saved |
 | `tests/risk.test.ts`            | Every risk rule on a fixed date (critical signals, the 31 July filing deadline, company forms and founding dates, key figures from the company's own accounts, change history within 12 months), limitations, score cap and level thresholds, live assessment of unfollowed and struck-off companies, watchlist report and sorting, risk rising by time alone is notified, falling risk recorded without notification                                                                                                                                     |
+| `tests/assistant.test.ts`       | The agent loop against a fake Ollama server: answers with and without tools, tool calls and results sent back in Ollama's format, private notes never sent to the model, tools limited to the asking user's data, invalid tool input and unknown tools returned to the model as errors, unfollowed companies, Brreg errors, the step limit, conversation history, daily limit per user (not reset by deleting), unavailable / missing / slow models storing nothing, validation, private conversations                                                    |
+| `tests/geminiProvider.test.ts`  | Gemini request format (system instruction, contents, function declarations, API key header), tool calls sent back unchanged with their thought signature, parallel tool results in one turn, quota errors                                                                                                                                                                                                                                                                                                                                                 |
 | `tests/notifications.test.ts`   | Notifications created end to end from detected changes, unread filter, pagination, unread count, marking one or all as read (first read time is kept), users cannot read or change each other's notifications                                                                                                                                                                                                                                                                                                                                             |
 | `tests/admin.test.ts`           | Admin account created once from environment variables (never by promoting an existing user), admin-only change detection endpoint (`401` / `403` / `200`), `409` when a run is already in progress, `502` when Brreg cannot be reached; admin-only accounts check endpoint (`403` / `200` / `409`)                                                                                                                                                                                                                                                        |
 
@@ -420,7 +457,7 @@ GitHub Actions runs the type check and all tests on every push, against a tempor
 
 - [x] Test setup: Vitest + Supertest with a separate test database
 - [x] Fake Brønnøysund API for tests, so the suite never depends on the network
-- [x] Tests for auth, companies, watchlist, change detection, role changes, notifications and admin
+- [x] Tests for auth, companies, watchlist, change detection, role changes, annual accounts, risk signals, notifications, the AI assistant and admin
 - [x] GitHub Actions CI: type check and tests on every push
 
 ### Company data
@@ -438,7 +475,7 @@ GitHub Actions runs the type check and all tests on every push, against a tempor
 
 ### AI
 
-- [ ] AI assistant with tool calling, using the existing service functions
+- [x] AI assistant with tool calling, using the existing service functions
 
 ### Delivery
 

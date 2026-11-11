@@ -23,6 +23,11 @@ const doc = {
       name: "Notifications",
       description: "Changes in followed companies, per user",
     },
+    {
+      name: "Assistant",
+      description:
+        "Questions in plain language about companies and the user's watchlist, answered with tool calling",
+    },
     { name: "Admin", description: "Admin-only operations" },
     { name: "General", description: "API status" },
   ],

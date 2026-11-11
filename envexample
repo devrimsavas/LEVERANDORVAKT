@@ -12,3 +12,15 @@ ADMIN_LAST_NAME=User
 
 CHANGE_DETECTION_INTERVAL_MINUTES=10
 ACCOUNTS_CHECK_INTERVAL_HOURS=24
+
+# AI assistant. AI_PROVIDER is "ollama" or "gemini"; leave it empty to turn the assistant off.
+AI_PROVIDER=ollama
+AI_TIMEOUT_SECONDS=60
+ASSISTANT_DAILY_LIMIT=20
+# Ollama: local server, or https://ollama.com with an API key for Ollama Cloud
+OLLAMA_HOST=http://localhost:11434
+OLLAMA_MODEL=qwen3
+OLLAMA_API_KEY=
+# Gemini: API key from Google AI Studio
+GEMINI_API_KEY=
+GEMINI_MODEL=

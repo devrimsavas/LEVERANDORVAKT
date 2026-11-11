@@ -48,4 +48,10 @@ jobs:
         run: npm run typecheck
 
       - name: Run tests
-        run: npm test
+        run:
+          npm test
+          # Vitest runs the TypeScript files with its own compiler. This loads
+      # the code compiled by tsc, so errors that only appear there
+      # (e.g. decorator metadata in an import cycle) fail the build.
+      - name: Check that the compiled app loads
+        run: node --input-type=module -e "await import('./dist/app.js')"

@@ -17,6 +17,13 @@ export type FakeCompany =
 
 // An in-memory stand-in for the Brønnøysund API.
 // Tests change its contents to simulate what happens in the real register.
+// Answers requests to another service (e.g. a language model) that the
+// tests route through the same fake fetch. Returns null to pass the request on.
+export type ExtraHandler = (
+  url: URL,
+  init: RequestInit | undefined,
+) => Promise<Response | null> | Response | null;
+
 export interface FakeBrreg {
   companies: Map<string, FakeCompany>;
   updates: BrregUpdate[];
@@ -33,6 +40,8 @@ export interface FakeBrreg {
   requests: URL[];
   // Milliseconds to wait before answering, to simulate a slow register
   delayMs: number;
+  // Handlers for other services; cleared before every test
+  extraHandlers: ExtraHandler[];
   setActive(enhet: BrregEnhet): void;
   setDeleted(orgNumber: string, slettedato: string): void;
   setError(orgNumber: string, status: number): void;
@@ -356,6 +365,7 @@ export function useFakeBrreg(): FakeBrreg {
     accounts: new Map(),
     requests: [],
     delayMs: 0,
+    extraHandlers: [],
 
     setActive(enhet) {
       fake.companies.set(enhet.organisasjonsnummer, { kind: "active", enhet });
@@ -412,6 +422,7 @@ export function useFakeBrreg(): FakeBrreg {
     fake.requests.length = 0;
     fake.updates.length = 0;
     fake.delayMs = 0;
+    fake.extraHandlers.length = 0;
     fake.addUpdate("000000000", "Ny");
 
     vi.stubGlobal(
@@ -422,6 +433,12 @@ export function useFakeBrreg(): FakeBrreg {
         );
         const headers = new Headers(init?.headers);
         fake.requests.push(url);
+        for (const extra of fake.extraHandlers) {
+          const response = await extra(url, init);
+          if (response) {
+            return response;
+          }
+        }
         if (fake.delayMs > 0) {
           await new Promise((resolve) => setTimeout(resolve, fake.delayMs));
         }
