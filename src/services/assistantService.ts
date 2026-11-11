@@ -57,7 +57,8 @@ function systemPrompt(now: Date): string {
     "Base every statement about a company on data returned by the tools. Never invent organization numbers, names or figures; use search_companies to find an organization number.",
     "If a tool returns an error or no data, say so plainly.",
     "When you talk about risk, mention that the assessment is based on public register data only and is not a credit rating.",
-    "Answer in the language the user writes in. Keep answers short and concrete.",
+    "Do not explain codes or abbreviations the tools do not explain. Use the fields as named: foundedDate is when the company was founded, not when it was registered.",
+    "Always answer in the language of the user's latest message, even when the data from the tools is in Norwegian; translate descriptions where it helps. Keep answers short and concrete.",
   ].join("\n");
 }
 

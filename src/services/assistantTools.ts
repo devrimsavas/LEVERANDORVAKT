@@ -171,6 +171,27 @@ export const ASSISTANT_TOOLS: ToolDefinition[] = [
   },
 ];
 
+// Names of the common Norwegian organization forms. The register only gives
+// the code; without the name a model guesses, and gets e.g. "ASA" wrong.
+// The legal forms are fixed by law, so a list in the code is safe.
+export const ORGANIZATION_FORMS: Record<string, string> = {
+  AS: "Aksjeselskap (private limited company)",
+  ASA: "Allmennaksjeselskap (public limited company)",
+  ENK: "Enkeltpersonforetak (sole proprietorship)",
+  NUF: "Norskregistrert utenlandsk foretak (Norwegian branch of a foreign company)",
+  ANS: "Ansvarlig selskap (general partnership, joint liability)",
+  DA: "Selskap med delt ansvar (general partnership, divided liability)",
+  KS: "Kommandittselskap (limited partnership)",
+  SA: "Samvirkeforetak (cooperative)",
+  STI: "Stiftelse (foundation)",
+  FLI: "Forening/lag/innretning (association)",
+  BRL: "Borettslag (housing cooperative)",
+  ESEK: "Eierseksjonssameie (owners' association of a condominium)",
+  SF: "Statsforetak (state enterprise)",
+  KF: "Kommunalt foretak (municipal enterprise)",
+  IKS: "Interkommunalt selskap (inter-municipal company)",
+};
+
 // A problem the model can fix itself, e.g. an invalid organization number.
 // Sent back to the model as { error } instead of failing the question.
 class ToolInputError extends Error {}
@@ -280,7 +301,12 @@ async function runTool(
       if (lookup.status === "deleted") {
         return { struckOff: true, deletedDate: lookup.deletedDate };
       }
-      return lookup.company;
+      return {
+        ...lookup.company,
+        // null for rare forms: the model is told not to guess
+        organizationFormName:
+          ORGANIZATION_FORMS[lookup.company.organizationForm] ?? null,
+      };
     }
 
     case "get_company_risk": {

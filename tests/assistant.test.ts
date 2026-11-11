@@ -168,6 +168,48 @@ describe("POST /api/assistant/messages", () => {
     });
   });
 
+  it("tells the model to answer in the user's language and not to guess codes", async () => {
+    const { auth } = await registerAndLogin(lukas);
+    ollama.reply("Hi");
+
+    await ask(auth, "Hi");
+
+    const system = ollama.requests[0]!.messages[0]!.content;
+    expect(system).toContain("language of the user's latest message");
+    expect(system).toContain("Do not explain codes or abbreviations");
+  });
+
+  it("gives the model the name of the organization form, not only its code", async () => {
+    const { auth } = await registerAndLogin(lukas);
+    brreg.setActive(
+      brregEnhet(ALTA_TOURS, "ALTA TOURS ASA", {
+        organisasjonsform: { kode: "ASA", beskrivelse: "Allmennaksjeselskap" },
+      }),
+    );
+    brreg.setActive(
+      brregEnhet(ARCTIC_FISH, "ARCTIC FISH", {
+        organisasjonsform: { kode: "XYZ", beskrivelse: "Unknown form" },
+      }),
+    );
+    ollama.callTools(
+      { name: "get_company", arguments: { orgNumber: ALTA_TOURS } },
+      { name: "get_company", arguments: { orgNumber: ARCTIC_FISH } },
+    );
+    ollama.reply("Done");
+
+    await ask(auth, "What kind of companies are these?");
+
+    const [alta, arctic] = ollama.toolResults();
+    expect(alta).toMatchObject({
+      organizationForm: "ASA",
+      organizationFormName: "Allmennaksjeselskap (public limited company)",
+    });
+    expect(arctic).toMatchObject({
+      organizationForm: "XYZ",
+      organizationFormName: null,
+    });
+  });
+
   it("tells the model about a tool that does not exist", async () => {
     const { auth } = await registerAndLogin(lukas);
     ollama.callTools({
