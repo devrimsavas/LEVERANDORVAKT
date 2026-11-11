@@ -1,0 +1,33 @@
+# Rebuilds the portfolio site (Vercel) when the README changes,
+# so its "In progress" page shows the current roadmap.
+name: Portfolio rebuild
+
+on:
+  push:
+    branches: [master]
+    paths: [README.md]
+  # Lets you run it by hand from the Actions tab
+  workflow_dispatch:
+
+# Only the latest README matters: a newer push cancels a waiting run
+concurrency:
+  group: portfolio-rebuild
+  cancel-in-progress: true
+
+# This workflow only calls Vercel; it needs no access to the repository
+permissions: {}
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      # The portfolio reads the README through GitHub's cache, which can
+      # serve the old version for a few minutes after a push
+      - name: Wait for GitHub's README cache
+        if: github.event_name == 'push'
+        run: sleep 300
+
+      - name: Trigger the Vercel deploy hook
+        env:
+          DEPLOY_HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: curl --fail --silent --show-error -X POST "$DEPLOY_HOOK_URL"
