@@ -1,5 +1,6 @@
 import { Op } from "sequelize";
 import type { Transaction } from "sequelize";
+import { sequelize } from "../config/database.js";
 import { CompanyRecord } from "../models/CompanyRecord.js";
 import { CompanyChange } from "../models/CompanyChange.js";
 import { getAnnualAccounts, lookupCompany } from "./brregService.js";
@@ -10,6 +11,8 @@ import type { RiskAssessment, RiskInput, RiskLevel } from "../types/risk.js";
 
 const LEVEL_RANK: Record<RiskLevel, number> = { low: 0, medium: 1, high: 2 };
 const DAY_MS = 24 * 60 * 60 * 1000;
+// How many companies without a risk level are assessed per run
+const MISSING_RISK_PER_RUN = 200;
 
 // Builds the risk input of a followed company from stored data
 async function storedRiskInput(
@@ -138,4 +141,26 @@ export async function reassessRisk(
   }
 
   await record.save({ transaction });
+}
+
+// Assesses followed companies that have no risk level yet, e.g. companies
+// followed before risk signals were added. Uses stored data only, so Brreg
+// is not called. Nothing is reported: the level becomes the starting point.
+// Failures are only logged; the company is tried again on the next run.
+export async function assessMissingRiskLevels(): Promise<void> {
+  const records = await CompanyRecord.findAll({
+    where: { riskLevel: null },
+    order: [["id", "ASC"]],
+    limit: MISSING_RISK_PER_RUN,
+  });
+
+  for (const record of records) {
+    try {
+      await sequelize.transaction((transaction) =>
+        reassessRisk(record, transaction, { notifyRise: false }),
+      );
+    } catch (error) {
+      console.error(`Risk: could not assess ${record.orgNumber}`, error);
+    }
+  }
 }

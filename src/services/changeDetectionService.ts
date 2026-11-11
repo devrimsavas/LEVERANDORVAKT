@@ -13,7 +13,7 @@ import {
 import { detectChanges } from "./companyDiff.js";
 import { detectRoleChanges } from "./roleDiff.js";
 import { notifyFollowers } from "./notificationService.js";
-import { reassessRisk } from "./riskService.js";
+import { assessMissingRiskLevels, reassessRisk } from "./riskService.js";
 import type { ChangeSeverity } from "../models/CompanyChange.js";
 
 // Brreg accepts a list of organization numbers in one request; keep URLs short
@@ -282,7 +282,8 @@ async function backfillMissingRoles(records: CompanyRecord[]): Promise<void> {
 // 1. read the company feed and the role feed from where the previous run stopped,
 // 2. check every followed company that appears in either feed,
 // 3. remember where to continue in each feed next time,
-// 4. fill in roles for companies that have none stored yet.
+// 4. fill in roles for companies that have none stored yet,
+// 5. assess the risk of companies that have no risk level yet.
 export async function runChangeDetection(): Promise<ChangeDetectionSummary> {
   const summary: ChangeDetectionSummary = {
     initialized: false,
@@ -372,6 +373,7 @@ export async function runChangeDetection(): Promise<ChangeDetectionSummary> {
   await state.save();
 
   await backfillMissingRoles(records);
+  await assessMissingRiskLevels();
 
   return summary;
 }

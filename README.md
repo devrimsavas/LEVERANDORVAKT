@@ -113,7 +113,7 @@ A transparent "check before you sign" assessment, built only from public registe
 
 The score is the sum of the points, at most 100. The level is `high` with any critical signal or a score of 40 or more, `medium` from 20, otherwise `low`. Key figures come from the company's own accounts, not the group's. Change-history signals need the company to be followed.
 
-For followed companies the level is stored and re-assessed after every check. A rise is recorded and notified (unless the same check already notified the followers of the change behind it); a fall is recorded without a notification.
+For followed companies the level is stored and re-assessed after every check. A rise is recorded and notified (unless the same check already notified the followers of the change behind it); a fall is recorded without a notification. Companies that have no risk level yet (e.g. followed before risk signals were added) are assessed from stored data at the end of the next change detection run.
 
 ## API Endpoints
 

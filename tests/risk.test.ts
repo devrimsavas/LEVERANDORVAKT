@@ -745,3 +745,58 @@ describe("early warning when the risk level rises", () => {
     expect(await Notification.count()).toBe(1);
   });
 });
+
+describe("filling in missing risk levels", () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(NOW);
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // A company followed before risk signals existed has no risk level
+  async function followWithoutRiskLevel(orgNumber: string, name: string) {
+    brreg.setActive(
+      brregEnhet(orgNumber, name, { sisteInnsendteAarsregnskap: "2024" }),
+    );
+    const { auth } = await registerAndLogin(lukas);
+    await request(app)
+      .post("/api/watchlist")
+      .set(auth)
+      .send({ orgNumber })
+      .expect(201);
+    // The first run only records the starting points of the feeds
+    await runChangeDetection();
+    await CompanyRecord.update(
+      { riskLevel: null, riskScore: null, riskAssessedAt: null },
+      { where: { orgNumber } },
+    );
+  }
+
+  it("assesses them on the next change detection run, without reporting a change", async () => {
+    await followWithoutRiskLevel(ALTA_TOURS, "ALTA TOURS AS");
+
+    // No feed events at all for the company
+    await runChangeDetection();
+
+    const record = await CompanyRecord.findOne({ rejectOnEmpty: true });
+    expect(record).toMatchObject({ riskLevel: "medium", riskScore: 25 });
+    expect(record.riskAssessedAt).not.toBeNull();
+    expect(await CompanyChange.count()).toBe(0);
+    expect(await Notification.count()).toBe(0);
+  });
+
+  it("also assesses companies that have been struck off", async () => {
+    await followWithoutRiskLevel(ALTA_TOURS, "ALTA TOURS AS");
+    await CompanyRecord.update(
+      { deletedFromRegistryAt: new Date("2026-10-01") },
+      { where: { orgNumber: ALTA_TOURS } },
+    );
+
+    await runChangeDetection();
+
+    const record = await CompanyRecord.findOne({ rejectOnEmpty: true });
+    expect(record.riskLevel).toBe("high");
+  });
+});
