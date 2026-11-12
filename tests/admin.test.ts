@@ -5,7 +5,12 @@ import app from "../src/app.js";
 import { ensureAdmin } from "../src/config/ensureAdmin.js";
 import { User } from "../src/models/User.js";
 import { BrregSyncState } from "../src/models/BrregSyncState.js";
-import { lukas, registerAndLogin } from "./helpers/users.js";
+import { CompanyRecord } from "../src/models/CompanyRecord.js";
+import { CompanyChange } from "../src/models/CompanyChange.js";
+import { Notification } from "../src/models/Notification.js";
+import { AssistantConversation } from "../src/models/AssistantConversation.js";
+import { AssistantUsage } from "../src/models/AssistantUsage.js";
+import { kari, lukas, registerAndLogin } from "./helpers/users.js";
 import { brregEnhet, useFakeBrreg } from "./helpers/fakeBrreg.js";
 
 const brreg = useFakeBrreg();
@@ -219,5 +224,333 @@ describe("POST /api/admin/accounts-check/run", () => {
 
     expect(first.status).toBe(200);
     expect(second.status).toBe(409);
+  });
+});
+
+describe("GET /api/admin/status", () => {
+  const path = "/api/admin/status";
+
+  async function follow(auth: Record<string, string>, orgNumber: string) {
+    await request(app)
+      .post("/api/watchlist")
+      .set(auth)
+      .send({ orgNumber })
+      .expect(201);
+  }
+
+  it("returns 401 without a token and 403 for a normal user", async () => {
+    const { auth } = await registerAndLogin(lukas);
+
+    expect((await request(app).get(path)).status).toBe(401);
+    expect((await request(app).get(path).set(auth)).status).toBe(403);
+  });
+
+  it("shows that change detection has not run yet on a new system", async () => {
+    const auth = await loginAsAdmin();
+
+    const res = await request(app).get(path).set(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body.changeDetection).toEqual({
+      running: false,
+      initialized: false,
+      lastRunAt: null,
+      lastUpdateId: null,
+      lastRoleEventId: null,
+    });
+    expect(res.body.accountsCheck).toEqual({
+      running: false,
+      lastCompanyCheckedAt: null,
+      companiesDue: 0,
+    });
+    expect(res.body.users).toEqual({ total: 1, admins: 1 });
+  });
+
+  it("shows where change detection stopped after a run", async () => {
+    const auth = await loginAsAdmin();
+    await request(app)
+      .post("/api/admin/change-detection/run")
+      .set(auth)
+      .expect(200);
+    const state = await BrregSyncState.findOne({ rejectOnEmpty: true });
+
+    const res = await request(app).get(path).set(auth);
+
+    expect(res.body.changeDetection.initialized).toBe(true);
+    expect(res.body.changeDetection.lastUpdateId).toBe(state.lastUpdateId);
+    expect(res.body.changeDetection.lastRunAt).toBe(
+      state.lastRunAt?.toISOString(),
+    );
+  });
+
+  it("counts users, companies, risk levels, notifications and assistant use", async () => {
+    const auth = await loginAsAdmin();
+    brreg.setActive(brregEnhet("912345678", "ALTA TOURS AS"));
+    brreg.setActive(brregEnhet("923456789", "NORDLYS BYGG AS"));
+    brreg.setActive(brregEnhet("934567890", "FJORD DATA AS"));
+    const lukasUser = await registerAndLogin(lukas);
+    const kariUser = await registerAndLogin(kari);
+    await follow(lukasUser.auth, "912345678");
+    await follow(lukasUser.auth, "923456789");
+    await follow(kariUser.auth, "912345678");
+    await follow(kariUser.auth, "934567890");
+    await request(app)
+      .delete("/api/watchlist/934567890")
+      .set(kariUser.auth)
+      .expect(204);
+
+    // Set the states directly, so the counts do not depend on the risk rules
+    await CompanyRecord.update(
+      { riskLevel: "high" },
+      { where: { orgNumber: "912345678" } },
+    );
+    await CompanyRecord.update(
+      { riskLevel: null, deletedFromRegistryAt: new Date() },
+      { where: { orgNumber: "923456789" } },
+    );
+    await CompanyRecord.update(
+      { riskLevel: "low" },
+      { where: { orgNumber: "934567890" } },
+    );
+
+    const company = await CompanyRecord.findOne({
+      where: { orgNumber: "912345678" },
+      rejectOnEmpty: true,
+    });
+    const change = await CompanyChange.create({
+      companyId: company.id,
+      field: "name",
+      oldValue: "ALTA TOURS AS",
+      newValue: "ALTA REISER AS",
+      severity: "info",
+      sourceUpdateId: null,
+      detectedAt: new Date(),
+    });
+    const lukasRecord = await User.findOne({
+      where: { email: lukas.email },
+      rejectOnEmpty: true,
+    });
+    const kariRecord = await User.findOne({
+      where: { email: kari.email },
+      rejectOnEmpty: true,
+    });
+    await Notification.create({
+      userId: lukasRecord.id,
+      companyChangeId: change.id,
+      readAt: new Date(),
+    });
+    await Notification.create({
+      userId: kariRecord.id,
+      companyChangeId: change.id,
+      readAt: null,
+    });
+
+    await AssistantConversation.create({
+      userId: lukasRecord.id,
+      title: "Risk",
+    });
+    await AssistantUsage.create({ userId: lukasRecord.id });
+    const old = await AssistantUsage.create({ userId: lukasRecord.id });
+    await AssistantUsage.update(
+      { createdAt: new Date(Date.now() - 25 * 60 * 60 * 1000) },
+      { where: { id: old.id }, silent: true },
+    );
+
+    const res = await request(app).get(path).set(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body.users).toEqual({ total: 3, admins: 1 });
+    expect(res.body.companies).toEqual({
+      total: 3,
+      followed: 2,
+      struckOff: 1,
+      riskLevels: { low: 1, medium: 0, high: 1, notAssessed: 1 },
+    });
+    expect(res.body.watchlistEntries).toBe(3);
+    expect(res.body.notifications).toEqual({ total: 2, unread: 1 });
+    expect(res.body.assistant).toMatchObject({
+      conversations: 1,
+      questionsLast24Hours: 1,
+    });
+  });
+
+  it("counts companies due for an accounts check, but not struck-off ones", async () => {
+    const auth = await loginAsAdmin();
+    brreg.setActive(brregEnhet("912345678", "ALTA TOURS AS"));
+    brreg.setActive(brregEnhet("923456789", "NORDLYS BYGG AS"));
+    brreg.setActive(brregEnhet("934567890", "FJORD DATA AS"));
+    const { auth: userAuth } = await registerAndLogin(lukas);
+    await follow(userAuth, "912345678");
+    await follow(userAuth, "923456789");
+    await follow(userAuth, "934567890");
+
+    const checkedRecently = new Date(Date.now() - 60 * 60 * 1000);
+    const checkedLongAgo = new Date(Date.now() - 21 * 60 * 60 * 1000);
+    await CompanyRecord.update(
+      { accountsCheckedAt: checkedRecently },
+      { where: { orgNumber: "912345678" } },
+    );
+    await CompanyRecord.update(
+      { accountsCheckedAt: checkedLongAgo },
+      { where: { orgNumber: "923456789" } },
+    );
+    await CompanyRecord.update(
+      { accountsCheckedAt: null, deletedFromRegistryAt: new Date() },
+      { where: { orgNumber: "934567890" } },
+    );
+
+    const res = await request(app).get(path).set(auth);
+
+    expect(res.body.accountsCheck).toEqual({
+      running: false,
+      lastCompanyCheckedAt: checkedRecently.toISOString(),
+      companiesDue: 1,
+    });
+  });
+
+  it("shows a run that is in progress", async () => {
+    const auth = await loginAsAdmin();
+    brreg.delayMs = 300;
+
+    const [, status] = await Promise.all([
+      request(app).post("/api/admin/change-detection/run").set(auth),
+      new Promise((resolve) => setTimeout(resolve, 50)).then(() =>
+        request(app).get(path).set(auth),
+      ),
+    ]);
+
+    expect(status.body.changeDetection.running).toBe(true);
+    expect(status.body.accountsCheck.running).toBe(false);
+  });
+
+  it("shows the assistant provider, or null when it is turned off", async () => {
+    const auth = await loginAsAdmin();
+
+    vi.stubEnv("AI_PROVIDER", "ollama");
+    vi.stubEnv("OLLAMA_MODEL", "test-model");
+    const on = await request(app).get(path).set(auth);
+    vi.stubEnv("AI_PROVIDER", "");
+    const off = await request(app).get(path).set(auth);
+
+    expect(on.body.assistant.provider).toBe("ollama:test-model");
+    expect(off.body.assistant.provider).toBeNull();
+  });
+});
+
+describe("GET /api/admin/users", () => {
+  const path = "/api/admin/users";
+
+  it("returns 403 for a normal user", async () => {
+    const { auth } = await registerAndLogin(lukas);
+
+    const res = await request(app).get(path).set(auth);
+
+    expect(res.status).toBe(403);
+  });
+
+  it("lists users newest first with their number of followed companies", async () => {
+    const auth = await loginAsAdmin();
+    brreg.setActive(brregEnhet("912345678", "ALTA TOURS AS"));
+    brreg.setActive(brregEnhet("923456789", "NORDLYS BYGG AS"));
+    const lukasUser = await registerAndLogin(lukas);
+    await registerAndLogin(kari);
+    for (const orgNumber of ["912345678", "923456789"]) {
+      await request(app)
+        .post("/api/watchlist")
+        .set(lukasUser.auth)
+        .send({ orgNumber })
+        .expect(201);
+    }
+
+    const res = await request(app).get(path).set(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body.totalItems).toBe(3);
+    expect(res.body.items.map((u: { email: string }) => u.email)).toEqual([
+      kari.email,
+      lukas.email,
+      admin.email,
+    ]);
+    const lukasItem = res.body.items[1];
+    expect(lukasItem).toEqual({
+      userId: lukasUser.userId,
+      firstName: lukas.firstName,
+      lastName: lukas.lastName,
+      email: lukas.email,
+      role: "user",
+      createdAt: expect.any(String),
+      lastLoginAt: expect.any(String),
+      followedCompanies: 2,
+    });
+    expect(res.body.items[0].followedCompanies).toBe(0);
+    expect(res.body.items[2].role).toBe("admin");
+  });
+
+  it("never returns password hashes or internal ids", async () => {
+    const auth = await loginAsAdmin();
+    await registerAndLogin(lukas);
+
+    const res = await request(app).get(path).set(auth);
+
+    const text = JSON.stringify(res.body);
+    expect(text).not.toMatch(/passwordHash|password_hash|\$2[aby]\$/);
+    for (const item of res.body.items) {
+      expect(item).not.toHaveProperty("id");
+    }
+  });
+
+  it("pages through the users", async () => {
+    const auth = await loginAsAdmin();
+    await registerAndLogin(lukas);
+    await registerAndLogin(kari);
+
+    const res = await request(app)
+      .get(path)
+      .query({ page: 2, pageSize: 2 })
+      .set(auth);
+
+    expect(res.body.totalItems).toBe(3);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0].email).toBe(admin.email);
+  });
+
+  // Name and email share no text, so each search proves one column
+  const ingrid = {
+    firstName: "Ingrid",
+    lastName: "Solberg",
+    email: "post@example.com",
+    password: "IngridSecure2026",
+  };
+
+  it.each([
+    ["part of an email", "WEBER@exam", [lukas.email]],
+    ["a first name", "ingrid", [ingrid.email]],
+    ["a last name", "SOLBERG", [ingrid.email]],
+    ["text with no match", "nobody", []],
+    ["a % sign, as plain text", "%", []],
+  ])("searches by %s", async (_case, q, expected) => {
+    const auth = await loginAsAdmin();
+    await registerAndLogin(lukas);
+    await registerAndLogin(ingrid);
+
+    const res = await request(app).get(path).query({ q }).set(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items.map((u: { email: string }) => u.email)).toEqual(
+      expected,
+    );
+    expect(res.body.totalItems).toBe(expected.length);
+  });
+
+  it.each([
+    ["pageSize is too large", { pageSize: 1000 }],
+    ["q is too long", { q: "a".repeat(101) }],
+    ["q is given twice", "q=a&q=b"],
+  ])("returns 400 when %s", async (_case, query) => {
+    const auth = await loginAsAdmin();
+
+    const res = await request(app).get(path).query(query).set(auth);
+
+    expect(res.status).toBe(400);
   });
 });
