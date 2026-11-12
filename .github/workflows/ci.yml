@@ -56,8 +56,87 @@ jobs:
       - name: Check that the compiled app loads
         run: node --input-type=module -e "await import('./dist/app.js')"
 
-  # Builds the Docker image and starts the whole stack with Docker Compose,
-  # the same way as on a developer's machine, then checks that the API answers.
+  # The web app: lint, type check and build, then the end-to-end tests with
+  # Playwright in a real browser against the real API. The API runs in
+  # end-to-end mode with fake Brreg and a fake language model, so the tests
+  # never reach the network.
+  web:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Created fresh by the API at the start of the tests
+      E2E_DATABASE_URL: postgres://postgres:postgres@localhost:5432/leverandorvakt_e2e
+
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            web/package-lock.json
+
+      # The tests start the API from the repository root
+      - name: Install the API's dependencies
+        working-directory: .
+        run: npm ci
+
+      - name: Install the web app's dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run the end-to-end tests
+        run: npm run e2e
+
+      # The report has a screenshot and a trace (every step, with the page
+      # as it was) of each failed test
+      - name: Upload the test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            web/playwright-report
+            web/test-results
+          retention-days: 7
+
+  # Builds the Docker images and starts the whole stack with Docker Compose,
+  # the same way as on a developer's machine, then checks that the API and
+  # the web app answer.
   docker:
     runs-on: ubuntu-latest
 
@@ -74,14 +153,16 @@ jobs:
           sed -i 's/^CHANGE_DETECTION_INTERVAL_MINUTES=.*/CHANGE_DETECTION_INTERVAL_MINUTES=0/' .env
           sed -i 's/^ACCOUNTS_CHECK_INTERVAL_HOURS=.*/ACCOUNTS_CHECK_INTERVAL_HOURS=0/' .env
 
-      # --wait returns when both containers report healthy, or fails
+      # --wait returns when every container reports healthy, or fails
       - name: Build and start the containers
         run: docker compose up --build --detach --wait --wait-timeout 120
 
-      - name: Check that the API and its docs answer
+      - name: Check that the API, its docs and the web app answer
         run: |
           curl --fail --silent --show-error http://localhost:3000/
           curl --fail --silent --show-error --output /dev/null http://localhost:3000/api/docs/
+          curl --fail --silent --show-error --output /dev/null http://localhost:3001/
+          curl --fail --silent --show-error --output /dev/null http://localhost:3001/guide
 
       - name: Show the container logs
         if: failure()

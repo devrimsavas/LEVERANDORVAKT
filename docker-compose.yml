@@ -1,6 +1,7 @@
-# Runs the API and its PostgreSQL database locally:
+# Runs the web app, the API and its PostgreSQL database locally:
 #   docker compose up --build
-# The API is then at http://localhost:3000 and the docs at /api/docs.
+# The web app is then at http://localhost:3001, the API at
+# http://localhost:3000 and its docs at /api/docs.
 # Settings come from .env (copy envexample); the database connection and
 # the Ollama address are set here, because they differ inside Docker.
 
@@ -42,6 +43,19 @@ services:
       # Docker Desktop (Windows, macOS) knows host.docker.internal already;
       # this makes it work on Linux too
       - "host.docker.internal:host-gateway"
+
+  web:
+    build: ./web
+    depends_on:
+      # Start only when the API answers
+      api:
+        condition: service_healthy
+    environment:
+      # The web app's server calls the API inside Docker's network;
+      # the browser only ever talks to the web app
+      API_URL: http://api:3000
+    ports:
+      - "3001:3001"
 
 volumes:
   db-data:

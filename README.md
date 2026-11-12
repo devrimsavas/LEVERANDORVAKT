@@ -4,7 +4,7 @@
 
 _Last updated: 12.11.2026_
 
-> ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages, trends, notifications, the assistant, an admin page and an in-app guide; end-to-end tests are next, then production hardening and deployment. See the [Roadmap](#roadmap).
+> ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages, trends, notifications, the assistant, an admin page and an in-app guide, with end-to-end tests in a real browser; production hardening and deployment are next. See the [Roadmap](#roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
 
@@ -32,7 +32,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **AI assistant** — questions in plain language ("Which of my suppliers have the highest risk?") answered with tool calling over the app's own service functions; read-only, per-user conversations, a daily question limit (with a status endpoint showing what is left), and a choice of model provider (local Ollama, Ollama Cloud or Gemini) in `.env`
 - **Admin overview** — an admin-only status of the background jobs and the data, and a read-only list of users
 - **Interactive API documentation** — Swagger UI at `/api/docs`
-- **Automated tests and CI** — Vitest + Supertest against a real PostgreSQL database, run by GitHub Actions on every push
+- **Automated tests and CI** — Vitest + Supertest against a real PostgreSQL database for the API, Playwright end-to-end tests in a real browser for the web app, run by GitHub Actions on every push
 
 ### Planned
 
@@ -69,6 +69,7 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 - **Designsystemet.** Components and design tokens from [Designsystemet](https://www.designsystemet.no), the Norwegian public sector's design system, with our own theme generated from `designsystemet.config.json`, Inter as the font and Aksel icons. Light and dark mode follow the operating system until the user chooses; the choice is kept in a cookie, so the page is rendered in the right colors from the start.
 - **English and Norwegian.** Texts are in `web/messages/en.json` and `nb.json` (next-intl), chosen by a cookie or the browser's language; a missing or misspelled key is a type error. The API sends risk signals, limitations and changes as codes with `params` (years, amounts, dates), and the web app writes the sentences itself, with amounts and dates in the reader's format.
 - **Charts that can be read without color.** Recharts with the theme's tokens: the accounts chart (revenue, net result or equity per year, losses below the zero line) and the trends line chart (this period solid, a year earlier dashed). Every chart has a legend or a title naming its series, a tooltip on hover and keyboard focus, and the same numbers in a table. The second series color was checked for color-blind separation and contrast in both modes. Risk levels and severities always carry their name next to the color.
+- **Tested in a real browser.** Playwright tests in `web/e2e` go through the app as a user would: creating an account, searching and following, notes, a bankruptcy turning into a critical notification, the assistant (including that HTML and unsafe links in an answer never run), the daily limit, the admin page, the getting-started list, both languages, dark mode and phone width. The API runs in end-to-end mode with a fresh database and fake Brreg, Kartverket, SSB and language model, so the tests never reach the network.
 - **URLs hold the state.** Search queries, filters, sorting and company tabs are in the URL, so every view can be bookmarked, shared and reached with the back button.
 
 ## Tech Stack
@@ -83,7 +84,7 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 | Authentication | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs`                                                                                                                                         |
 | AI             | Ollama (`ollama` client, local or Ollama Cloud) or the Gemini API, behind one provider interface                                                                                                           |
 | API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                                                                                                                                             |
-| Testing        | Vitest + Supertest, GitHub Actions CI                                                                                                                                                                      |
+| Testing        | Vitest + Supertest (API), Playwright (web app, end to end), GitHub Actions CI                                                                                                                              |
 | Containers     | Docker (multi-stage image) and Docker Compose for the API and PostgreSQL                                                                                                                                   |
 | Web app        | Next.js 16 (App Router, server components and server actions), React 19, TypeScript                                                                                                                        |
 | Design         | Designsystemet (React components, CSS and a generated theme), Aksel icons, Inter                                                                                                                           |
@@ -343,8 +344,12 @@ LEVERANDORVAKT/
 │   │   └── express.d.ts          # Adds the authenticated user to Express requests
 │   └── utils/                    # Validation, pagination and limited-concurrency helpers
 ├── tests/
+│   ├── e2e/
+│   │   ├── fakeServices.ts       # End-to-end mode: fresh database, fake services with example companies, control server
+│   │   └── e2e.env               # The API's settings in end-to-end mode (no secrets)
 │   ├── helpers/
-│   │   ├── fakeBrreg.ts          # In-memory stand-in for the Brønnøysund API
+│   │   ├── fakeRegister.ts       # In-memory stand-in for the Brønnøysund, Kartverket and SSB APIs
+│   │   ├── fakeBrreg.ts          # Puts the fake register in place for each test (Vitest)
 │   │   ├── fakeLlm.ts            # Fake Ollama server with scripted model replies
 │   │   ├── users.ts              # Test users and register/login helper
 │   │   ├── globalSetup.ts        # Applies migrations to the test database once
@@ -352,11 +357,14 @@ LEVERANDORVAKT/
 │   ├── fixtures/                 # Fictional data shaped like real Brreg responses
 │   └── *.test.ts                 # One test file per area (auth, companies, watchlist, ...)
 ├── web/                          # The Next.js web app
+│   ├── e2e/                      # Playwright end-to-end tests, one file per area
+│   ├── playwright.config.ts      # Starts the API in end-to-end mode and the web app, then runs the tests
+│   ├── Dockerfile                # Image with Next.js's standalone server
 │   ├── messages/                 # en.json and nb.json: every text in both languages
 │   ├── designsystemet.config.json # Theme colors; npm run theme generates src/theme from it
 │   └── src/
 │       ├── app/
-│       │   ├── (public)/         # Landing, log in, create account (public header and footer)
+│       │   ├── (public)/         # Landing, guide, about, contact, log in, create account (public header and footer)
 │       │   ├── (app)/            # Overview, watchlist, search, companies, trends, ... (login required)
 │       │   └── api/notifications/ # Route the bell polls; calls the API with the session token
 │       ├── components/           # Header, footer, bell, company tabs, charts, overview cards
@@ -365,10 +373,10 @@ LEVERANDORVAKT/
 │       ├── theme/                # Generated Designsystemet theme (do not edit by hand)
 │       └── proxy.ts              # Sends visitors without a session to the login page
 ├── .github/workflows/
-│   ├── ci.yml                    # Type check, tests and a Docker Compose smoke test on every push
+│   ├── ci.yml                    # API tests, web app checks and end-to-end tests, and a Docker Compose smoke test on every push
 │   └── portfolio-rebuild.yml     # Rebuilds the portfolio site when the README changes
 ├── Dockerfile                    # Multi-stage image: build with all dependencies, run with production ones only
-├── docker-compose.yml            # The API and PostgreSQL for local development
+├── docker-compose.yml            # The web app, the API and PostgreSQL for local development
 ├── .dockerignore
 ├── vitest.config.ts
 ├── envexample
@@ -391,7 +399,7 @@ cp envexample .env        # then set JWT_SECRET (and the ADMIN_* values) in .env
 docker compose up --build
 ```
 
-The API runs at `http://localhost:3000` and the docs at `http://localhost:3000/api/docs`. Compose starts PostgreSQL, waits until it accepts connections, then starts the API, which applies the migrations itself. The database is also reachable from your machine on port `5433` (e.g. for pgAdmin), and its data is kept in a Docker volume between runs; `docker compose down --volumes` deletes it.
+The web app runs at `http://localhost:3001`, the API at `http://localhost:3000` and its docs at `http://localhost:3000/api/docs`. Compose starts PostgreSQL, waits until it accepts connections, then starts the API, which applies the migrations itself, and then the web app. The database is also reachable from your machine on port `5433` (e.g. for pgAdmin), and its data is kept in a Docker volume between runs; `docker compose down --volumes` deletes it.
 
 Inside Docker the database address and the Ollama address are set by `docker-compose.yml`, so the `DATABASE_URL` and `OLLAMA_HOST` in `.env` are not used there. The assistant reaches Ollama running on your machine through `host.docker.internal`.
 
@@ -488,6 +496,18 @@ npm run dev
 
 The web app runs at `http://localhost:3001`. In `web/`, `npm run typecheck` checks the types, `npm run lint` runs ESLint and `npm run theme` generates the theme again after changing `designsystemet.config.json`.
 
+#### 8. Run the end-to-end tests
+
+The tests need PostgreSQL running, as for `npm test`. Install Chromium for Playwright once, then run the tests from `web/`:
+
+```bash
+cd web
+npx playwright install chromium
+npm run e2e
+```
+
+Playwright builds and starts the API in end-to-end mode on port `3100` and the web app on port `3101`, so `npm run dev` can keep running. The API uses its own database, `leverandorvakt_e2e`, created fresh on every run with the connection details from `.env.test` (or `E2E_DATABASE_URL`). `npm run e2e:report` opens the report of the last run, with a screenshot and a trace of every failed test.
+
 #### Available scripts
 
 | Script               | What it does                                                              |
@@ -499,10 +519,11 @@ The web app runs at `http://localhost:3001`. In `web/`, `npm run typecheck` chec
 | `npm test`           | Runs all tests once                                                       |
 | `npm run test:watch` | Runs the tests again on every change                                      |
 | `npm run typecheck`  | Type checks the app and the tests without writing files                   |
+| `npm run e2e:api`    | Runs the API in end-to-end mode (used by the web app's Playwright tests)  |
 
 ## Tests
 
-Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. Every test starts with empty tables, and the Brønnøysund API is replaced by a fake in tests that need it, so the suite never depends on the network.
+The API's tests run with **Vitest** and **Supertest** against a real PostgreSQL database; the web app is tested end to end with **Playwright** (see below). Every test starts with empty tables, and the Brønnøysund API is replaced by a fake in tests that need it, so the suite never depends on the network.
 
 | Test file                       | What it covers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -547,9 +568,25 @@ Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. 
 
 Migrations are applied to the test database automatically.
 
+### End-to-end tests
+
+The Playwright tests in `web/e2e` run in Chromium against the real web app and API, on a desktop screen and, for `phone.spec.ts`, as a Pixel 7. See [Run the end-to-end tests](#8-run-the-end-to-end-tests).
+
+| Test file               | What it covers                                                                                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `public.spec.ts`        | Landing page and header, switching language and color scheme (kept after reload), guide, about and contact, app pages sending visitors to log in                                                       |
+| `auth.spec.ts`          | Creating an account, a message per wrong field, a wrong password, going back to the page asked for after logging in, logging out                                                                       |
+| `companies.spec.ts`     | Search by name and by organization number, roles, accounts and risk tabs, following, a private note in the watchlist, stopping following                                                               |
+| `notifications.spec.ts` | A followed supplier going bankrupt in the fake register: change detection, the bell, a critical notification, marking all as read                                                                      |
+| `assistant.spec.ts`     | A question answered with a tool call, a Markdown table, "based on", HTML shown as text and never run, unsafe links and images dropped, the conversation kept, the daily limit, deleting a conversation |
+| `admin.spec.ts`         | Normal users neither see nor reach the admin page; the admin runs a job and finds a user                                                                                                               |
+| `onboarding.spec.ts`    | The getting-started list following the user's progress, closed for good                                                                                                                                |
+| `trends.spec.ts`        | The chart and filtering by municipality                                                                                                                                                                |
+| `phone.spec.ts`         | No sideways scrolling on public and app pages, the menu on a phone                                                                                                                                     |
+
 ### Continuous integration
 
-GitHub Actions runs two jobs on every push: the type check and all tests against a temporary PostgreSQL database, and a Docker job that builds the image, starts the stack with Docker Compose and checks that the API and its docs answer.
+GitHub Actions runs three jobs on every push: the API's type check and all its tests against a temporary PostgreSQL database; the web app's lint, type check, build and end-to-end tests (the report with screenshots and traces is uploaded when a test fails); and a Docker job that builds both images, starts the stack with Docker Compose and checks that the API, its docs and the web app answer.
 
 ## Roadmap
 
@@ -621,7 +658,7 @@ GitHub Actions runs two jobs on every push: the type check and all tests against
 - [x] About and contact pages
 - [x] Admin page
 - [x] In-app guide and a getting-started checklist
-- [ ] End-to-end tests (Playwright) and the web app in CI and Docker Compose
+- [x] End-to-end tests (Playwright) and the web app in CI and Docker Compose
 
 ### Production readiness
 

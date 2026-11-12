@@ -8,7 +8,9 @@
     "start": "next start -p 3001",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "theme": "designsystemet"
+    "theme": "designsystemet",
+    "e2e": "playwright test",
+    "e2e:report": "playwright show-report"
   },
   "dependencies": {
     "@digdir/designsystemet-css": "1.24.0",
@@ -27,6 +29,7 @@
   },
   "devDependencies": {
     "@digdir/designsystemet": "1.24.0",
+    "@playwright/test": "1.63.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
