@@ -15,7 +15,8 @@
     "switchLanguageLabel": "Switch to English",
     "colorScheme": "Bytt mellom lys og mørk modus",
     "overview": "Oversikt",
-    "logOut": "Logg ut"
+    "logOut": "Logg ut",
+    "guide": "Veiledning"
   },
   "home": {
     "hero": {
@@ -173,20 +174,30 @@
     "unavailable": "Oversikten kunne ikke lastes akkurat nå. Prøv igjen om litt.",
     "start": {
       "title": "Kom i gang i tre steg",
-      "lead": "Leverandørvakt holder øye med selskapene du er avhengig av. Følg din første leverandør eller kunde, så får du varsel når noe endrer seg til det verre.",
-      "search": {
-        "title": "Søk",
-        "text": "Finn et selskap på navn eller organisasjonsnummer."
+      "lead": "Leverandørvakt holder øye med selskapene du er avhengig av. Registeret sjekkes hvert tiende minutt, og bjella øverst viser hva som er endret.",
+      "progress": "{done} av {total} fullført",
+      "stepDone": "fullført",
+      "close": "Lukk",
+      "closeFailed": "Listen kunne ikke lukkes. Prøv igjen.",
+      "doneTitle": "Du er klar",
+      "doneLead": "Du følger et selskap, har skrevet et notat og spurt assistenten. Nå kan du lukke denne listen.",
+      "followCompany": {
+        "title": "Følg ditt første selskap",
+        "text": "Søk på navn eller organisasjonsnummer, og trykk Følg på selskapssiden.",
+        "link": "Finn et selskap"
       },
-      "follow": {
-        "title": "Følg",
-        "text": "Trykk Følg på selskapssiden og legg til et privat notat hvis du vil."
+      "writeNote": {
+        "title": "Skriv et privat notat",
+        "text": "Noter hvorfor du følger selskapet, for eksempel «hovedleverandør av emballasje». Bare du kan se det.",
+        "link": "Skriv et notat for {name}"
       },
-      "notified": {
-        "title": "Få varsel",
-        "text": "Bjella øverst viser nye endringer. Registeret sjekkes hvert tiende minutt."
+      "askAssistant": {
+        "title": "Spør assistenten",
+        "text": "Spør med vanlige ord, for eksempel hvilke av selskapene dine som har høyest risiko.",
+        "link": "Åpne assistenten"
       },
-      "button": "Finn ditt første selskap"
+      "button": "Finn ditt første selskap",
+      "guide": "Les veiledningen"
     },
     "tiles": {
       "followed": "Selskaper du følger",
@@ -822,6 +833,159 @@
       "newer": "Nyere",
       "older": "Eldre",
       "pageOf": "Side {page} av {total}"
+    }
+  },
+  "guide": {
+    "title": "Veiledning",
+    "lead": "Slik følger du leverandører og kunder med Leverandørvakt, hva som overvåkes, og hva du ser når noe skjer.",
+    "contents": "På denne siden",
+    "start": {
+      "title": "Kom i gang",
+      "text": "Opprett en konto, og følg selskapene du er avhengig av. Alt annet bygger på overvåkingslisten din.",
+      "points": {
+        "search": {
+          "title": "Søk.",
+          "text": "Finn et selskap på navn, eller skriv det nisifrede organisasjonsnummeret for å gå rett til det."
+        },
+        "follow": {
+          "title": "Følg.",
+          "text": "Trykk Følg på selskapssiden. Fra da av lagres endringer, og du får varsel."
+        },
+        "note": {
+          "title": "Skriv et notat.",
+          "text": "Et privat notat minner deg om hvorfor du følger selskapet. Bare du kan se det, og det sendes aldri til assistentens språkmodell."
+        }
+      }
+    },
+    "watched": {
+      "title": "Hva som overvåkes",
+      "text": "Leverandørvakt leser oppdateringsstrømmene til Brønnøysundregistrene hvert tiende minutt og sammenligner hvert fulgte selskap med det som ble lagret sist. Årsregnskap sjekkes én gang i døgnet.",
+      "points": {
+        "status": {
+          "title": "Status:",
+          "text": "konkurs, avvikling, tvangsavvikling og sletting fra registeret."
+        },
+        "roles": {
+          "title": "Roller:",
+          "text": "daglig leder, styreleder og andre styremedlemmer, revisor og regnskapsfører."
+        },
+        "details": {
+          "title": "Selskapsopplysninger:",
+          "text": "navn, organisasjonsform, forretningsadresse, hjemmeside, bransje og antall ansatte."
+        },
+        "accounts": {
+          "title": "Årsregnskap:",
+          "text": "nye innsendinger, rettede innsendinger og nøkkeltall som driftsinntekter, resultat og egenkapital."
+        }
+      }
+    },
+    "risk": {
+      "title": "Slik leser du risikonivået",
+      "text": "Hvert selskap får et risikonivå bygget på varseltegn i de offentlige registrene. Risikofanen viser nøyaktig hvilke tegn som ble funnet, og hvorfor.",
+      "points": {
+        "level": {
+          "title": "Lav, middels eller høy.",
+          "text": "Et kritisk tegn, som konkurs, gir alltid høy risiko. Ellers følger nivået poengsummen."
+        },
+        "score": {
+          "title": "Poengsum fra 0 til 100.",
+          "text": "Hvert varseltegn gir poeng: 20 eller mer er middels, 40 eller mer er høy."
+        },
+        "signals": {
+          "title": "Varseltegn,",
+          "text": "som negativ egenkapital, underskudd, manglende regnskap etter fristen 31. juli eller hyppige bytter av daglig leder eller adresse."
+        },
+        "limits": {
+          "title": "Hva som ikke kunne sjekkes,",
+          "text": "for eksempel et selskap som er for nytt til å ha levert regnskap. Få varseltegn er ikke det samme som en friskmelding."
+        }
+      },
+      "notCredit": "Risikonivået bygger bare på offentlige registerdata. Det er ikke en kredittvurdering, og det erstatter ikke ditt eget skjønn eller en kredittsjekk."
+    },
+    "notifications": {
+      "title": "Varsler",
+      "text": "Når et fulgt selskap endres, får du et varsel. Bjella i toppen viser antall uleste og de siste varslene; Varsler-siden viser alle, med verdien før og etter endringen. Hvert varsel har en alvorlighetsgrad:",
+      "points": {
+        "critical": {
+          "title": "Kritisk:",
+          "text": "selskapet kan kanskje ikke lenger levere eller betale: konkurs, avvikling eller tvangsavvikling."
+        },
+        "warning": {
+          "title": "Advarsel:",
+          "text": "verdt en nærmere titt, for eksempel ny daglig leder, styreleder eller revisor, nytt navn eller ny adresse, eller negativ egenkapital."
+        },
+        "info": {
+          "title": "Info:",
+          "text": "til orientering, for eksempel nye styremedlemmer, ny hjemmeside eller nylig levert regnskap."
+        }
+      }
+    },
+    "accounts": {
+      "title": "Årsregnskap",
+      "text": "Regnskapsfanen viser driftsinntekter, årsresultat og egenkapital per år som diagram og tabell. Underskudd tegnes under nullinjen. Selskaper må sende inn regnskapet innen 31. juli året etter; manglende regnskap etter fristen er et varseltegn."
+    },
+    "trends": {
+      "title": "Trender",
+      "text": "Trender-siden viser hvor mange selskaper som registreres per måned sammenlignet med året før, og de vanligste bransjene. Filtrer på kommune, hovedbransje, organisasjonsform og periode for å se hva som skjer der du driver."
+    },
+    "assistant": {
+      "title": "Assistenten",
+      "text": "Spør om selskapene dine med vanlige ord, på norsk eller engelsk. Assistenten slår opp i overvåkingslisten, registrene og trendene, og svarer med det den fant.",
+      "points": {
+        "ask": {
+          "title": "Gode spørsmål",
+          "text": "handler om dine egne selskaper: «Hvilke har høyest risiko, og hvorfor?», «Hva har endret seg denne uka?» eller «Har noen felles styremedlem?»"
+        },
+        "sources": {
+          "title": "Under hvert svar",
+          "text": "ser du hva det bygger på, for eksempel risikovurderingen eller årsregnskapet."
+        },
+        "private": {
+          "title": "Den bare leser.",
+          "text": "Den kan ikke følge, slutte å følge eller endre noe, og de private notatene dine sendes aldri til modellen."
+        },
+        "limit": {
+          "title": "Det er en daglig grense",
+          "text": "for antall spørsmål per bruker, regnet over de siste 24 timene. Antallet som er igjen vises under spørsmålsfeltet."
+        }
+      }
+    },
+    "scenarios": {
+      "title": "Eksempler",
+      "text": "Hva du ser i Leverandørvakt når noe skjer med et selskap du følger.",
+      "happens": "Hva som skjer",
+      "see": "Hva du ser",
+      "do": "Hva du kan gjøre",
+      "bankrupt": {
+        "title": "En leverandør går konkurs",
+        "happens": "Retten åpner konkurs, og registeret markerer selskapet som konkurs.",
+        "see": "Et kritisk varsel innen omtrent ti minutter, en Konkurs-merkelapp på selskapet, og risikonivået går til høy.",
+        "do": "Kontakt boet om åpne ordre og leveranser, og begynn å se etter en annen leverandør."
+      },
+      "newCeo": {
+        "title": "En kunde får ny daglig leder og nytt styre",
+        "happens": "Rollene endres i registeret.",
+        "see": "En advarsel for ny daglig leder og en for ny styreleder, og et infovarsel for de andre styremedlemmene, hver med gamle og nye personer.",
+        "do": "Se på Roller-fanen, og spør assistenten om de nye personene også sitter i styret i andre av selskapene dine."
+      },
+      "lateAccounts": {
+        "title": "Regnskapet er forsinket",
+        "happens": "31. juli passerer uten at fjorårets regnskap er levert.",
+        "see": "Et varseltegn på risikofanen som sier hvilket år som mangler og når fristen var, og en høyere risikopoengsum.",
+        "do": "Spør selskapet hvorfor, og vurder tryggere betalingsvilkår til regnskapet er levert."
+      },
+      "newCustomer": {
+        "title": "Sjekk en ny kunde før du signerer",
+        "happens": "Du skal til å gi en ny kunde kreditt.",
+        "see": "Søk opp selskapet: fanene for oversikt, roller, regnskap og risiko viser status, nøkkelpersoner, tall og varseltegn, også før du følger det.",
+        "do": "Følg selskapet hvis du går videre, så får du beskjed når noe endres. Du kan slutte å følge når som helst."
+      }
+    },
+    "more": {
+      "title": "Klar til å begynne?",
+      "text": "Følg ditt første selskap, så viser oversiktssiden deg resten.",
+      "start": "Gå til oversikten",
+      "about": "Om Leverandørvakt"
     }
   }
 }

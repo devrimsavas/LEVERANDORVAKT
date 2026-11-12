@@ -3,7 +3,6 @@ import NextLink from "next/link";
 import { getFormatter, getNow, getTranslations } from "next-intl/server";
 import {
   Alert,
-  Button,
   Heading,
   Link,
   Paragraph,
@@ -16,6 +15,8 @@ import { SEVERITY_COLOR } from "@/lib/notificationTypes";
 import { formatOrgNumber } from "@/lib/orgNumber";
 import { requireUser } from "@/lib/user";
 import { RiskTag } from "@/components/company/RiskTag";
+import { getOnboarding } from "@/lib/onboarding";
+import { GettingStarted } from "@/components/overview/GettingStarted";
 import { RiskSplit, countRiskLevels } from "@/components/overview/RiskSplit";
 import styles from "@/components/overview/overview.module.css";
 
@@ -34,9 +35,10 @@ export default async function OverviewPage() {
   const severity = await getTranslations("notifications.severity");
   const format = await getFormatter();
   const now = await getNow();
-  const [watchlist, notifications] = await Promise.all([
+  const [watchlist, notifications, onboarding] = await Promise.all([
     getWatchlist("risk"),
     getNotificationSummary(),
+    getOnboarding(),
   ]);
 
   const heading = (
@@ -56,34 +58,22 @@ export default async function OverviewPage() {
 
   const rows = watchlist.data;
 
+  // Without the API's answer, the steps are read from the watchlist alone
+  const steps = onboarding?.steps ?? {
+    followCompany: rows.length > 0,
+    writeNote: rows.some((row) => row.note),
+    askAssistant: false,
+  };
+  const firstCompany = rows[0]
+    ? { orgNumber: rows[0].orgNumber, name: rows[0].name }
+    : null;
+
   // A new user: show how to get started instead of empty boxes
   if (rows.length === 0) {
     return (
       <div className={`container ${styles.page}`}>
         {heading}
-        <section className={styles.welcome} aria-labelledby="get-started">
-          <Heading id="get-started" level={2} data-size="md">
-            {t("start.title")}
-          </Heading>
-          <Paragraph>{t("start.lead")}</Paragraph>
-          <ol className={styles.startSteps}>
-            {(["search", "follow", "notified"] as const).map((step, index) => (
-              <li key={step}>
-                <span className={styles.stepNumber} aria-hidden="true">
-                  {index + 1}
-                </span>
-                <span>
-                  <strong>{t(`start.${step}.title`)}</strong>
-                  <br />
-                  {t(`start.${step}.text`)}
-                </span>
-              </li>
-            ))}
-          </ol>
-          <Button asChild data-size="lg">
-            <NextLink href="/search">{t("start.button")}</NextLink>
-          </Button>
-        </section>
+        <GettingStarted steps={steps} firstCompany={null} canClose={false} />
       </div>
     );
   }
@@ -96,6 +86,10 @@ export default async function OverviewPage() {
   return (
     <div className={`container ${styles.page}`}>
       {heading}
+
+      {onboarding && onboarding.dismissedAt === null && (
+        <GettingStarted steps={steps} firstCompany={firstCompany} canClose />
+      )}
 
       <ul className={styles.tiles}>
         <li className={styles.tile}>

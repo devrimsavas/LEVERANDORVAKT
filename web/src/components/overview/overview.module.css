@@ -215,6 +215,48 @@
   gap: var(--ds-size-3);
 }
 
+.welcome[data-compact] {
+  padding: var(--ds-size-6);
+}
+
+.startHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-size-3);
+  width: 100%;
+}
+
+.progress {
+  font-size: var(--ds-body-sm-font-size);
+  font-weight: var(--ds-font-weight-semibold);
+  color: var(--ds-color-accent-text-subtle);
+}
+
+.stepText {
+  display: grid;
+  gap: var(--ds-size-1);
+}
+
+/* A finished step: a check instead of the number, and quieter text */
+.startSteps li[data-done] .stepNumber {
+  background: var(--ds-color-success-base-default);
+  color: var(--ds-color-success-base-contrast-default);
+  font-size: 1.25rem;
+}
+
+.startSteps li[data-done] .stepText {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.startFoot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-size-5);
+}
+
 .stepNumber {
   display: inline-grid;
   place-items: center;

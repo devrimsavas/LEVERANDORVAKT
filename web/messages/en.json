@@ -15,7 +15,8 @@
     "switchLanguageLabel": "Bytt til norsk",
     "colorScheme": "Switch between light and dark mode",
     "overview": "Overview",
-    "logOut": "Log out"
+    "logOut": "Log out",
+    "guide": "Guide"
   },
   "home": {
     "hero": {
@@ -173,20 +174,30 @@
     "unavailable": "Your overview could not be loaded right now. Try again in a little while.",
     "start": {
       "title": "Get started in three steps",
-      "lead": "Leverandørvakt keeps an eye on the companies you depend on. Follow your first supplier or customer, and you will be notified when something changes for the worse.",
-      "search": {
-        "title": "Search",
-        "text": "Find a company by name or organization number."
+      "lead": "Leverandørvakt keeps an eye on the companies you depend on. The register is checked every ten minutes, and the bell at the top shows what has changed.",
+      "progress": "{done} of {total} done",
+      "stepDone": "done",
+      "close": "Close",
+      "closeFailed": "Could not close the list. Try again.",
+      "doneTitle": "You are all set",
+      "doneLead": "You follow a company, have written a note and asked the assistant. You can close this list now.",
+      "followCompany": {
+        "title": "Follow your first company",
+        "text": "Search by name or organization number and press Follow on the company page.",
+        "link": "Find a company"
       },
-      "follow": {
-        "title": "Follow",
-        "text": "Press Follow on the company page and add a private note if you like."
+      "writeNote": {
+        "title": "Write a private note",
+        "text": "Note why you follow the company, such as “main supplier of packaging”. Only you can see it.",
+        "link": "Write a note for {name}"
       },
-      "notified": {
-        "title": "Get notified",
-        "text": "The bell at the top shows new changes. The register is checked every ten minutes."
+      "askAssistant": {
+        "title": "Ask the assistant",
+        "text": "Ask in plain language, such as which of your companies have the highest risk.",
+        "link": "Open the assistant"
       },
-      "button": "Find your first company"
+      "button": "Find your first company",
+      "guide": "Read the guide"
     },
     "tiles": {
       "followed": "Companies followed",
@@ -822,6 +833,159 @@
       "newer": "Newer",
       "older": "Older",
       "pageOf": "Page {page} of {total}"
+    }
+  },
+  "guide": {
+    "title": "Guide",
+    "lead": "How to follow your suppliers and customers with Leverandørvakt, what is watched, and what you see when something happens.",
+    "contents": "On this page",
+    "start": {
+      "title": "Getting started",
+      "text": "Create an account, then follow the companies you depend on. Everything else builds on your watchlist.",
+      "points": {
+        "search": {
+          "title": "Search.",
+          "text": "Find a company by name, or type its nine-digit organization number to go straight to it."
+        },
+        "follow": {
+          "title": "Follow.",
+          "text": "Press Follow on the company page. From then on, changes are recorded and you are notified."
+        },
+        "note": {
+          "title": "Write a note.",
+          "text": "A private note reminds you why you follow the company. Only you can see it, and it is never sent to the assistant's language model."
+        }
+      }
+    },
+    "watched": {
+      "title": "What is watched",
+      "text": "Leverandørvakt reads the Brønnøysund Register Centre's update feeds every ten minutes and compares each followed company with what was stored last time. Annual accounts are checked once a day.",
+      "points": {
+        "status": {
+          "title": "Status:",
+          "text": "bankruptcy, being wound up, forced liquidation and being struck off the register."
+        },
+        "roles": {
+          "title": "Roles:",
+          "text": "the CEO, the chair and other board members, the auditor and the accountant."
+        },
+        "details": {
+          "title": "Company details:",
+          "text": "name, organization form, business address, website, industry and number of employees."
+        },
+        "accounts": {
+          "title": "Annual accounts:",
+          "text": "new filings, corrected filings and key figures such as revenue, result and equity."
+        }
+      }
+    },
+    "risk": {
+      "title": "Reading the risk level",
+      "text": "Each company gets a risk level built from warning signs in the public registers. The risk tab shows exactly which signs were found and why.",
+      "points": {
+        "level": {
+          "title": "Low, medium or high.",
+          "text": "A critical sign, such as bankruptcy, always gives high risk. Otherwise the level follows the score."
+        },
+        "score": {
+          "title": "Score from 0 to 100.",
+          "text": "Each warning sign adds points: 20 or more is medium, 40 or more is high."
+        },
+        "signals": {
+          "title": "Warning signs,",
+          "text": "such as negative equity, a loss, missing accounts after the 31 July deadline or frequent changes of CEO or address."
+        },
+        "limits": {
+          "title": "What could not be checked,",
+          "text": "such as a company too new to have filed accounts. A short list of signs is not the same as a clean bill of health."
+        }
+      },
+      "notCredit": "The risk level is based only on public register data. It is not a credit rating, and it does not replace your own judgement or a credit check."
+    },
+    "notifications": {
+      "title": "Notifications",
+      "text": "When a followed company changes, you get a notification. The bell in the header shows the unread count and the latest ones; the Notifications page shows them all, with the value before and after the change. Each has a severity:",
+      "points": {
+        "critical": {
+          "title": "Critical:",
+          "text": "the company may no longer be able to deliver or pay: bankruptcy, being wound up or forced liquidation."
+        },
+        "warning": {
+          "title": "Warning:",
+          "text": "worth a closer look, such as a new CEO, chair or auditor, a new name or address, or negative equity."
+        },
+        "info": {
+          "title": "Info:",
+          "text": "for the record, such as new board members, a new website or newly filed accounts."
+        }
+      }
+    },
+    "accounts": {
+      "title": "Annual accounts",
+      "text": "The accounts tab shows revenue, net result and equity per year as a chart and as a table. Losses are drawn below the zero line. Companies must send their accounts by 31 July the year after; a missing filing after that date is a warning sign."
+    },
+    "trends": {
+      "title": "Trends",
+      "text": "The Trends page shows how many companies are registered per month compared with a year earlier, and the most common industries. Filter by municipality, main industry, organization form and period to see what is happening where you do business."
+    },
+    "assistant": {
+      "title": "The assistant",
+      "text": "Ask about your companies in plain language, in English or Norwegian. The assistant looks things up in your watchlist, the registers and the trends, and answers with what it found.",
+      "points": {
+        "ask": {
+          "title": "Good questions",
+          "text": "are about your own companies: “Which have the highest risk, and why?”, “What changed this week?” or “Do any share a board member?”"
+        },
+        "sources": {
+          "title": "Under each answer",
+          "text": "you see what it is based on, such as the risk assessment or the annual accounts."
+        },
+        "private": {
+          "title": "It only reads.",
+          "text": "It cannot follow, unfollow or change anything, and your private notes are never sent to the model."
+        },
+        "limit": {
+          "title": "There is a daily limit",
+          "text": "of questions per user, counted over the last 24 hours. The number left is shown under the question box."
+        }
+      }
+    },
+    "scenarios": {
+      "title": "Scenarios",
+      "text": "What you see in Leverandørvakt when something happens to a company you follow.",
+      "happens": "What happens",
+      "see": "What you see",
+      "do": "What you can do",
+      "bankrupt": {
+        "title": "A supplier goes bankrupt",
+        "happens": "The court opens bankruptcy proceedings, and the register marks the company as bankrupt.",
+        "see": "A critical notification within about ten minutes, a Bankrupt tag on the company, and the risk level goes to high.",
+        "do": "Contact the estate about open orders and deliveries, and start looking for another supplier."
+      },
+      "newCeo": {
+        "title": "A customer gets a new CEO and board",
+        "happens": "The roles are changed in the register.",
+        "see": "A warning for the new CEO and one for the new chair, an info notification for the other board members, each with the old and new people.",
+        "do": "Check the Roles tab, and ask the assistant whether the new people are also on the boards of your other companies."
+      },
+      "lateAccounts": {
+        "title": "The accounts are late",
+        "happens": "31 July passes without accounts for last year being filed.",
+        "see": "A warning sign on the risk tab saying which year is missing and when it was due, and a higher risk score.",
+        "do": "Ask the company why, and consider safer payment terms until the accounts are in."
+      },
+      "newCustomer": {
+        "title": "Checking a new customer before you sign",
+        "happens": "You are about to give a new customer credit.",
+        "see": "Search for the company: the overview, roles, accounts and risk tabs show its status, key people, figures and warning signs, even before you follow it.",
+        "do": "Follow it if you go ahead, so you are told if things change. You can stop following at any time."
+      }
+    },
+    "more": {
+      "title": "Ready to start?",
+      "text": "Follow your first company and the overview page will guide you through the rest.",
+      "start": "Go to the overview",
+      "about": "About Leverandørvakt"
     }
   }
 }

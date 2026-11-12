@@ -34,6 +34,11 @@ export async function SiteFooter() {
           <ul className={styles.list}>
             <li>
               <Link asChild>
+                <NextLink href="/guide">{header("guide")}</NextLink>
+              </Link>
+            </li>
+            <li>
+              <Link asChild>
                 <NextLink href="/about">{header("about")}</NextLink>
               </Link>
             </li>

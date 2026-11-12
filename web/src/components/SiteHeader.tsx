@@ -17,6 +17,7 @@ export async function SiteHeader() {
   const loggedIn = Boolean(await getSessionToken());
 
   const links = [
+    { href: "/guide", text: t("guide") },
     { href: "/about", text: t("about") },
     { href: "/contact", text: t("contact") },
   ];

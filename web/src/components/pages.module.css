@@ -1,4 +1,4 @@
-/* Text pages: about and contact */
+/* Text pages: about, contact and the guide */
 
 .page {
   display: grid;
@@ -104,4 +104,65 @@
   font-weight: var(--ds-font-weight-semibold);
   color: var(--ds-color-accent-text-subtle);
   overflow-wrap: anywhere;
+}
+
+/* Guide: contents and the scenarios */
+
+.contents {
+  display: grid;
+  gap: var(--ds-size-2);
+  padding: var(--ds-size-5) var(--ds-size-6);
+  border-left: 4px solid var(--ds-color-accent-base-default);
+  background: var(--ds-color-accent-surface-tinted);
+  border-radius: 0 var(--ds-border-radius-lg) var(--ds-border-radius-lg) 0;
+}
+
+.contents ol {
+  display: grid;
+  gap: var(--ds-size-1);
+  margin: 0;
+  padding-left: var(--ds-size-5);
+}
+
+/* Room for the header when a contents link jumps to a section */
+.section[id] {
+  scroll-margin-top: var(--ds-size-8);
+}
+
+.scenarios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+  gap: var(--ds-size-4);
+}
+
+.scenario {
+  display: grid;
+  align-content: start;
+  gap: var(--ds-size-3);
+  padding: var(--ds-size-5);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: var(--ds-border-radius-lg);
+}
+
+.scenario dl {
+  display: grid;
+  gap: var(--ds-size-1);
+  margin: 0;
+}
+
+.scenario dt {
+  margin-top: var(--ds-size-2);
+  font-size: var(--ds-body-sm-font-size);
+  font-weight: var(--ds-font-weight-semibold);
+  color: var(--ds-color-accent-text-subtle);
+}
+
+.scenario dd {
+  margin: 0;
+}
+
+@media (max-width: 30rem) {
+  .scenarios {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

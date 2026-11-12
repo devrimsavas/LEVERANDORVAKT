@@ -39,4 +39,8 @@ export class User extends Model {
 
   @Column({ type: DataType.DATE, allowNull: true })
   declare lastLoginAt: Date | null;
+
+  // When the "getting started" list was closed; null while it is shown
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare onboardingDismissedAt: Date | null;
 }

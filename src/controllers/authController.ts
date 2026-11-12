@@ -6,6 +6,10 @@ import {
   EmailTakenError,
   InvalidCredentialsError,
 } from "../services/authService.js";
+import {
+  dismissOnboarding,
+  getOnboarding,
+} from "../services/onboardingService.js";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -100,5 +104,41 @@ export const me = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Could not load the user" });
+  }
+};
+
+// GET /api/auth/me/onboarding
+export const getMyOnboarding = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Auth"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.description = "The getting-started steps the user has done, read from their data, and whether the list was closed" */
+  try {
+    const onboarding = await getOnboarding(req.auth!.userId);
+    if (!onboarding) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.json(onboarding);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Could not load the getting-started steps" });
+  }
+};
+
+// POST /api/auth/me/onboarding/dismiss
+export const dismissMyOnboarding = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Auth"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.description = "Closes the getting-started list for good" */
+  try {
+    const onboarding = await dismissOnboarding(req.auth!.userId);
+    if (!onboarding) {
+      res.status(404).json({ error: "User not found" });
+      return;
+    }
+    res.json(onboarding);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Could not close the getting-started list" });
   }
 };

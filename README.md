@@ -4,7 +4,7 @@
 
 _Last updated: 12.11.2026_
 
-> ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages, trends, notifications, the assistant and an admin page; an in-app guide and end-to-end tests are next, then production hardening and deployment. See the [Roadmap](#roadmap).
+> ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages, trends, notifications, the assistant, an admin page and an in-app guide; end-to-end tests are next, then production hardening and deployment. See the [Roadmap](#roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
 
@@ -46,20 +46,21 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 
 ### Pages
 
-| Page                   | What it shows                                                                                                                                                                                                |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Landing (`/`)          | What the service does, an example of its notifications, the features and the open data sources                                                                                                               |
-| Log in, Create account | Forms with a message per field and the new password typed twice; a new account is logged in right away                                                                                                       |
-| Overview               | A welcome guide for new users; otherwise the number of followed companies, the ones that need attention, the risk split across the watchlist and the latest notifications                                    |
-| Watchlist              | Every followed company with its risk level, last change, latest accounts and the start of your note, sorted by name or highest risk                                                                          |
-| Search                 | Search by name, or go straight to a company by its organization number                                                                                                                                       |
-| Company                | Follow / stop following, a private note, and tabs for overview, roles, annual accounts (chart and table), risk (level, score, warning signs, what could not be checked) and detected changes                 |
-| Trends                 | New companies per month against a year earlier, and the ten most common industries, filtered by municipality, main industry, organization form and period                                                    |
-| Notification bell      | In the header on every app page: unread count, the latest notifications, mark as read; refreshed every minute while the page is visible, with the count in the browser tab                                   |
-| Notifications          | All notifications with what changed (before → after), unread filter, mark one or all as read, 20 per page                                                                                                    |
-| Assistant              | Ask in plain language and get answers in Markdown (tables, lists, links), with the tools each answer is based on; example questions, earlier conversations to reopen or delete, and the questions left today |
-| About, Contact         | What the project is and how it is built; where to reach the author                                                                                                                                           |
-| Admin                  | Only for admins (others get "not found"): the background jobs with their state and a button to run each now, the data in numbers, risk levels of all stored companies, and the users with search and paging  |
+| Page                   | What it shows                                                                                                                                                                                                                                                                     |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing (`/`)          | What the service does, an example of its notifications, the features and the open data sources                                                                                                                                                                                    |
+| Log in, Create account | Forms with a message per field and the new password typed twice; a new account is logged in right away                                                                                                                                                                            |
+| Overview               | A "getting started" checklist (follow a company, write a note, ask the assistant) ticked from your own data and closed for good when you choose; the number of followed companies, the ones that need attention, the risk split across the watchlist and the latest notifications |
+| Watchlist              | Every followed company with its risk level, last change, latest accounts and the start of your note, sorted by name or highest risk                                                                                                                                               |
+| Search                 | Search by name, or go straight to a company by its organization number                                                                                                                                                                                                            |
+| Company                | Follow / stop following, a private note, and tabs for overview, roles, annual accounts (chart and table), risk (level, score, warning signs, what could not be checked) and detected changes                                                                                      |
+| Trends                 | New companies per month against a year earlier, and the ten most common industries, filtered by municipality, main industry, organization form and period                                                                                                                         |
+| Notification bell      | In the header on every app page: unread count, the latest notifications, mark as read; refreshed every minute while the page is visible, with the count in the browser tab                                                                                                        |
+| Notifications          | All notifications with what changed (before → after), unread filter, mark one or all as read, 20 per page                                                                                                                                                                         |
+| Assistant              | Ask in plain language and get answers in Markdown (tables, lists, links), with the tools each answer is based on; example questions, earlier conversations to reopen or delete, and the questions left today                                                                      |
+| About, Contact         | What the project is and how it is built; where to reach the author                                                                                                                                                                                                                |
+| Guide                  | Public: how to get started, what is watched, how to read the risk level, notifications, accounts, trends and the assistant, and scenarios such as a supplier going bankrupt or late accounts                                                                                      |
+| Admin                  | Only for admins (others get "not found"): the background jobs with their state and a button to run each now, the data in numbers, risk levels of all stored companies, and the users with search and paging                                                                       |
 
 ### How it is built
 
@@ -177,11 +178,13 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 
 ### Authentication
 
-| Method | Endpoint             | Description                                                      |
-| ------ | -------------------- | ---------------------------------------------------------------- |
-| POST   | `/api/auth/register` | Create an account (`firstName`, `lastName`, `email`, `password`) |
-| POST   | `/api/auth/login`    | Log in and receive a JWT together with the user's public data    |
-| GET    | `/api/auth/me`       | Get the logged-in user's profile (requires token)                |
+| Method | Endpoint                          | Description                                                                                                 |
+| ------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| POST   | `/api/auth/register`              | Create an account (`firstName`, `lastName`, `email`, `password`)                                            |
+| POST   | `/api/auth/login`                 | Log in and receive a JWT together with the user's public data                                               |
+| GET    | `/api/auth/me`                    | Get the logged-in user's profile (requires token)                                                           |
+| GET    | `/api/auth/me/onboarding`         | The getting-started steps done, read from the user's data, and whether the list was closed (requires token) |
+| POST   | `/api/auth/me/onboarding/dismiss` | Close the getting-started list for good (requires token)                                                    |
 
 ### Watchlist
 
@@ -252,17 +255,18 @@ List endpoints return `{ items, page, pageSize, totalItems, totalPages }` (defau
 
 ### `users`
 
-| Column                     | Type         | Notes                                             |
-| -------------------------- | ------------ | ------------------------------------------------- |
-| `id`                       | integer      | Internal primary key, never exposed               |
-| `public_id`                | UUID         | Public user number, used in the API and in tokens |
-| `first_name`               | varchar(100) | Required                                          |
-| `last_name`                | varchar(100) | Required                                          |
-| `email`                    | varchar(255) | Required, unique, stored in lower case            |
-| `password_hash`            | varchar      | bcrypt hash, never returned by the API            |
-| `role`                     | varchar(20)  | `user` (default) or `admin`                       |
-| `last_login_at`            | timestamp    | Updated on every successful login                 |
-| `created_at`, `updated_at` | timestamp    | Managed automatically                             |
+| Column                     | Type         | Notes                                                        |
+| -------------------------- | ------------ | ------------------------------------------------------------ |
+| `id`                       | integer      | Internal primary key, never exposed                          |
+| `public_id`                | UUID         | Public user number, used in the API and in tokens            |
+| `first_name`               | varchar(100) | Required                                                     |
+| `last_name`                | varchar(100) | Required                                                     |
+| `email`                    | varchar(255) | Required, unique, stored in lower case                       |
+| `password_hash`            | varchar      | bcrypt hash, never returned by the API                       |
+| `role`                     | varchar(20)  | `user` (default) or `admin`                                  |
+| `last_login_at`            | timestamp    | Updated on every successful login                            |
+| `onboarding_dismissed_at`  | timestamp    | When the getting-started list was closed; `null` while shown |
+| `created_at`, `updated_at` | timestamp    | Managed automatically                                        |
 
 ### Other tables
 
@@ -303,6 +307,7 @@ LEVERANDORVAKT/
 │   │   ├── brregService.ts       # Calls the Brønnøysund APIs: companies, roles, annual accounts and both update feeds
 │   │   ├── authService.ts        # Registration, login, JWT
 │   │   ├── userService.ts        # Maps the public user id in tokens to the internal id
+│   │   ├── onboardingService.ts  # Getting-started steps, read from the user's data
 │   │   ├── watchlistService.ts   # Following companies, notes, change history
 │   │   ├── companyDiff.ts        # Compares two company states and rates each change
 │   │   ├── roleDiff.ts           # Compares two sets of roles and rates each change
@@ -503,6 +508,7 @@ Tests run with **Vitest** and **Supertest** against a real PostgreSQL database. 
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `tests/index.test.ts`           | The API responds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `tests/auth.test.ts`            | Registration (public data only, bcrypt hashing, email normalization, role cannot be set by the client, duplicate email, input validation), login (token content, same error for unknown email and wrong password), `/me` (missing, tampered and expired tokens, deleted account)                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `tests/onboarding.test.ts`      | Getting-started steps read from the user's own data (following, a non-empty note, a question asked, still counted after the conversation is deleted), completed when all are done, closing kept with its first time, per user, `404` for a deleted account, not part of the public user                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `tests/companies.test.ts`       | Company lookup and search (struck-off companies, Norwegian characters, input validation, Brreg unavailable), roles mapped from a real-shaped Brreg response (deregistered members left out, sorted in Norwegian order, no birth dates)                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `tests/watchlist.test.ts`       | Following a company (stored once and fetched from Brreg once even with several followers, unknown and struck-off companies, Brreg unavailable, input validation), listing only your own companies, reading one followed company, notes, unfollowing, change history with pagination, users cannot see or change each other's watchlists                                                                                                                                                                                                                                                                                                                                                                          |
 | `tests/changeDetection.test.ts` | Starting point on the first run, changes recorded with severity and source update, stored state updated so nothing is recorded twice, one Brreg lookup per company, struck-off companies (including `410 Gone`), stopping before a failed company and catching up after a Brreg outage, notifications only to followers, full rollback when notifications cannot be saved                                                                                                                                                                                                                                                                                                                                        |
@@ -562,6 +568,7 @@ GitHub Actions runs two jobs on every push: the type check and all tests against
 - [x] Internal ID + public UUID, roles (`user` / `admin`)
 - [x] `requireAuth` middleware for protected endpoints
 - [x] `GET /api/auth/me` — current user's profile
+- [x] Getting-started steps and closing the list (`/api/auth/me/onboarding`)
 - [x] Admin account created once on startup from environment variables
 
 ### Watchlist and change detection
@@ -613,7 +620,7 @@ GitHub Actions runs two jobs on every push: the type check and all tests against
 - [x] Assistant and notifications pages
 - [x] About and contact pages
 - [x] Admin page
-- [ ] In-app guide and onboarding
+- [x] In-app guide and a getting-started checklist
 - [ ] End-to-end tests (Playwright) and the web app in CI and Docker Compose
 
 ### Production readiness
