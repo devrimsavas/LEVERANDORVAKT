@@ -168,5 +168,218 @@
   "overview": {
     "welcome": "Velkommen, {name}",
     "placeholder": "Her kommer oversikten over selskapene du følger og de siste varslene."
+  },
+  "app": {
+    "comingSoon": "Denne siden er under arbeid.",
+    "nav": {
+      "label": "Hovedmeny",
+      "home": "Leverandørvakt, oversikt",
+      "account": "Konto: {name}",
+      "overview": "Oversikt",
+      "watchlist": "Overvåkingsliste",
+      "search": "Søk",
+      "trends": "Trender",
+      "assistant": "Assistent",
+      "notifications": "Varsler",
+      "admin": "Admin"
+    }
+  },
+  "notifications": {
+    "title": "Varsler",
+    "bellLabel": "Varsler",
+    "bellLabelUnread": "Varsler, {count} uleste",
+    "markAllRead": "Merk alle som lest",
+    "seeAll": "Se alle varsler",
+    "empty": "Ingen varsler ennå. Følg et selskap for å få varsel når det endrer seg.",
+    "unavailable": "Varslene kunne ikke lastes akkurat nå.",
+    "unread": "(ulest)",
+    "severity": {
+      "critical": "Kritisk",
+      "warning": "Advarsel",
+      "info": "Info"
+    }
+  },
+  "changes": {
+    "other": "Endret i registeret",
+    "name": "Nytt selskapsnavn",
+    "organizationForm": "Ny organisasjonsform",
+    "website": "Ny hjemmeside",
+    "address": "Ny forretningsadresse",
+    "industryCode": "Ny bransje",
+    "employees": "Antall ansatte endret",
+    "foundedDate": "Stiftelsesdato rettet",
+    "isBankrupt_yes": "Konkurs registrert",
+    "isBankrupt_no": "Konkurs ikke lenger registrert",
+    "isUnderLiquidation_yes": "Avvikling startet",
+    "isUnderLiquidation_no": "Avvikling ikke lenger registrert",
+    "isUnderForcedLiquidation_yes": "Tvangsavvikling startet",
+    "isUnderForcedLiquidation_no": "Tvangsavvikling ikke lenger registrert",
+    "deletedFromRegistry_yes": "Slettet fra registeret",
+    "deletedFromRegistry_no": "Tilbake i registeret",
+    "lastAnnualAccountsYear": "Årsregnskap levert",
+    "roles_ceo": "Ny daglig leder",
+    "roles_boardChair": "Ny styreleder",
+    "roles_deputyChair": "Ny nestleder",
+    "roles_boardMembers": "Styremedlemmer endret",
+    "roles_deputyMembers": "Varamedlemmer endret",
+    "roles_auditor": "Revisor endret",
+    "roles_accountant": "Regnskapsfører endret",
+    "annualAccounts_filed": "Nytt årsregnskap",
+    "annualAccounts_corrected": "Årsregnskap korrigert",
+    "annualAccounts_liquidation": "Regnskap avlagt ved avvikling",
+    "annualAccounts_negativeEquity": "Negativ egenkapital",
+    "annualAccounts_auditDropped": "Regnskapet revideres ikke lenger",
+    "riskLevel": "Risikonivå endret"
+  },
+  "search": {
+    "title": "Søk",
+    "lead": "Finn et norsk selskap på navn eller organisasjonsnummer.",
+    "label": "Selskapsnavn eller organisasjonsnummer",
+    "placeholder": "For eksempel Equinor eller 923 609 016",
+    "clear": "Tøm",
+    "button": "Søk",
+    "tooShort": "Skriv minst {min} tegn.",
+    "unavailable": "Brønnøysundregistrene kan ikke nås akkurat nå. Prøv igjen om litt.",
+    "noResults": "Ingen selskaper passer med «{query}»",
+    "resultCount": "{count, plural, one {# selskap} other {# selskaper}} passer med «{query}»",
+    "limited": "Viser de {limit} første treffene. Skriv mer av navnet for å snevre inn søket."
+  },
+  "company": {
+    "backToSearch": "Tilbake til søk",
+    "orgNumberShort": "Org.nr.",
+    "tabsLabel": "Selskapsinformasjon",
+    "unavailable": "Brønnøysundregistrene kan ikke nås akkurat nå. Prøv igjen om litt.",
+    "notFound": {
+      "title": "Fant ikke selskapet",
+      "text": "Det finnes ikke noe aktivt selskap med organisasjonsnummer {orgNumber} i Brønnøysundregistrene. Det kan være slettet, eller nummeret kan være skrevet feil."
+    },
+    "tabs": {
+      "overview": "Oversikt",
+      "roles": "Roller",
+      "changes": "Endringer"
+    },
+    "status": {
+      "struckOff": "Slettet",
+      "bankrupt": "Konkurs",
+      "forcedLiquidation": "Tvangsavvikling",
+      "liquidation": "Under avvikling"
+    },
+    "follow": {
+      "follow": "Følg",
+      "following": "Følger",
+      "unfollow": "Slutt å følge",
+      "confirmTitle": "Slutte å følge {name}?",
+      "confirmText": "Du får ikke lenger varsel om endringer, og notatet ditt om selskapet slettes.",
+      "confirm": "Slutt å følge",
+      "cancel": "Avbryt",
+      "failed": "Det gikk ikke. Prøv igjen om litt.",
+      "close": "Lukk"
+    },
+    "note": {
+      "label": "Ditt notat",
+      "description": "Bare du kan se det.",
+      "save": "Lagre notat",
+      "saved": "Lagret",
+      "failed": "Notatet kunne ikke lagres. Prøv igjen om litt.",
+      "tooLong": "Notatet kan ha høyst {max} tegn.",
+      "charsLeft": "%d tegn igjen",
+      "charsOver": "%d tegn for mye"
+    },
+    "overview": {
+      "orgNumber": "Organisasjonsnummer",
+      "organizationForm": "Organisasjonsform",
+      "founded": "Stiftet",
+      "industry": "Bransje",
+      "employees": "Ansatte",
+      "address": "Forretningsadresse",
+      "municipality": "{name} kommune",
+      "website": "Hjemmeside",
+      "lastAccounts": "Siste årsregnskap",
+      "followedSince": "Fulgt siden",
+      "lastChecked": "Sist sjekket",
+      "lastChanged": "Siste endring",
+      "noChanges": "Ingen endringer siden du begynte å følge",
+      "unknown": "Ikke registrert"
+    },
+    "roles": {
+      "unavailable": "Rollene kunne ikke lastes akkurat nå.",
+      "none": "Det er ikke registrert roller for dette selskapet.",
+      "ceo": "Daglig leder",
+      "boardChair": "Styreleder",
+      "deputyChair": "Nestleder",
+      "boardMembers": "Styremedlemmer",
+      "deputyMembers": "Varamedlemmer",
+      "auditor": "Revisor",
+      "accountant": "Regnskapsfører"
+    },
+    "changes": {
+      "notFollowed": "Endringer registreres fra det øyeblikket noen følger et selskap. Følg dette selskapet for å se endringene her og få varsel om nye.",
+      "unavailable": "Endringene kunne ikke lastes akkurat nå.",
+      "none": "Ingen endringer er oppdaget ennå. Leverandørvakt sjekker registeret hvert tiende minutt.",
+      "caption": "Oppdagede endringer, nyeste først",
+      "date": "Dato",
+      "change": "Endring",
+      "from": "Før",
+      "to": "Etter",
+      "yes": "Ja",
+      "no": "Nei",
+      "pages": "Sider",
+      "newer": "Nyere",
+      "older": "Eldre",
+      "pageOf": "Side {page} av {total}"
+    }
+  },
+  "orgForms": {
+    "AS": "Aksjeselskap",
+    "ASA": "Allmennaksjeselskap",
+    "ENK": "Enkeltpersonforetak",
+    "NUF": "Norskregistrert utenlandsk foretak",
+    "ANS": "Ansvarlig selskap",
+    "DA": "Selskap med delt ansvar",
+    "KS": "Kommandittselskap",
+    "SA": "Samvirkeforetak",
+    "STI": "Stiftelse",
+    "FLI": "Forening/lag/innretning",
+    "BA": "Selskap med begrenset ansvar",
+    "SPA": "Sparebank",
+    "ORGL": "Organisasjonsledd",
+    "KF": "Kommunalt foretak",
+    "IKS": "Interkommunalt selskap"
+  },
+  "watchlist": {
+    "title": "Overvåkingsliste",
+    "summary": "Du følger {count, plural, one {# selskap} other {# selskaper}}.",
+    "riskCount": {
+      "high": "{count} med høy risiko",
+      "medium": "{count} med middels risiko",
+      "low": "{count} med lav risiko"
+    },
+    "add": "Finn et selskap",
+    "unavailable": "Overvåkingslisten kunne ikke lastes akkurat nå. Prøv igjen om litt.",
+    "empty": {
+      "title": "Du følger ingen selskaper ennå",
+      "text": "Søk opp leverandørene og kundene dine og følg dem. Du får varsel når noe endrer seg til det verre.",
+      "button": "Søk etter et selskap"
+    },
+    "sortLabel": "Sorter etter",
+    "sort": {
+      "name": "Navn",
+      "risk": "Høyest risiko"
+    },
+    "columns": {
+      "risk": "Risiko",
+      "lastChange": "Siste endring",
+      "accounts": "Regnskap"
+    },
+    "noChanges": "Ingen ennå",
+    "accountsUnsupported": "Ikke tilgjengelig"
+  },
+  "risk": {
+    "level": {
+      "low": "Lav",
+      "medium": "Middels",
+      "high": "Høy",
+      "notAssessed": "Ikke vurdert"
+    }
   }
 }

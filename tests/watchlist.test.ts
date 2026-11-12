@@ -21,6 +21,7 @@ describe("watchlist endpoints require a token", () => {
   it.each([
     ["get", "/api/watchlist"],
     ["post", "/api/watchlist"],
+    ["get", `/api/watchlist/${ALTA_TOURS}`],
     ["patch", `/api/watchlist/${ALTA_TOURS}`],
     ["delete", `/api/watchlist/${ALTA_TOURS}`],
     ["get", `/api/watchlist/${ALTA_TOURS}/changes`],
@@ -180,6 +181,66 @@ describe("GET /api/watchlist", () => {
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
+  });
+});
+
+describe("GET /api/watchlist/:orgNumber", () => {
+  it("returns a followed company with the user's note", async () => {
+    brreg.setActive(brregEnhet(ALTA_TOURS, "ALTA TOURS AS"));
+    const { auth } = await registerAndLogin(lukas);
+    await request(app)
+      .post("/api/watchlist")
+      .set(auth)
+      .send({ orgNumber: ALTA_TOURS, note: "Main supplier" });
+
+    const res = await request(app)
+      .get(`/api/watchlist/${ALTA_TOURS}`)
+      .set(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      orgNumber: ALTA_TOURS,
+      name: "ALTA TOURS AS",
+      note: "Main supplier",
+      company: { orgNumber: ALTA_TOURS, name: "ALTA TOURS AS" },
+    });
+    expect(res.body.followedSince).toEqual(expect.any(String));
+  });
+
+  it("returns 404 for a company the user does not follow", async () => {
+    brreg.setActive(brregEnhet(ALTA_TOURS, "ALTA TOURS AS"));
+    const { auth } = await registerAndLogin(lukas);
+
+    const res = await request(app)
+      .get(`/api/watchlist/${ALTA_TOURS}`)
+      .set(auth);
+
+    expect(res.status).toBe(404);
+  });
+
+  it("does not show another user's company or note", async () => {
+    brreg.setActive(brregEnhet(ALTA_TOURS, "ALTA TOURS AS"));
+    const lukasSession = await registerAndLogin(lukas);
+    const kariSession = await registerAndLogin(kari);
+    await request(app)
+      .post("/api/watchlist")
+      .set(lukasSession.auth)
+      .send({ orgNumber: ALTA_TOURS, note: "Private" });
+
+    const res = await request(app)
+      .get(`/api/watchlist/${ALTA_TOURS}`)
+      .set(kariSession.auth);
+
+    expect(res.status).toBe(404);
+    expect(JSON.stringify(res.body)).not.toContain("Private");
+  });
+
+  it("returns 400 for an invalid organization number", async () => {
+    const { auth } = await registerAndLogin(lukas);
+
+    const res = await request(app).get("/api/watchlist/12345").set(auth);
+
+    expect(res.status).toBe(400);
   });
 });
 

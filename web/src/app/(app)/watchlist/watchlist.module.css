@@ -1,0 +1,138 @@
+.page {
+  display: grid;
+  gap: var(--ds-size-5);
+  padding-block: var(--ds-size-10) var(--ds-size-12);
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-size-4);
+}
+
+.top p {
+  margin: var(--ds-size-2) 0 0;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.empty {
+  display: grid;
+  justify-items: start;
+  gap: var(--ds-size-3);
+  padding: var(--ds-size-10) var(--ds-size-8);
+  border: 1px dashed var(--ds-color-neutral-border-default);
+  border-radius: var(--ds-border-radius-lg);
+}
+
+.sort {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-2);
+  color: var(--ds-color-neutral-text-subtle);
+  font-size: var(--ds-body-sm-font-size);
+}
+
+.sort a {
+  padding: var(--ds-size-1) var(--ds-size-3);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: var(--ds-border-radius-full);
+  color: var(--ds-color-neutral-text-default);
+  text-decoration: none;
+}
+
+.sort a[aria-current="true"] {
+  border-color: var(--ds-color-accent-base-default);
+  background: var(--ds-color-accent-base-default);
+  color: var(--ds-color-accent-base-contrast-default);
+}
+
+.sort a:focus-visible {
+  outline: var(--dsc-focus-outline);
+  outline-offset: 2px;
+}
+
+.list {
+  display: grid;
+  gap: var(--ds-size-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* One company: name and details, then risk, last change and accounts in
+   columns that line up from row to row */
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 9rem 9rem 7rem;
+  gap: var(--ds-size-4);
+  align-items: start;
+  padding: var(--ds-size-4) var(--ds-size-5);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: var(--ds-border-radius-lg);
+  color: inherit;
+  text-decoration: none;
+}
+
+.row:hover {
+  border-color: var(--ds-color-accent-border-default);
+  background: var(--ds-color-accent-surface-tinted);
+}
+
+.row:focus-visible {
+  outline: var(--dsc-focus-outline);
+  outline-offset: 2px;
+}
+
+.company {
+  display: grid;
+  gap: var(--ds-size-1);
+  justify-items: start;
+  min-width: 0;
+}
+
+.name {
+  font-weight: var(--ds-font-weight-semibold);
+  color: var(--ds-color-accent-text-subtle);
+  overflow-wrap: anywhere;
+}
+
+.meta {
+  font-size: var(--ds-body-sm-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+/* The note's first two lines */
+.note {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 40rem;
+  font-size: var(--ds-body-sm-font-size);
+  font-style: italic;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.cell {
+  display: grid;
+  gap: var(--ds-size-1);
+  justify-items: start;
+  font-size: var(--ds-body-sm-font-size);
+}
+
+.label {
+  font-size: var(--ds-body-xs-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+@media (max-width: 48rem) {
+  .row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .company {
+    grid-column: 1 / -1;
+  }
+}

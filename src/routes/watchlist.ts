@@ -2,6 +2,7 @@ import express from "express";
 import {
   listWatchlist,
   addCompany,
+  getWatchedCompany,
   updateNote,
   removeCompany,
   listCompanyChanges,
@@ -19,6 +20,7 @@ router.use(requireAuth);
 router.get("/", listWatchlist);
 router.get("/connections", listConnections);
 router.post("/", addCompany);
+router.get("/:orgNumber", getWatchedCompany);
 router.patch("/:orgNumber", updateNote);
 router.delete("/:orgNumber", removeCompany);
 router.get("/:orgNumber/changes", listCompanyChanges);

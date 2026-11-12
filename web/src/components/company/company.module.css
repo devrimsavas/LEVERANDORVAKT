@@ -1,0 +1,169 @@
+.page {
+  display: grid;
+  gap: var(--ds-size-6);
+  padding-block: var(--ds-size-8) var(--ds-size-12);
+}
+
+.header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-size-5);
+}
+
+.titleBlock {
+  display: grid;
+  gap: var(--ds-size-2);
+  min-width: 0;
+}
+
+.titleBlock h1 {
+  overflow-wrap: anywhere;
+}
+
+.sub {
+  margin: 0;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.follow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-size-2);
+}
+
+.following {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-size-1);
+  color: var(--ds-color-success-text-subtle);
+  font-weight: var(--ds-font-weight-semibold);
+}
+
+.dialogActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-size-3);
+  margin-top: var(--ds-size-5);
+}
+
+.note {
+  display: grid;
+  gap: var(--ds-size-2);
+  max-width: 40rem;
+  padding: var(--ds-size-5);
+  border-radius: var(--ds-border-radius-lg);
+  background: var(--ds-color-neutral-background-tinted);
+}
+
+.noteActions {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-3);
+}
+
+.noteActions p {
+  margin: 0;
+  color: var(--ds-color-success-text-subtle);
+}
+
+/* Tabs as links: each tab has its own URL (?tab=roles), so it can be
+   shared, bookmarked and reached with the back button */
+.tabs {
+  display: flex;
+  gap: var(--ds-size-1);
+  /* The line under the tabs is drawn inside the box, so the selected tab's
+     underline can cover it without anything sticking out (which would
+     show a scrollbar) */
+  box-shadow: inset 0 -1px 0 var(--ds-color-neutral-border-subtle);
+  overflow-x: auto;
+}
+
+.tabs a {
+  padding: var(--ds-size-3) var(--ds-size-4);
+  color: var(--ds-color-neutral-text-subtle);
+  text-decoration: none;
+  font-weight: var(--ds-font-weight-medium);
+  white-space: nowrap;
+  border-bottom: 3px solid transparent;
+}
+
+.tabs a:hover {
+  color: var(--ds-color-accent-text-subtle);
+  background: var(--ds-color-neutral-surface-hover);
+}
+
+.tabs a[aria-current="page"] {
+  color: var(--ds-color-accent-text-subtle);
+  border-bottom-color: var(--ds-color-accent-base-default);
+}
+
+.tabs a:focus-visible {
+  outline: var(--dsc-focus-outline);
+  outline-offset: -3px;
+}
+
+.panel {
+  min-height: 12rem;
+}
+
+.details {
+  display: grid;
+  margin: 0;
+  max-width: 48rem;
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) 2fr;
+  gap: var(--ds-size-4);
+  padding-block: var(--ds-size-3);
+  border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
+}
+
+.detail dt {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.detail dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.names {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+.changeTitle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-size-2);
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ds-size-4);
+  margin-top: var(--ds-size-5);
+}
+
+@media (max-width: 36rem) {
+  .detail {
+    grid-template-columns: 1fr;
+    gap: var(--ds-size-1);
+  }
+}

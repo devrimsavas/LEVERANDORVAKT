@@ -645,6 +645,37 @@ describe("risk on the watchlist", () => {
     ).toEqual(["ARCTIC FISH AS", "ALTA TOURS AS"]);
   });
 
+  it("sorts by risk level before score, so a bankruptcy comes first", async () => {
+    // Bankruptcy is a critical signal: level high, but no points
+    brreg.setActive(brregEnhet(ALTA_TOURS, "ALTA TOURS AS", { konkurs: true }));
+    // The latest due accounts are missing: medium, with points. Relative to
+    // today, so the test does not change result when the year turns.
+    brreg.setActive(
+      brregEnhet(ARCTIC_FISH, "ARCTIC FISH AS", {
+        sisteInnsendteAarsregnskap: String(
+          latestDueAccountsYear(new Date()) - 1,
+        ),
+      }),
+    );
+    const { auth } = await registerAndLogin(lukas);
+    await follow(auth, ARCTIC_FISH);
+    await follow(auth, ALTA_TOURS);
+
+    const res = await request(app).get("/api/watchlist?sort=risk").set(auth);
+
+    const rows = res.body.map(
+      (i: { name: string; risk: { level: string; score: number } }) => [
+        i.name,
+        i.risk.level,
+      ],
+    );
+    expect(rows).toEqual([
+      ["ALTA TOURS AS", "high"],
+      ["ARCTIC FISH AS", "medium"],
+    ]);
+    expect(res.body[0].risk.score).toBeLessThan(res.body[1].risk.score);
+  });
+
   it("returns 400 for an unknown sort order", async () => {
     const { auth } = await registerAndLogin(lukas);
 

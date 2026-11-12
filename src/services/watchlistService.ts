@@ -1,4 +1,4 @@
-import { Op, UniqueConstraintError } from "sequelize";
+import { literal, Op, UniqueConstraintError } from "sequelize";
 import { CompanyRecord } from "../models/CompanyRecord.js";
 import { WatchlistEntry } from "../models/WatchlistEntry.js";
 import { CompanyChange } from "../models/CompanyChange.js";
@@ -44,6 +44,11 @@ export interface WatchlistRisk {
 
 // How the watchlist can be sorted
 export type WatchlistSort = "name" | "risk";
+
+// high = 3 ... not assessed = 0, for sorting by risk level
+const RISK_LEVEL_RANK = literal(
+  `CASE "company"."risk_level" WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END`,
+);
 
 // All stored annual accounts of a followed company, newest first
 export interface CompanyAccounts {
@@ -208,10 +213,13 @@ export async function getWatchlist(
   const entries = await WatchlistEntry.findAll({
     where: { userId },
     include: [CompanyRecord],
-    // By risk: highest score first, companies not assessed yet last
+    // By risk: highest level first, then highest score, companies not
+    // assessed yet last. The level comes first because a critical signal
+    // (e.g. bankruptcy) sets the level to high without adding points.
     order:
       sort === "risk"
         ? [
+            [RISK_LEVEL_RANK, "DESC"],
             ["company", "riskScore", "DESC NULLS LAST"],
             ["company", "name", "ASC"],
           ]
@@ -225,6 +233,18 @@ export async function getWatchlist(
   return entries.map((entry) =>
     toWatchlistItem(entry, latest.get(entry.companyId) ?? null),
   );
+}
+
+// One company on the user's watchlist, e.g. to show it on the company page.
+// NotWatchingError when the user does not follow it.
+export async function getWatchlistItem(
+  userPublicId: string,
+  orgNumber: string,
+): Promise<WatchlistItem> {
+  const userId = await getInternalUserId(userPublicId);
+  const entry = await findEntry(userId, orgNumber);
+  const latest = await latestAccountsByCompany([entry.companyId]);
+  return toWatchlistItem(entry, latest.get(entry.companyId) ?? null);
 }
 
 // Adds a company to the user's watchlist.

@@ -14,6 +14,8 @@
 }
 
 .home {
+  /* flex, so the link is exactly as tall as the logo; as an inline link it
+     would also reserve space for text below the baseline */
   display: flex;
   color: inherit;
   text-decoration: none;
@@ -114,5 +116,49 @@
 
   .home :global(.logo-text) {
     font-size: var(--ds-heading-2xs-font-size);
+  }
+}
+
+/* The page the user is on */
+.nav a[aria-current="page"] {
+  color: var(--ds-color-accent-text-subtle);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.4em;
+}
+
+/* App header: more links, so they move into the menu earlier */
+
+.userEmail {
+  display: block;
+  font-weight: var(--ds-font-weight-regular);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+@media (max-width: 80rem) {
+  .userName {
+    display: none;
+  }
+}
+
+@media (max-width: 68rem) {
+  .app .nav {
+    display: none;
+  }
+
+  .app .mobileMenu {
+    display: block;
+  }
+}
+
+@media (max-width: 52rem) {
+  .userMenu {
+    display: none;
+  }
+}
+
+@media (max-width: 36rem) {
+  .app .home :global(.logo-text) {
+    display: none;
   }
 }

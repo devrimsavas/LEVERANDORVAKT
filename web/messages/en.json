@@ -168,5 +168,218 @@
   "overview": {
     "welcome": "Welcome, {name}",
     "placeholder": "Your overview of followed companies and the latest notifications will appear here."
+  },
+  "app": {
+    "comingSoon": "This page is being built.",
+    "nav": {
+      "label": "Main menu",
+      "home": "Leverandørvakt, overview",
+      "account": "Account: {name}",
+      "overview": "Overview",
+      "watchlist": "Watchlist",
+      "search": "Search",
+      "trends": "Trends",
+      "assistant": "Assistant",
+      "notifications": "Notifications",
+      "admin": "Admin"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "bellLabel": "Notifications",
+    "bellLabelUnread": "Notifications, {count} unread",
+    "markAllRead": "Mark all as read",
+    "seeAll": "See all notifications",
+    "empty": "No notifications yet. Follow a company to get notified when it changes.",
+    "unavailable": "Notifications could not be loaded right now.",
+    "unread": "(unread)",
+    "severity": {
+      "critical": "Critical",
+      "warning": "Warning",
+      "info": "Info"
+    }
+  },
+  "changes": {
+    "other": "Changed in the register",
+    "name": "New company name",
+    "organizationForm": "New organization form",
+    "website": "New website",
+    "address": "New business address",
+    "industryCode": "New industry",
+    "employees": "Number of employees changed",
+    "foundedDate": "Founding date corrected",
+    "isBankrupt_yes": "Bankruptcy registered",
+    "isBankrupt_no": "Bankruptcy no longer registered",
+    "isUnderLiquidation_yes": "Liquidation started",
+    "isUnderLiquidation_no": "Liquidation no longer registered",
+    "isUnderForcedLiquidation_yes": "Forced liquidation started",
+    "isUnderForcedLiquidation_no": "Forced liquidation no longer registered",
+    "deletedFromRegistry_yes": "Removed from the register",
+    "deletedFromRegistry_no": "Back in the register",
+    "lastAnnualAccountsYear": "Annual accounts filed",
+    "roles_ceo": "New CEO",
+    "roles_boardChair": "New chair of the board",
+    "roles_deputyChair": "New deputy chair",
+    "roles_boardMembers": "Board members changed",
+    "roles_deputyMembers": "Deputy board members changed",
+    "roles_auditor": "Auditor changed",
+    "roles_accountant": "Accountant changed",
+    "annualAccounts_filed": "New annual accounts",
+    "annualAccounts_corrected": "Annual accounts corrected",
+    "annualAccounts_liquidation": "Accounts prepared for liquidation",
+    "annualAccounts_negativeEquity": "Equity turned negative",
+    "annualAccounts_auditDropped": "Accounts no longer audited",
+    "riskLevel": "Risk level changed"
+  },
+  "search": {
+    "title": "Search",
+    "lead": "Find a Norwegian company by name or organization number.",
+    "label": "Company name or organization number",
+    "placeholder": "For example Equinor or 923 609 016",
+    "clear": "Clear",
+    "button": "Search",
+    "tooShort": "Type at least {min} characters.",
+    "unavailable": "The Brønnøysund Register cannot be reached right now. Try again in a little while.",
+    "noResults": "No companies match “{query}”",
+    "resultCount": "{count, plural, one {# company} other {# companies}} match “{query}”",
+    "limited": "Showing the first {limit} matches. Add more of the name to narrow the search."
+  },
+  "company": {
+    "backToSearch": "Back to search",
+    "orgNumberShort": "Org. no.",
+    "tabsLabel": "Company information",
+    "unavailable": "The Brønnøysund Register cannot be reached right now. Try again in a little while.",
+    "notFound": {
+      "title": "Company not found",
+      "text": "There is no active company with organization number {orgNumber} in the Brønnøysund Register. It may have been struck off, or the number may be mistyped."
+    },
+    "tabs": {
+      "overview": "Overview",
+      "roles": "Roles",
+      "changes": "Changes"
+    },
+    "status": {
+      "struckOff": "Struck off",
+      "bankrupt": "Bankrupt",
+      "forcedLiquidation": "Forced liquidation",
+      "liquidation": "Being wound up"
+    },
+    "follow": {
+      "follow": "Follow",
+      "following": "Following",
+      "unfollow": "Stop following",
+      "confirmTitle": "Stop following {name}?",
+      "confirmText": "You will no longer be notified about changes, and your note on the company is deleted.",
+      "confirm": "Stop following",
+      "cancel": "Cancel",
+      "failed": "That did not work. Try again in a little while.",
+      "close": "Close"
+    },
+    "note": {
+      "label": "Your note",
+      "description": "Only you can see it.",
+      "save": "Save note",
+      "saved": "Saved",
+      "failed": "The note could not be saved. Try again in a little while.",
+      "tooLong": "The note can be at most {max} characters.",
+      "charsLeft": "%d characters left",
+      "charsOver": "%d characters too many"
+    },
+    "overview": {
+      "orgNumber": "Organization number",
+      "organizationForm": "Organization form",
+      "founded": "Founded",
+      "industry": "Industry",
+      "employees": "Employees",
+      "address": "Business address",
+      "municipality": "{name} municipality",
+      "website": "Website",
+      "lastAccounts": "Latest annual accounts",
+      "followedSince": "Following since",
+      "lastChecked": "Last checked",
+      "lastChanged": "Last change",
+      "noChanges": "No changes since you started following",
+      "unknown": "Not registered"
+    },
+    "roles": {
+      "unavailable": "The roles could not be loaded right now.",
+      "none": "No roles are registered for this company.",
+      "ceo": "CEO",
+      "boardChair": "Chair of the board",
+      "deputyChair": "Deputy chair",
+      "boardMembers": "Board members",
+      "deputyMembers": "Deputy board members",
+      "auditor": "Auditor",
+      "accountant": "Accountant"
+    },
+    "changes": {
+      "notFollowed": "Changes are recorded from the moment someone follows a company. Follow this company to see its changes here and be notified of new ones.",
+      "unavailable": "The changes could not be loaded right now.",
+      "none": "No changes have been detected yet. Leverandørvakt checks the register every ten minutes.",
+      "caption": "Detected changes, newest first",
+      "date": "Date",
+      "change": "Change",
+      "from": "Before",
+      "to": "After",
+      "yes": "Yes",
+      "no": "No",
+      "pages": "Pages",
+      "newer": "Newer",
+      "older": "Older",
+      "pageOf": "Page {page} of {total}"
+    }
+  },
+  "orgForms": {
+    "AS": "Private limited company",
+    "ASA": "Public limited company",
+    "ENK": "Sole proprietorship",
+    "NUF": "Norwegian-registered foreign company",
+    "ANS": "General partnership",
+    "DA": "Partnership with shared liability",
+    "KS": "Limited partnership",
+    "SA": "Cooperative",
+    "STI": "Foundation",
+    "FLI": "Association",
+    "BA": "Company with limited liability",
+    "SPA": "Savings bank",
+    "ORGL": "Organizational unit",
+    "KF": "Municipal enterprise",
+    "IKS": "Inter-municipal company"
+  },
+  "watchlist": {
+    "title": "Watchlist",
+    "summary": "You follow {count, plural, one {# company} other {# companies}}.",
+    "riskCount": {
+      "high": "{count} with high risk",
+      "medium": "{count} with medium risk",
+      "low": "{count} with low risk"
+    },
+    "add": "Find a company",
+    "unavailable": "Your watchlist could not be loaded right now. Try again in a little while.",
+    "empty": {
+      "title": "You are not following any companies yet",
+      "text": "Search for your suppliers and customers and follow them. You are notified when something changes for the worse.",
+      "button": "Search for a company"
+    },
+    "sortLabel": "Sort by",
+    "sort": {
+      "name": "Name",
+      "risk": "Highest risk"
+    },
+    "columns": {
+      "risk": "Risk",
+      "lastChange": "Last change",
+      "accounts": "Accounts"
+    },
+    "noChanges": "None yet",
+    "accountsUnsupported": "Not available"
+  },
+  "risk": {
+    "level": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "notAssessed": "Not assessed"
+    }
   }
 }

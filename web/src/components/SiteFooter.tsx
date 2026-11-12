@@ -1,6 +1,7 @@
 import NextLink from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Link, Paragraph } from "@digdir/designsystemet-react";
+import { getSessionToken } from "@/lib/session";
 import { Logo } from "./Logo";
 import styles from "./SiteFooter.module.css";
 
@@ -16,6 +17,7 @@ export const DATA_SOURCES = [
 export async function SiteFooter() {
   const t = await getTranslations("footer");
   const header = await getTranslations("header");
+  const loggedIn = Boolean(await getSessionToken());
 
   return (
     <footer className={styles.footer}>
@@ -42,7 +44,11 @@ export async function SiteFooter() {
             </li>
             <li>
               <Link asChild>
-                <NextLink href="/login">{header("logIn")}</NextLink>
+                {loggedIn ? (
+                  <NextLink href="/overview">{header("overview")}</NextLink>
+                ) : (
+                  <NextLink href="/login">{header("logIn")}</NextLink>
+                )}
               </Link>
             </li>
           </ul>

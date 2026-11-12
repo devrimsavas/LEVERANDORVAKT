@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import {
   getWatchlist,
+  getWatchlistItem,
   addToWatchlist,
   updateWatchlistNote,
   removeFromWatchlist,
@@ -108,6 +109,30 @@ export const addCompany = async (req: Request, res: Response) => {
     console.error(error);
     // The only remaining failure is the Brreg call
     res.status(502).json({ error: "Could not reach the Brreg API" });
+  }
+};
+
+// GET /api/watchlist/:orgNumber
+export const getWatchedCompany = async (
+  req: Request<{ orgNumber: string }>,
+  res: Response,
+) => {
+  // #swagger.tags = ["Watchlist"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.responses[404] = { description: "Company is not on the watchlist" } */
+  const { orgNumber } = req.params;
+
+  if (!isValidOrgNumber(orgNumber)) {
+    res.status(400).json({ error: "Organization number must be 9 digits" });
+    return;
+  }
+
+  try {
+    res.json(await getWatchlistItem(req.auth!.userId, orgNumber));
+  } catch (error) {
+    if (sendKnownError(error, res)) return;
+    console.error(error);
+    res.status(500).json({ error: "Could not load the company" });
   }
 };
 

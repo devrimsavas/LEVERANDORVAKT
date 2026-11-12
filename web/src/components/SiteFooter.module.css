@@ -44,12 +44,24 @@
   color: inherit;
 }
 
+.list a {
+  overflow-wrap: anywhere;
+}
+
 @media (max-width: 52rem) {
   .columns {
-    grid-template-columns: 1fr 1fr;
+    /* minmax(0, 1fr): long names wrap instead of widening the page */
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .brand {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 36rem) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ds-size-6);
   }
 }

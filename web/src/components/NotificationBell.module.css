@@ -1,0 +1,97 @@
+/* Designsystemet's popover is 300px wide at most and has padding; the
+   panel needs more room and puts its own padding on each row */
+.panel {
+  --dsc-popover-max-width: min(28rem, calc(100vw - 2rem));
+  --dsc-popover-padding: 0;
+  width: min(28rem, calc(100vw - 2rem));
+  overflow: hidden;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-size-2);
+  padding: var(--ds-size-3) var(--ds-size-4);
+  border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
+}
+
+.title {
+  margin: 0;
+  font-size: var(--ds-body-md-font-size);
+  font-weight: var(--ds-font-weight-semibold);
+}
+
+.panel > p {
+  margin: 0;
+  padding: var(--ds-size-4);
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr auto;
+  gap: var(--ds-size-3);
+  align-items: start;
+  width: 100%;
+  padding: var(--ds-size-3) var(--ds-size-4);
+  border: 0;
+  border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
+  background: transparent;
+  color: var(--ds-color-neutral-text-default);
+  font: inherit;
+  font-size: var(--ds-body-sm-font-size);
+  text-align: left;
+  cursor: pointer;
+}
+
+.item > :first-child {
+  justify-self: start;
+}
+
+.item:hover {
+  background: var(--ds-color-neutral-surface-hover);
+}
+
+.item:focus-visible {
+  outline: var(--dsc-focus-outline);
+  outline-offset: -3px;
+}
+
+/* Unread: tinted background and a bar on the left */
+.item[data-unread] {
+  background: var(--ds-color-accent-surface-tinted);
+  box-shadow: inset 3px 0 0 var(--ds-color-accent-base-default);
+}
+
+.text {
+  display: grid;
+}
+
+.company {
+  font-weight: var(--ds-font-weight-semibold);
+}
+
+.time {
+  color: var(--ds-color-neutral-text-subtle);
+  font-size: var(--ds-body-xs-font-size);
+  white-space: nowrap;
+}
+
+.all {
+  display: block;
+  padding: var(--ds-size-3) var(--ds-size-4);
+  color: var(--ds-color-accent-text-subtle);
+  font-weight: var(--ds-font-weight-medium);
+  text-align: center;
+}
+
+.all:focus-visible {
+  outline: var(--dsc-focus-outline);
+  outline-offset: -3px;
+}
