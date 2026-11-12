@@ -40,6 +40,15 @@ export function NotificationBell({
   const router = useRouter();
   const pathname = usePathname();
   const [summary, setSummary] = useState(initial);
+
+  // A new count from the server (e.g. after "mark all as read" on the
+  // notifications page) replaces the one shown. Compared during render, as
+  // React recommends for state that follows a prop.
+  const [serverSummary, setServerSummary] = useState(initial);
+  if (initial !== serverSummary) {
+    setServerSummary(initial);
+    setSummary(initial);
+  }
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
 

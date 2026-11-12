@@ -362,8 +362,6 @@
       "change": "Change",
       "from": "Before",
       "to": "After",
-      "yes": "Yes",
-      "no": "No",
       "pages": "Pages",
       "newer": "Newer",
       "older": "Older",
@@ -586,5 +584,36 @@
       "namesUnavailable": "Industry names could not be loaded from Statistics Norway, so they are shown by code."
     },
     "source": "Source: the Central Coordinating Register for Legal Entities (registration date), Statistics Norway (industry names) and the Norwegian Mapping Authority (municipalities). Companies that have since been struck off are not counted."
+  },
+  "notificationsPage": {
+    "title": "Notifications",
+    "unreadCount": "{count, plural, one {# unread notification} other {# unread notifications}}",
+    "allRead": "You have read all your notifications.",
+    "markAllRead": "Mark all as read",
+    "markRead": "Mark as read",
+    "unread": "Unread",
+    "changedTo": "changed to",
+    "filterLabel": "Show",
+    "filters": {
+      "all": "All",
+      "unread": "Unread"
+    },
+    "unavailable": "The notifications could not be loaded right now. Try again in a little while.",
+    "empty": "No notifications yet. Follow a company and you are notified here when it changes.",
+    "emptyUnread": "No unread notifications. You are up to date.",
+    "findCompany": "Find a company to follow",
+    "pages": "Pages",
+    "newer": "Newer",
+    "older": "Older",
+    "pageOf": "Page {page} of {total}"
+  },
+  "changeValues": {
+    "yes": "Yes",
+    "no": "No",
+    "risk": "{level} ({score} points)",
+    "equity": "{amount} at the end of {year}",
+    "audited": "Audited ({year})",
+    "notAudited": "Not audited ({year})",
+    "accountsFor": "Accounts for {year}"
   }
 }

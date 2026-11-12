@@ -362,8 +362,6 @@
       "change": "Endring",
       "from": "Før",
       "to": "Etter",
-      "yes": "Ja",
-      "no": "Nei",
       "pages": "Sider",
       "newer": "Nyere",
       "older": "Eldre",
@@ -586,5 +584,36 @@
       "namesUnavailable": "Bransjenavnene kunne ikke hentes fra Statistisk sentralbyrå, så de vises med kode."
     },
     "source": "Kilde: Enhetsregisteret (registreringsdato), Statistisk sentralbyrå (bransjenavn) og Kartverket (kommuner). Selskaper som senere er slettet, telles ikke med."
+  },
+  "notificationsPage": {
+    "title": "Varsler",
+    "unreadCount": "{count, plural, one {# ulest varsel} other {# uleste varsler}}",
+    "allRead": "Du har lest alle varslene dine.",
+    "markAllRead": "Merk alle som lest",
+    "markRead": "Merk som lest",
+    "unread": "Ulest",
+    "changedTo": "endret til",
+    "filterLabel": "Vis",
+    "filters": {
+      "all": "Alle",
+      "unread": "Uleste"
+    },
+    "unavailable": "Varslene kunne ikke lastes akkurat nå. Prøv igjen om litt.",
+    "empty": "Ingen varsler ennå. Følg et selskap, så får du varsel her når det endrer seg.",
+    "emptyUnread": "Ingen uleste varsler. Du er oppdatert.",
+    "findCompany": "Finn et selskap å følge",
+    "pages": "Sider",
+    "newer": "Nyere",
+    "older": "Eldre",
+    "pageOf": "Side {page} av {total}"
+  },
+  "changeValues": {
+    "yes": "Ja",
+    "no": "Nei",
+    "risk": "{level} ({score} poeng)",
+    "equity": "{amount} ved utgangen av {year}",
+    "audited": "Revidert ({year})",
+    "notAudited": "Ikke revidert ({year})",
+    "accountsFor": "Regnskap for {year}"
   }
 }

@@ -13,7 +13,7 @@ import {
   Tag,
 } from "@digdir/designsystemet-react";
 import { changeTitleKey } from "@/lib/changeTitle";
-import { formatChangeValue } from "@/lib/changeValue";
+import { getChangeDisplay } from "@/lib/changeDisplay";
 import { getCompanyChanges } from "@/lib/companies";
 import { SEVERITY_COLOR } from "@/lib/notificationTypes";
 import styles from "./company.module.css";
@@ -38,7 +38,7 @@ export async function ChangesTab({
   const { items, totalPages } = result.data;
   if (items.length === 0) return <Paragraph>{t("none")}</Paragraph>;
 
-  const value = (v: unknown) => formatChangeValue(v, t("yes"), t("no"));
+  const display = await getChangeDisplay();
   const pageLink = (target: number) =>
     `/companies/${orgNumber}?tab=changes&page=${target}`;
 
@@ -58,6 +58,11 @@ export async function ChangesTab({
           <TableBody>
             {items.map((item, index) => {
               const key = changeTitleKey(item.field, item.newValue);
+              const { before, after } = display(
+                item.field,
+                item.oldValue,
+                item.newValue,
+              );
               return (
                 <TableRow key={`${item.detectedAt}-${index}`}>
                   <TableCell className={styles.nowrap}>
@@ -76,8 +81,8 @@ export async function ChangesTab({
                       {changes.has(key) ? changes(key) : changes("other")}
                     </span>
                   </TableCell>
-                  <TableCell>{value(item.oldValue)}</TableCell>
-                  <TableCell>{value(item.newValue)}</TableCell>
+                  <TableCell>{before}</TableCell>
+                  <TableCell>{after}</TableCell>
                 </TableRow>
               );
             })}

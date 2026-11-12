@@ -23,3 +23,22 @@ export const getNotificationSummary = cache(
     return { unreadCount: count.data.count, latest: latest.data.items };
   },
 );
+
+export const NOTIFICATIONS_PAGE_SIZE = 20;
+
+export interface NotificationPage {
+  items: NotificationItem[];
+  page: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export async function getNotifications(
+  page: number,
+  unreadOnly: boolean,
+): Promise<NotificationPage | null> {
+  const result = await apiFetch<NotificationPage>(
+    `/api/notifications?page=${page}&pageSize=${NOTIFICATIONS_PAGE_SIZE}${unreadOnly ? "&unread=true" : ""}`,
+  );
+  return result.ok ? result.data : null;
+}
