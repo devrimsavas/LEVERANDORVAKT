@@ -4,7 +4,7 @@
 
 _Last updated: 12.11.2026_
 
-> ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages and trends; the assistant and notification pages, the admin page and end-to-end tests are next, then production hardening and deployment. See the [Roadmap](#roadmap).
+> ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages, trends, notifications and the assistant; the admin page, an in-app guide and end-to-end tests are next, then production hardening and deployment. See the [Roadmap](#roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
 
@@ -29,7 +29,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Notifications** — followers of a company are notified of every recorded change
 - **Regional trends** — new companies registered per month by municipality, industry and organization form, each month compared with the same month a year earlier, plus the most common industries in a period; answers are cached because past months hardly change
 - **Versioned database migrations** — schema changes are tracked as numbered migration files and applied automatically on startup
-- **AI assistant** — questions in plain language ("Which of my suppliers have the highest risk?") answered with tool calling over the app's own service functions; read-only, per-user conversations, a daily question limit, and a choice of model provider (local Ollama, Ollama Cloud or Gemini) in `.env`
+- **AI assistant** — questions in plain language ("Which of my suppliers have the highest risk?") answered with tool calling over the app's own service functions; read-only, per-user conversations, a daily question limit (with a status endpoint showing what is left), and a choice of model provider (local Ollama, Ollama Cloud or Gemini) in `.env`
 - **Admin overview** — an admin-only status of the background jobs and the data, and a read-only list of users
 - **Interactive API documentation** — Swagger UI at `/api/docs`
 - **Automated tests and CI** — Vitest + Supertest against a real PostgreSQL database, run by GitHub Actions on every push
@@ -46,19 +46,23 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 
 ### Pages
 
-| Page                   | What it shows                                                                                                                                                                                |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Landing (`/`)          | What the service does, an example of its notifications, the features and the open data sources                                                                                               |
-| Log in, Create account | Forms with a message per field and the new password typed twice; a new account is logged in right away                                                                                                                        |
-| Overview               | A welcome guide for new users; otherwise the number of followed companies, the ones that need attention, the risk split across the watchlist and the latest notifications                    |
-| Watchlist              | Every followed company with its risk level, last change, latest accounts and the start of your note, sorted by name or highest risk                                                          |
-| Search                 | Search by name, or go straight to a company by its organization number                                                                                                                       |
-| Company                | Follow / stop following, a private note, and tabs for overview, roles, annual accounts (chart and table), risk (level, score, warning signs, what could not be checked) and detected changes |
-| Trends                 | New companies per month against a year earlier, and the ten most common industries, filtered by municipality, main industry, organization form and period                                    |
-| Notification bell      | In the header on every app page: unread count, the latest notifications, mark as read; refreshed every minute while the page is visible, with the count in the browser tab                   |
+| Page                   | What it shows                                                                                                                                                                                                |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Landing (`/`)          | What the service does, an example of its notifications, the features and the open data sources                                                                                                               |
+| Log in, Create account | Forms with a message per field and the new password typed twice; a new account is logged in right away                                                                                                       |
+| Overview               | A welcome guide for new users; otherwise the number of followed companies, the ones that need attention, the risk split across the watchlist and the latest notifications                                    |
+| Watchlist              | Every followed company with its risk level, last change, latest accounts and the start of your note, sorted by name or highest risk                                                                          |
+| Search                 | Search by name, or go straight to a company by its organization number                                                                                                                                       |
+| Company                | Follow / stop following, a private note, and tabs for overview, roles, annual accounts (chart and table), risk (level, score, warning signs, what could not be checked) and detected changes                 |
+| Trends                 | New companies per month against a year earlier, and the ten most common industries, filtered by municipality, main industry, organization form and period                                                    |
+| Notification bell      | In the header on every app page: unread count, the latest notifications, mark as read; refreshed every minute while the page is visible, with the count in the browser tab                                   |
+| Notifications          | All notifications with what changed (before → after), unread filter, mark one or all as read, 20 per page                                                                                                    |
+| Assistant              | Ask in plain language and get answers in Markdown (tables, lists, links), with the tools each answer is based on; example questions, earlier conversations to reopen or delete, and the questions left today |
+| About, Contact         | What the project is and how it is built; where to reach the author                                                                                                                                           |
 
 ### How it is built
 
+- **Model answers are shown safely.** The assistant's Markdown is rendered with `react-markdown`, which never runs HTML from the text: a `<script>` in an answer is shown as plain text, only `http(s)` links are kept, and images are dropped.
 - **The token never reaches the browser (BFF).** The login form posts to the Next server, which logs in against the API and keeps the JWT in an `httpOnly`, `SameSite=Lax` cookie with the token's lifetime. Pages and server actions call the API with it as a Bearer token, so page scripts cannot read it and the API needs no CORS. A proxy (`src/proxy.ts`) sends visitors without a session to the login page and back to the page they asked for; only paths on the site are accepted as the target.
 - **Designsystemet.** Components and design tokens from [Designsystemet](https://www.designsystemet.no), the Norwegian public sector's design system, with our own theme generated from `designsystemet.config.json`, Inter as the font and Aksel icons. Light and dark mode follow the operating system until the user chooses; the choice is kept in a cookie, so the page is rendered in the right colors from the start.
 - **English and Norwegian.** Texts are in `web/messages/en.json` and `nb.json` (next-intl), chosen by a cookie or the browser's language; a missing or misspelled key is a type error. The API sends risk signals, limitations and changes as codes with `params` (years, amounts, dates), and the web app writes the sentences itself, with amounts and dates in the reader's format.
@@ -83,6 +87,7 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 | Design         | Designsystemet (React components, CSS and a generated theme), Aksel icons, Inter                                                                                                                           |
 | Languages      | next-intl (English and Norwegian Bokmål)                                                                                                                                                                   |
 | Charts         | Recharts                                                                                                                                                                                                   |
+| Markdown       | react-markdown with remark-gfm (assistant answers)                                                                                                                                                         |
 | Data source    | [Brønnøysund Register Centre open API](https://data.brreg.no) (Central Coordinating Register and Register of Company Accounts; free, no API key), Kartverket municipality API, SSB industry classification |
 
 ## Architecture
@@ -210,6 +215,7 @@ All assistant endpoints require a token. Each user sees only their own conversat
 
 | Method | Endpoint                            | Description                                                                                                                 |
 | ------ | ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/api/assistant/status`             | Whether the assistant is available, the daily limit and how many questions are left in the last 24 hours                    |
 | POST   | `/api/assistant/messages`           | Ask a question (`message`, optional `conversationId`); returns the answer, the tools it is based on and the conversation id |
 | GET    | `/api/assistant/conversations`      | Your conversations, most recently used first (`page`, `pageSize`)                                                           |
 | GET    | `/api/assistant/conversations/{id}` | One conversation with all its messages                                                                                      |
@@ -603,8 +609,8 @@ GitHub Actions runs two jobs on every push: the type check and all tests against
 - [x] Overview, watchlist, search and company pages (overview, roles, accounts, risk, changes)
 - [x] Charts: annual accounts per year, new companies per month
 - [x] Trends with municipality, industry, form and period filters
-- [ ] Assistant and notifications pages
-- [ ] About and contact pages
+- [x] Assistant and notifications pages
+- [x] About and contact pages
 - [ ] Admin page and an in-app guide
 - [ ] End-to-end tests (Playwright) and the web app in CI and Docker Compose
 

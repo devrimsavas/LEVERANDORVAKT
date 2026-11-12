@@ -86,6 +86,10 @@
   display: none;
 }
 
+.languageCode {
+  display: none;
+}
+
 /* Small screens: links move into the menu, "Get started" stays visible */
 @media (max-width: 52rem) {
   .nav,
@@ -110,8 +114,13 @@
 
   .getStarted,
   .languageIcon,
+  .languageName,
   .menuText {
     display: none;
+  }
+
+  .languageCode {
+    display: inline;
   }
 
   .home :global(.logo-text) {

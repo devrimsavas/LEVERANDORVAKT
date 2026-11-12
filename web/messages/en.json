@@ -130,7 +130,8 @@
     "license": "Contains data under the Norwegian licence for Open Government data (NLOD) distributed by the Brønnøysund Register Centre, the Norwegian Mapping Authority and Statistics Norway.",
     "independent": "Leverandørvakt is an independent project and is not affiliated with these agencies.",
     "sourceCode": "Source code on GitHub",
-    "opensInNewTab": "(opens in a new tab)"
+    "opensInNewTab": "(opens in a new tab)",
+    "builtBy": "Built by"
   },
   "auth": {
     "email": "Email",
@@ -615,5 +616,136 @@
     "audited": "Audited ({year})",
     "notAudited": "Not audited ({year})",
     "accountsFor": "Accounts for {year}"
+  },
+  "about": {
+    "title": "About Leverandørvakt",
+    "lead": "Leverandørvakt keeps an eye on the Norwegian companies you depend on, and tells you when one of them changes for the worse.",
+    "why": {
+      "title": "Why it exists",
+      "text1": "Small and medium-sized businesses rarely notice that a supplier or customer is in trouble until an invoice goes unpaid or a delivery does not arrive. The signs are often public long before that: a CEO leaves, the auditor resigns, the annual accounts are late, or equity turns negative.",
+      "text2": "All of this is registered with the Brønnøysund Register Centre, but nobody has time to check every partner by hand. Leverandørvakt does it for you, every ten minutes, and only tells you about what matters."
+    },
+    "watches": {
+      "title": "What it watches",
+      "roles": {
+        "title": "Roles.",
+        "text": "New CEO, chair, board members, auditor or accountant."
+      },
+      "status": {
+        "title": "Status.",
+        "text": "Bankruptcy, liquidation, forced liquidation, or being struck off the register."
+      },
+      "accounts": {
+        "title": "Annual accounts.",
+        "text": "New and corrected filings, equity turning negative, audits being dropped, and accounts that are overdue after 31 July."
+      },
+      "risk": {
+        "title": "Risk signals.",
+        "text": "An assessment that shows every signal, its weight and its reason, and what could not be checked."
+      },
+      "connections": {
+        "title": "Connections.",
+        "text": "People or audit firms that hold roles in several of your companies."
+      }
+    },
+    "data": {
+      "title": "Where the data comes from",
+      "text": "Everything is open data from Norwegian public agencies. Nothing is bought, scraped or guessed.",
+      "brreg": "the Central Coordinating Register for Legal Entities, roles, update feeds and the Register of Company Accounts",
+      "kartverket": "municipality names and numbers",
+      "ssb": "industry names from the Standard Industrial Classification"
+    },
+    "risk": {
+      "title": "What the risk assessment is, and is not",
+      "text1": "The risk level is calculated from public register data with fixed, documented rules: each warning sign adds points, and some signs, like bankruptcy, give high risk on their own. Every assessment shows its reasons.",
+      "limits": "It is support for your own assessment, not a credit rating. It does not know about unpaid invoices, court cases or anything else outside the public registers, and changes are only known from the day someone started following a company."
+    },
+    "privacy": {
+      "title": "Your data",
+      "account": "Your account holds your name, email address and a securely hashed password.",
+      "watchlist": "Your watchlist and notes are only visible to you. The notes are never sent to the AI assistant.",
+      "notifications": "Notifications are kept so you can read them later.",
+      "notStored": "Birth dates of the people behind a company are used to tell people with the same name apart, but they are never stored or shown."
+    },
+    "project": {
+      "title": "About this project",
+      "text": "Leverandørvakt is an independent portfolio project built by a full-stack developer in Norway.",
+      "byName": "Leverandørvakt is an independent portfolio project built by {name}, a full-stack developer in Norway.",
+      "built": "The API is written in Node.js and TypeScript with Express and PostgreSQL, and is covered by more than 300 automated tests that run on every change. The web app uses Next.js and Designsystemet, the design system of the Norwegian public sector.",
+      "independent": "It is not affiliated with the Brønnøysund Register Centre or any other agency, and it is not a commercial service.",
+      "source": "See the source code",
+      "contact": "Get in touch"
+    }
+  },
+  "contact": {
+    "title": "Contact",
+    "lead": "Questions, feedback or a job opportunity? I would be glad to hear from you.",
+    "leadName": "Questions, feedback or a job opportunity? {name} would be glad to hear from you.",
+    "channels": {
+      "email": "Email",
+      "linkedin": "LinkedIn",
+      "portfolio": "Portfolio",
+      "github": "Source code"
+    },
+    "linkedinText": "Profile and messages",
+    "githubText": "Leverandørvakt on GitHub",
+    "about": {
+      "title": "About the service",
+      "text": "Leverandørvakt is a portfolio project, so there is no customer service or support line. Questions about the register data itself belong to the Brønnøysund Register Centre."
+    }
+  },
+  "assistant": {
+    "title": "Assistant",
+    "lead": "Ask about your companies in plain language, in English or Norwegian. The assistant reads your watchlist, the registers and the trends, and never changes anything.",
+    "conversations": "Conversations",
+    "newConversation": "New conversation",
+    "noConversations": "No conversations yet.",
+    "listFailed": "The conversations could not be loaded.",
+    "chatLabel": "Chat with the assistant",
+    "notFound": "This conversation does not exist, or it was deleted.",
+    "notAvailable": "The assistant is turned off on this server, so it cannot answer questions right now.",
+    "statusFailed": "The assistant could not be reached right now. Try again in a little while.",
+    "intro": "Ask a question about your suppliers and customers, or start with one of these:",
+    "examples": {
+      "highestRisk": "Which of my companies have the highest risk, and why?",
+      "changes": "What has changed in my companies lately?",
+      "accounts": "Which companies have overdue or weak annual accounts?",
+      "connections": "Do any of my companies share board members or an auditor?"
+    },
+    "you": "You",
+    "assistantName": "Assistant",
+    "thinking": "Thinking… a local model can take a while.",
+    "basedOn": "Based on: {tools}",
+    "label": "Your question",
+    "placeholder": "Ask about your companies… (Enter to send, Shift+Enter for a new line)",
+    "send": "Send",
+    "remaining": "{remaining} of {limit} questions left in the last 24 hours",
+    "errors": {
+      "unavailable": "The assistant is not available right now. Try again later.",
+      "limit": "You have used today's questions. The limit counts the last 24 hours.",
+      "timeout": "The language model did not answer in time. Try a shorter question, or try again.",
+      "model": "The language model returned an error. Try again in a little while.",
+      "notFound": "This conversation no longer exists. Start a new one.",
+      "failed": "The question could not be sent. Try again."
+    },
+    "tools": {
+      "list_watchlist": "your watchlist",
+      "search_companies": "company search",
+      "get_company": "company details",
+      "get_company_risk": "risk assessment",
+      "get_company_changes": "detected changes",
+      "get_company_accounts": "annual accounts",
+      "get_company_roles": "roles",
+      "find_connections": "connections",
+      "get_registration_trends": "regional trends",
+      "get_notifications": "your notifications"
+    },
+    "delete": {
+      "label": "Delete conversation: {title}",
+      "title": "Delete this conversation?",
+      "text": "The conversation and its answers are deleted. Questions you asked still count towards the daily limit.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    }
   }
 }

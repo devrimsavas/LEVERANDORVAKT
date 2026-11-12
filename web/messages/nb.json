@@ -130,7 +130,8 @@
     "license": "Inneholder data under Norsk lisens for offentlige data (NLOD) tilgjengeliggjort av Brønnøysundregistrene, Kartverket og Statistisk sentralbyrå.",
     "independent": "Leverandørvakt er et uavhengig prosjekt og er ikke tilknyttet disse etatene.",
     "sourceCode": "Kildekode på GitHub",
-    "opensInNewTab": "(åpnes i ny fane)"
+    "opensInNewTab": "(åpnes i ny fane)",
+    "builtBy": "Laget av"
   },
   "auth": {
     "email": "E-post",
@@ -615,5 +616,136 @@
     "audited": "Revidert ({year})",
     "notAudited": "Ikke revidert ({year})",
     "accountsFor": "Regnskap for {year}"
+  },
+  "about": {
+    "title": "Om Leverandørvakt",
+    "lead": "Leverandørvakt holder øye med de norske selskapene du er avhengig av, og sier fra når et av dem endrer seg til det verre.",
+    "why": {
+      "title": "Hvorfor den finnes",
+      "text1": "Små og mellomstore bedrifter merker sjelden at en leverandør eller kunde har problemer før en faktura ikke blir betalt eller en leveranse uteblir. Tegnene er ofte offentlige lenge før det: en daglig leder går av, revisor trer ut, årsregnskapet er forsinket eller egenkapitalen blir negativ.",
+      "text2": "Alt dette registreres i Brønnøysundregistrene, men ingen har tid til å sjekke hver samarbeidspartner for hånd. Leverandørvakt gjør det for deg, hvert tiende minutt, og sier bare fra om det som betyr noe."
+    },
+    "watches": {
+      "title": "Dette holder den øye med",
+      "roles": {
+        "title": "Roller.",
+        "text": "Ny daglig leder, styreleder, styremedlemmer, revisor eller regnskapsfører."
+      },
+      "status": {
+        "title": "Status.",
+        "text": "Konkurs, avvikling, tvangsavvikling eller sletting fra registeret."
+      },
+      "accounts": {
+        "title": "Årsregnskap.",
+        "text": "Nye og korrigerte regnskap, egenkapital som blir negativ, revisjon som faller bort, og regnskap som er forsinket etter 31. juli."
+      },
+      "risk": {
+        "title": "Risikosignaler.",
+        "text": "En vurdering som viser hvert signal, vekten og begrunnelsen, og hva som ikke kunne sjekkes."
+      },
+      "connections": {
+        "title": "Forbindelser.",
+        "text": "Personer eller revisjonsselskaper som har roller i flere av selskapene dine."
+      }
+    },
+    "data": {
+      "title": "Hvor dataene kommer fra",
+      "text": "Alt er åpne data fra norske offentlige etater. Ingenting er kjøpt, skrapet eller gjettet.",
+      "brreg": "Enhetsregisteret, roller, oppdateringsstrømmer og Regnskapsregisteret",
+      "kartverket": "kommunenavn og kommunenummer",
+      "ssb": "bransjenavn fra Standard for næringsgruppering"
+    },
+    "risk": {
+      "title": "Hva risikovurderingen er, og ikke er",
+      "text1": "Risikonivået beregnes fra offentlige registerdata med faste, dokumenterte regler: hvert varselsignal gir poeng, og noen signaler, som konkurs, gir høy risiko alene. Hver vurdering viser begrunnelsen.",
+      "limits": "Den er støtte til din egen vurdering, ikke en kredittvurdering. Den vet ingenting om ubetalte fakturaer, rettssaker eller annet utenfor de offentlige registrene, og endringer er bare kjent fra dagen noen begynte å følge et selskap."
+    },
+    "privacy": {
+      "title": "Dine data",
+      "account": "Kontoen din inneholder navn, e-postadresse og et sikkert hashet passord.",
+      "watchlist": "Overvåkingslisten og notatene dine er bare synlige for deg. Notatene sendes aldri til KI-assistenten.",
+      "notifications": "Varsler lagres slik at du kan lese dem senere.",
+      "notStored": "Fødselsdatoene til personene bak et selskap brukes for å skille personer med samme navn, men de lagres eller vises aldri."
+    },
+    "project": {
+      "title": "Om dette prosjektet",
+      "text": "Leverandørvakt er et uavhengig porteføljeprosjekt laget av en fullstack-utvikler i Norge.",
+      "byName": "Leverandørvakt er et uavhengig porteføljeprosjekt laget av {name}, fullstack-utvikler i Norge.",
+      "built": "API-et er skrevet i Node.js og TypeScript med Express og PostgreSQL, og dekkes av over 300 automatiske tester som kjører ved hver endring. Webappen bruker Next.js og Designsystemet, designsystemet for offentlig sektor i Norge.",
+      "independent": "Det er ikke tilknyttet Brønnøysundregistrene eller andre etater, og det er ikke en kommersiell tjeneste.",
+      "source": "Se kildekoden",
+      "contact": "Ta kontakt"
+    }
+  },
+  "contact": {
+    "title": "Kontakt",
+    "lead": "Spørsmål, tilbakemeldinger eller en jobbmulighet? Jeg hører gjerne fra deg.",
+    "leadName": "Spørsmål, tilbakemeldinger eller en jobbmulighet? {name} hører gjerne fra deg.",
+    "channels": {
+      "email": "E-post",
+      "linkedin": "LinkedIn",
+      "portfolio": "Portefølje",
+      "github": "Kildekode"
+    },
+    "linkedinText": "Profil og meldinger",
+    "githubText": "Leverandørvakt på GitHub",
+    "about": {
+      "title": "Om tjenesten",
+      "text": "Leverandørvakt er et porteføljeprosjekt, så det finnes ingen kundeservice eller brukerstøtte. Spørsmål om selve registerdataene hører hjemme hos Brønnøysundregistrene."
+    }
+  },
+  "assistant": {
+    "title": "Assistent",
+    "lead": "Spør om selskapene dine med vanlige ord, på norsk eller engelsk. Assistenten leser overvåkingslisten, registrene og trendene, og endrer aldri noe.",
+    "conversations": "Samtaler",
+    "newConversation": "Ny samtale",
+    "noConversations": "Ingen samtaler ennå.",
+    "listFailed": "Samtalene kunne ikke lastes.",
+    "chatLabel": "Samtale med assistenten",
+    "notFound": "Denne samtalen finnes ikke, eller den er slettet.",
+    "notAvailable": "Assistenten er slått av på denne serveren, så den kan ikke svare akkurat nå.",
+    "statusFailed": "Assistenten kunne ikke nås akkurat nå. Prøv igjen om litt.",
+    "intro": "Still et spørsmål om leverandørene og kundene dine, eller begynn med et av disse:",
+    "examples": {
+      "highestRisk": "Hvilke av selskapene mine har høyest risiko, og hvorfor?",
+      "changes": "Hva har endret seg i selskapene mine i det siste?",
+      "accounts": "Hvilke selskaper har forsinket eller svakt årsregnskap?",
+      "connections": "Har noen av selskapene mine felles styremedlemmer eller revisor?"
+    },
+    "you": "Du",
+    "assistantName": "Assistent",
+    "thinking": "Tenker … en lokal modell kan bruke litt tid.",
+    "basedOn": "Basert på: {tools}",
+    "label": "Spørsmålet ditt",
+    "placeholder": "Spør om selskapene dine … (Enter for å sende, Shift+Enter for ny linje)",
+    "send": "Send",
+    "remaining": "{remaining} av {limit} spørsmål igjen de siste 24 timene",
+    "errors": {
+      "unavailable": "Assistenten er ikke tilgjengelig akkurat nå. Prøv igjen senere.",
+      "limit": "Du har brukt dagens spørsmål. Grensen gjelder de siste 24 timene.",
+      "timeout": "Språkmodellen svarte ikke i tide. Prøv et kortere spørsmål, eller prøv igjen.",
+      "model": "Språkmodellen svarte med en feil. Prøv igjen om litt.",
+      "notFound": "Denne samtalen finnes ikke lenger. Start en ny.",
+      "failed": "Spørsmålet kunne ikke sendes. Prøv igjen."
+    },
+    "tools": {
+      "list_watchlist": "overvåkingslisten din",
+      "search_companies": "selskapssøk",
+      "get_company": "selskapsopplysninger",
+      "get_company_risk": "risikovurdering",
+      "get_company_changes": "oppdagede endringer",
+      "get_company_accounts": "årsregnskap",
+      "get_company_roles": "roller",
+      "find_connections": "forbindelser",
+      "get_registration_trends": "regionale trender",
+      "get_notifications": "varslene dine"
+    },
+    "delete": {
+      "label": "Slett samtale: {title}",
+      "title": "Slette denne samtalen?",
+      "text": "Samtalen og svarene slettes. Spørsmål du har stilt teller fortsatt med i dagsgrensen.",
+      "confirm": "Slett",
+      "cancel": "Avbryt"
+    }
   }
 }

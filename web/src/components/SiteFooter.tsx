@@ -2,10 +2,10 @@ import NextLink from "next/link";
 import { getTranslations } from "next-intl/server";
 import { Link, Paragraph } from "@digdir/designsystemet-react";
 import { getSessionToken } from "@/lib/session";
+import { SITE } from "@/lib/site";
 import { Logo } from "./Logo";
 import styles from "./SiteFooter.module.css";
 
-const REPOSITORY_URL = "https://github.com/devrimsavas/LEVERANDORVAKT";
 const NLOD_URL = "https://data.norge.no/nlod/en/2.0";
 
 export const DATA_SOURCES = [
@@ -80,7 +80,20 @@ export async function SiteFooter() {
         </Paragraph>
         <Paragraph data-size="xs">
           © {new Date().getFullYear()} Leverandørvakt ·{" "}
-          <Link href={REPOSITORY_URL} target="_blank" rel="noreferrer">
+          {SITE.ownerName && (
+            <>
+              {t("builtBy")}{" "}
+              {SITE.portfolioUrl ? (
+                <Link href={SITE.portfolioUrl} target="_blank" rel="noreferrer">
+                  {SITE.ownerName}
+                </Link>
+              ) : (
+                SITE.ownerName
+              )}{" "}
+              ·{" "}
+            </>
+          )}
+          <Link href={SITE.repositoryUrl} target="_blank" rel="noreferrer">
             {t("sourceCode")}
           </Link>
         </Paragraph>

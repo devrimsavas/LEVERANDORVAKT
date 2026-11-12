@@ -1,0 +1,107 @@
+/* Text pages: about and contact */
+
+.page {
+  display: grid;
+  gap: var(--ds-size-10);
+  max-width: 52rem;
+  padding-block: var(--ds-size-12) var(--ds-size-15);
+}
+
+.intro {
+  display: grid;
+  gap: var(--ds-size-4);
+}
+
+.lead {
+  margin: 0;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.section {
+  display: grid;
+  gap: var(--ds-size-3);
+}
+
+.section p {
+  margin: 0;
+}
+
+.list {
+  display: grid;
+  gap: var(--ds-size-2);
+  margin: 0;
+  padding-left: var(--ds-size-5);
+}
+
+.muted {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.project {
+  padding: var(--ds-size-6);
+  border-radius: var(--ds-border-radius-lg);
+  background: var(--ds-color-neutral-background-tinted);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-size-3);
+}
+
+.channels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--ds-size-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.channel {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-4);
+  height: 100%;
+  box-sizing: border-box;
+  padding: var(--ds-size-5);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: var(--ds-border-radius-lg);
+  color: inherit;
+  text-decoration: none;
+}
+
+.channel:hover {
+  border-color: var(--ds-color-accent-border-default);
+  background: var(--ds-color-accent-surface-tinted);
+}
+
+.channel:focus-visible {
+  outline: var(--dsc-focus-outline);
+  outline-offset: 2px;
+}
+
+.channelIcon {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--ds-size-11);
+  height: var(--ds-size-11);
+  border-radius: var(--ds-border-radius-md);
+  background: var(--ds-color-accent-surface-tinted);
+  color: var(--ds-color-accent-text-subtle);
+  font-size: var(--ds-heading-sm-font-size);
+}
+
+.channelLabel {
+  display: block;
+  font-size: var(--ds-body-sm-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.channelText {
+  display: block;
+  font-weight: var(--ds-font-weight-semibold);
+  color: var(--ds-color-accent-text-subtle);
+  overflow-wrap: anywhere;
+}

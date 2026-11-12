@@ -32,7 +32,11 @@ export function LanguageSwitcher({
       onClick={() => startTransition(() => setLocale(target))}
     >
       <LanguageIcon aria-hidden className={styles.languageIcon} />
-      {text}
+      <span className={styles.languageName}>{text}</span>
+      {/* On phones only the short code fits: NO / EN */}
+      <span className={styles.languageCode} aria-hidden>
+        {target === "nb" ? "NO" : "EN"}
+      </span>
     </Button>
   );
 }

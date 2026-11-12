@@ -5,6 +5,7 @@ import {
   ConversationNotFoundError,
   DailyLimitReachedError,
   deleteConversation,
+  getAssistantStatus,
   getConversation,
   listConversations,
   MAX_QUESTION_LENGTH,
@@ -96,6 +97,20 @@ export const askQuestion = async (req: Request, res: Response) => {
     if (sendKnownError(error, res)) return;
     console.error(error);
     res.status(500).json({ error: "Could not answer the question" });
+  }
+};
+
+// GET /api/assistant/status
+export const getMyAssistantStatus = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Assistant"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.description = "Whether the assistant is available, and how many questions are left in the last 24 hours" */
+  try {
+    res.json(await getAssistantStatus(req.auth!.userId));
+  } catch (error) {
+    if (sendKnownError(error, res)) return;
+    console.error(error);
+    res.status(500).json({ error: "Could not load the assistant status" });
   }
 };
 

@@ -436,6 +436,67 @@ describe("limits and errors", () => {
   });
 });
 
+describe("GET /api/assistant/status", () => {
+  it("returns 401 without a token", async () => {
+    const res = await request(app).get("/api/assistant/status");
+
+    expect(res.status).toBe(401);
+  });
+
+  it("shows the limit and how many questions are left", async () => {
+    vi.stubEnv("ASSISTANT_DAILY_LIMIT", "3");
+    const { auth } = await registerAndLogin(lukas);
+    const before = await request(app).get("/api/assistant/status").set(auth);
+    ollama.reply("One");
+    await ask(auth, "Question 1").expect(200);
+
+    const after = await request(app).get("/api/assistant/status").set(auth);
+
+    expect(before.body).toEqual({
+      available: true,
+      dailyLimit: 3,
+      usedToday: 0,
+      remaining: 3,
+    });
+    expect(after.body).toEqual({
+      available: true,
+      dailyLimit: 3,
+      usedToday: 1,
+      remaining: 2,
+    });
+  });
+
+  it("counts only the user's own questions, and never below zero", async () => {
+    vi.stubEnv("ASSISTANT_DAILY_LIMIT", "2");
+    const { auth: kariAuth } = await registerAndLogin(kari);
+    const { auth } = await registerAndLogin(lukas);
+    ollama.reply("One");
+    ollama.reply("Two");
+    await ask(kariAuth, "Question 1").expect(200);
+    await ask(kariAuth, "Question 2").expect(200);
+    // The limit is lowered below the questions Kari already asked
+    vi.stubEnv("ASSISTANT_DAILY_LIMIT", "1");
+    const kariStatus = await request(app)
+      .get("/api/assistant/status")
+      .set(kariAuth);
+
+    const res = await request(app).get("/api/assistant/status").set(auth);
+
+    expect(res.body).toMatchObject({ usedToday: 0, remaining: 1 });
+    expect(kariStatus.body).toMatchObject({ usedToday: 2, remaining: 0 });
+  });
+
+  it("says when the assistant is not configured", async () => {
+    vi.stubEnv("AI_PROVIDER", "");
+    const { auth } = await registerAndLogin(lukas);
+
+    const res = await request(app).get("/api/assistant/status").set(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.body.available).toBe(false);
+  });
+});
+
 describe("conversations", () => {
   it("lists the user's conversations, most recently used first, and shows their messages", async () => {
     const { auth } = await registerAndLogin(lukas);

@@ -34,6 +34,15 @@ export interface AssistantAnswer {
   createdAt: Date;
 }
 
+export interface AssistantStatus {
+  // false when no language model is configured (AI_PROVIDER is empty)
+  available: boolean;
+  dailyLimit: number;
+  // Questions in the last 24 hours, the same window the limit uses
+  usedToday: number;
+  remaining: number;
+}
+
 export interface ConversationSummary {
   id: string;
   title: string;
@@ -102,6 +111,34 @@ async function recentHistory(conversationId: number): Promise<ChatMessage[]> {
 
 // Answers a question with the help of the tools, in a new conversation
 // or in one of the user's own conversations.
+// Questions the user asked in the last 24 hours. Counted from the usage
+// table, which keeps no content and is not touched when conversations are
+// deleted, so deleting cannot reset the limit.
+function questionsInLastDay(userId: number): Promise<number> {
+  return AssistantUsage.count({
+    where: {
+      userId,
+      createdAt: { [Op.gte]: new Date(Date.now() - DAY_MS) },
+    },
+  });
+}
+
+// Whether the assistant can answer, and how many questions are left, so a
+// client can say so before the user types
+export async function getAssistantStatus(
+  userPublicId: string,
+): Promise<AssistantStatus> {
+  const userId = await getInternalUserId(userPublicId);
+  const usedToday = await questionsInLastDay(userId);
+  const limit = dailyLimit();
+  return {
+    available: createLlmProvider() !== null,
+    dailyLimit: limit,
+    usedToday,
+    remaining: Math.max(0, limit - usedToday),
+  };
+}
+
 export async function askAssistant(
   userPublicId: string,
   question: string,
@@ -117,12 +154,7 @@ export async function askAssistant(
     ? await findConversation(userId, conversationId)
     : null;
 
-  const asked = await AssistantUsage.count({
-    where: {
-      userId,
-      createdAt: { [Op.gte]: new Date(Date.now() - DAY_MS) },
-    },
-  });
+  const asked = await questionsInLastDay(userId);
   if (asked >= dailyLimit()) {
     throw new DailyLimitReachedError(
       `The assistant can answer ${dailyLimit()} questions per 24 hours`,

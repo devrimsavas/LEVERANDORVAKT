@@ -2,6 +2,7 @@ import express from "express";
 import {
   askQuestion,
   deleteMyConversation,
+  getMyAssistantStatus,
   getMyConversation,
   listMyConversations,
 } from "../controllers/assistantController.js";
@@ -12,6 +13,7 @@ const router = express.Router();
 // The assistant answers only logged-in users, about their own data
 router.use(requireAuth);
 
+router.get("/status", getMyAssistantStatus);
 router.post("/messages", askQuestion);
 router.get("/conversations", listMyConversations);
 router.get("/conversations/:id", getMyConversation);
