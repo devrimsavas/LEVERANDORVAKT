@@ -292,3 +292,57 @@
 .howItWorks p {
   max-width: 48rem;
 }
+
+/* Accounts chart */
+
+.chart {
+  display: grid;
+  gap: var(--ds-size-3);
+  margin: 0;
+  padding: var(--ds-size-4) var(--ds-size-5);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: var(--ds-border-radius-lg);
+}
+
+.chartHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-size-3);
+}
+
+.chartTitle {
+  font-weight: var(--ds-font-weight-semibold);
+}
+
+.chartUnit {
+  font-weight: var(--ds-font-weight-regular);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.chartArea {
+  min-width: 0;
+}
+
+.tooltip {
+  display: grid;
+  gap: 2px;
+  padding: var(--ds-size-2) var(--ds-size-3);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: var(--ds-border-radius-md);
+  background: var(--ds-color-neutral-background-default);
+  box-shadow: var(--ds-shadow-md);
+  font-size: var(--ds-body-sm-font-size);
+}
+
+.tooltip span {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.chartEmpty {
+  margin: 0;
+  padding-block: var(--ds-size-8);
+  text-align: center;
+  color: var(--ds-color-neutral-text-subtle);
+}

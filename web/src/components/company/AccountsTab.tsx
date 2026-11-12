@@ -12,6 +12,8 @@ import {
 } from "@digdir/designsystemet-react";
 import { getCompanyAccounts } from "@/lib/companies";
 import type { AnnualAccounts, AnnualAccountsFigures } from "@/lib/companyTypes";
+import { CHART_METRICS, type ChartYear } from "@/lib/accountsChart";
+import { AccountsChart } from "./AccountsChart";
 import styles from "./company.module.css";
 
 // The key figures shown, in the usual order of an income statement and a
@@ -90,12 +92,30 @@ async function AccountsTable({
   const amount = (value: number | null) =>
     value === null ? "–" : format.number(value, { maximumFractionDigits: 0 });
 
+  // The chart compares years, so it is left out when they were reported in
+  // different currencies (the table still shows each year in its own)
+  const currencies = new Set(accounts.map((a) => a.currency));
+  const chartYears: ChartYear[] = [...accounts].reverse().map((a) => ({
+    year: a.year,
+    values: Object.fromEntries(
+      CHART_METRICS.map((m) => [m, a.figures[m]]),
+    ) as ChartYear["values"],
+  }));
+  const showChart = currencies.size === 1 && accounts.length >= 2;
+
   return (
     <section className={styles.stack}>
       <Heading level={2} data-size="xs">
         {title}
       </Heading>
       {note && <Paragraph data-size="sm">{note}</Paragraph>}
+      {showChart ? (
+        <AccountsChart years={chartYears} currency={accounts[0]!.currency} />
+      ) : (
+        accounts.length >= 2 && (
+          <Paragraph data-size="sm">{t("chart.mixedCurrencies")}</Paragraph>
+        )
+      )}
       <div className={styles.tableWrap}>
         <Table zebra className={styles.figures}>
           <caption className="visually-hidden">{title}</caption>

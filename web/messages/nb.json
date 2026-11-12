@@ -167,7 +167,44 @@
   },
   "overview": {
     "welcome": "Velkommen, {name}",
-    "placeholder": "Her kommer oversikten over selskapene du følger og de siste varslene."
+    "unavailable": "Oversikten kunne ikke lastes akkurat nå. Prøv igjen om litt.",
+    "start": {
+      "title": "Kom i gang i tre steg",
+      "lead": "Leverandørvakt holder øye med selskapene du er avhengig av. Følg din første leverandør eller kunde, så får du varsel når noe endrer seg til det verre.",
+      "search": {
+        "title": "Søk",
+        "text": "Finn et selskap på navn eller organisasjonsnummer."
+      },
+      "follow": {
+        "title": "Følg",
+        "text": "Trykk Følg på selskapssiden og legg til et privat notat hvis du vil."
+      },
+      "notified": {
+        "title": "Få varsel",
+        "text": "Bjella øverst viser nye endringer. Registeret sjekkes hvert tiende minutt."
+      },
+      "button": "Finn ditt første selskap"
+    },
+    "tiles": {
+      "followed": "Selskaper du følger",
+      "attention": "Trenger oppmerksomhet",
+      "unread": "Uleste varsler"
+    },
+    "attention": {
+      "title": "Trenger oppmerksomhet",
+      "none": "Ingen av selskapene dine har middels eller høy risiko akkurat nå."
+    },
+    "risk": {
+      "title": "Risiko i overvåkingslisten",
+      "companies": "{count, plural, one {# selskap} other {# selskaper}}",
+      "link": "Se overvåkingslisten etter risiko"
+    },
+    "latest": {
+      "title": "Siste varsler",
+      "none": "Ingen varsler ennå. De dukker opp her når et selskap du følger endrer seg.",
+      "unavailable": "Varslene kunne ikke lastes akkurat nå.",
+      "link": "Se alle varsler"
+    }
   },
   "app": {
     "comingSoon": "Denne siden er under arbeid.",
@@ -354,7 +391,13 @@
       },
       "audited": "Revidert",
       "notAudited": "Ikke revidert",
-      "liquidation": "Avviklingsregnskap"
+      "liquidation": "Avviklingsregnskap",
+      "chart": {
+        "title": "{figure} per år",
+        "choose": "Nøkkeltall i grafen",
+        "mixedCurrencies": "Årene er rapportert i ulike valutaer, så de sammenlignes ikke i en graf. Tabellen viser hvert år i sin egen valuta.",
+        "noData": "Selskapet rapporterer ikke {figure} disse årene."
+      }
     }
   },
   "orgForms": {

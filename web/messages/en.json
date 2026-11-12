@@ -167,7 +167,44 @@
   },
   "overview": {
     "welcome": "Welcome, {name}",
-    "placeholder": "Your overview of followed companies and the latest notifications will appear here."
+    "unavailable": "Your overview could not be loaded right now. Try again in a little while.",
+    "start": {
+      "title": "Get started in three steps",
+      "lead": "Leverandørvakt keeps an eye on the companies you depend on. Follow your first supplier or customer, and you will be notified when something changes for the worse.",
+      "search": {
+        "title": "Search",
+        "text": "Find a company by name or organization number."
+      },
+      "follow": {
+        "title": "Follow",
+        "text": "Press Follow on the company page and add a private note if you like."
+      },
+      "notified": {
+        "title": "Get notified",
+        "text": "The bell at the top shows new changes. The register is checked every ten minutes."
+      },
+      "button": "Find your first company"
+    },
+    "tiles": {
+      "followed": "Companies followed",
+      "attention": "Need attention",
+      "unread": "Unread notifications"
+    },
+    "attention": {
+      "title": "Needs attention",
+      "none": "None of your companies has medium or high risk right now."
+    },
+    "risk": {
+      "title": "Risk across your watchlist",
+      "companies": "{count, plural, one {# company} other {# companies}}",
+      "link": "See the watchlist by risk"
+    },
+    "latest": {
+      "title": "Latest notifications",
+      "none": "No notifications yet. They appear here when a company you follow changes.",
+      "unavailable": "The notifications could not be loaded right now.",
+      "link": "See all notifications"
+    }
   },
   "app": {
     "comingSoon": "This page is being built.",
@@ -354,7 +391,13 @@
       },
       "audited": "Audited",
       "notAudited": "Not audited",
-      "liquidation": "Liquidation accounts"
+      "liquidation": "Liquidation accounts",
+      "chart": {
+        "title": "{figure} per year",
+        "choose": "Key figure in the chart",
+        "mixedCurrencies": "The years were reported in different currencies, so they are not compared in a chart. The table shows each year in its own currency.",
+        "noData": "The company does not report {figure} in these years."
+      }
     }
   },
   "orgForms": {

@@ -1,0 +1,251 @@
+.page {
+  display: grid;
+  gap: var(--ds-size-6);
+  padding-block: var(--ds-size-10) var(--ds-size-12);
+}
+
+/* Stat tiles */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ds-size-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  display: grid;
+  gap: var(--ds-size-1);
+  padding: var(--ds-size-5);
+  border-radius: var(--ds-border-radius-lg);
+  background: var(--ds-color-neutral-background-tinted);
+}
+
+.tileLabel {
+  font-size: var(--ds-body-sm-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.tileValue {
+  font-size: var(--ds-heading-lg-font-size);
+  font-weight: var(--ds-font-weight-semibold);
+  line-height: 1.1;
+}
+
+/* Cards */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-size-5);
+  align-items: start;
+}
+
+.card {
+  display: grid;
+  min-width: 0;
+  gap: var(--ds-size-4);
+  padding: var(--ds-size-5);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: var(--ds-border-radius-lg);
+}
+
+.wide {
+  grid-column: 1 / -1;
+}
+
+.rows {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-size-3);
+  padding: var(--ds-size-3) var(--ds-size-2);
+  border-top: 1px solid var(--ds-color-neutral-border-subtle);
+  color: inherit;
+  text-decoration: none;
+}
+
+.row:hover {
+  background: var(--ds-color-neutral-surface-hover);
+}
+
+.row:focus-visible {
+  outline: var(--dsc-focus-outline);
+  outline-offset: -2px;
+}
+
+.row[data-unread] {
+  box-shadow: inset 3px 0 0 var(--ds-color-accent-base-default);
+}
+
+/* Same width for every severity tag, so the company names line up */
+.tagColumn {
+  flex: none;
+  width: 5.5rem;
+}
+
+.rowMain {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.rowName {
+  font-weight: var(--ds-font-weight-semibold);
+  color: var(--ds-color-accent-text-subtle);
+  overflow-wrap: anywhere;
+}
+
+.rowMeta {
+  font-size: var(--ds-body-sm-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.rowTime {
+  font-size: var(--ds-body-xs-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+  white-space: nowrap;
+}
+
+/* Risk split: a thin segmented bar with a 2px gap between the parts */
+
+.bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+}
+
+.segment {
+  min-width: 4px;
+  border-radius: 999px;
+}
+
+.legend {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend li {
+  display: grid;
+  grid-template-columns: auto 1fr auto 3.5rem;
+  align-items: center;
+  gap: var(--ds-size-3);
+  padding-block: var(--ds-size-2);
+  border-top: 1px solid var(--ds-color-neutral-border-subtle);
+}
+
+.legend li[data-empty] {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legendCount,
+.legendShare {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.legendShare {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+/* The risk levels use the status colors, as the risk tags do */
+.segment[data-level="high"],
+.swatch[data-level="high"] {
+  background: var(--ds-color-danger-base-default);
+}
+
+.segment[data-level="medium"],
+.swatch[data-level="medium"] {
+  background: var(--ds-color-warning-base-default);
+}
+
+.segment[data-level="low"],
+.swatch[data-level="low"] {
+  background: var(--ds-color-success-base-default);
+}
+
+.segment[data-level="notAssessed"],
+.swatch[data-level="notAssessed"] {
+  background: var(--ds-color-neutral-border-default);
+}
+
+/* Welcome panel for a new user */
+
+.welcome {
+  display: grid;
+  justify-items: start;
+  gap: var(--ds-size-4);
+  padding: var(--ds-size-8);
+  border-radius: var(--ds-border-radius-xl);
+  background: var(--ds-color-accent-surface-tinted);
+}
+
+.welcome p {
+  margin: 0;
+  max-width: 44rem;
+}
+
+.startSteps {
+  display: grid;
+  gap: var(--ds-size-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.startSteps li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--ds-size-3);
+}
+
+.stepNumber {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--ds-size-9);
+  height: var(--ds-size-9);
+  border-radius: 999px;
+  background: var(--ds-color-accent-base-default);
+  color: var(--ds-color-accent-base-contrast-default);
+  font-weight: var(--ds-font-weight-semibold);
+}
+
+@media (max-width: 52rem) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 36rem) {
+  .tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .welcome {
+    padding: var(--ds-size-5);
+  }
+
+  /* "for 5 minutter siden" may wrap instead of widening the page */
+  .rowTime {
+    max-width: 5.5rem;
+    white-space: normal;
+    text-align: right;
+  }
+}
