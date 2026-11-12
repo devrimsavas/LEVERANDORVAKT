@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Card, Heading, Paragraph, Tag } from "@digdir/designsystemet-react";
 import { BellIcon } from "@navikt/aksel-icons";
-import styles from "@/app/page.module.css";
+import styles from "@/app/(public)/page.module.css";
 
 // A picture of the product in use: example notifications as they will
 // look in the app. Every company in it is made up.

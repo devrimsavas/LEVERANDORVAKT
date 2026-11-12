@@ -10,8 +10,6 @@ import "@fontsource-variable/inter";
 import "@digdir/designsystemet-css";
 import "../theme/leverandorvakt.css";
 import "./globals.css";
-import { SiteHeader } from "@/components/SiteHeader";
-import { SiteFooter } from "@/components/SiteFooter";
 import { COLOR_SCHEME_COOKIE, parseColorScheme } from "@/lib/colorScheme";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,6 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("title"), description: t("description") };
 }
 
+// The document shell shared by every page. The public pages and the app
+// pages each add their own layout inside it: app/(public) and app/(app).
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const locale = await getLocale();
   const t = await getTranslations("header");
@@ -32,11 +32,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <NextIntlClientProvider>
           <SkipLink href="#main">{t("skipLink")}</SkipLink>
-          <SiteHeader />
-          <main id="main" tabIndex={-1}>
-            {children}
-          </main>
-          <SiteFooter />
+          {children}
         </NextIntlClientProvider>
       </body>
     </html>

@@ -13,7 +13,9 @@
     "menu": "Menu",
     "switchLanguage": "Norsk",
     "switchLanguageLabel": "Bytt til norsk",
-    "colorScheme": "Switch between light and dark mode"
+    "colorScheme": "Switch between light and dark mode",
+    "overview": "Overview",
+    "logOut": "Log out"
   },
   "home": {
     "hero": {
@@ -129,5 +131,42 @@
     "independent": "Leverandørvakt is an independent project and is not affiliated with these agencies.",
     "sourceCode": "Source code on GitHub",
     "opensInNewTab": "(opens in a new tab)"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "passwordHint": "At least {min} characters",
+    "login": {
+      "title": "Log in",
+      "lead": "Log in to see your watchlist and notifications.",
+      "submit": "Log in",
+      "noAccount": "No account yet?",
+      "toRegister": "Create an account",
+      "expired": "Your session has ended. Log in again to continue."
+    },
+    "register": {
+      "title": "Create an account",
+      "lead": "Free to use. You only need an email address.",
+      "submit": "Create account",
+      "haveAccount": "Already have an account?",
+      "toLogin": "Log in"
+    },
+    "errors": {
+      "firstNameRequired": "Enter your first name",
+      "lastNameRequired": "Enter your last name",
+      "nameTooLong": "The name can be at most 100 characters",
+      "emailInvalid": "Enter a valid email address, like name@example.com",
+      "passwordRequired": "Enter your password",
+      "passwordTooShort": "The password must be at least {min} characters",
+      "emailTaken": "There is already an account with this email address. Log in instead?",
+      "invalidCredentials": "The email address or password is wrong",
+      "unavailable": "The service is not available right now. Try again in a little while."
+    }
+  },
+  "overview": {
+    "welcome": "Welcome, {name}",
+    "placeholder": "Your overview of followed companies and the latest notifications will appear here."
   }
 }

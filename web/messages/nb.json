@@ -13,7 +13,9 @@
     "menu": "Meny",
     "switchLanguage": "English",
     "switchLanguageLabel": "Switch to English",
-    "colorScheme": "Bytt mellom lys og mørk modus"
+    "colorScheme": "Bytt mellom lys og mørk modus",
+    "overview": "Oversikt",
+    "logOut": "Logg ut"
   },
   "home": {
     "hero": {
@@ -129,5 +131,42 @@
     "independent": "Leverandørvakt er et uavhengig prosjekt og er ikke tilknyttet disse etatene.",
     "sourceCode": "Kildekode på GitHub",
     "opensInNewTab": "(åpnes i ny fane)"
+  },
+  "auth": {
+    "email": "E-post",
+    "password": "Passord",
+    "firstName": "Fornavn",
+    "lastName": "Etternavn",
+    "passwordHint": "Minst {min} tegn",
+    "login": {
+      "title": "Logg inn",
+      "lead": "Logg inn for å se overvåkingslisten og varslene dine.",
+      "submit": "Logg inn",
+      "noAccount": "Har du ikke konto?",
+      "toRegister": "Opprett konto",
+      "expired": "Økten din er avsluttet. Logg inn igjen for å fortsette."
+    },
+    "register": {
+      "title": "Opprett konto",
+      "lead": "Gratis å bruke. Du trenger bare en e-postadresse.",
+      "submit": "Opprett konto",
+      "haveAccount": "Har du allerede en konto?",
+      "toLogin": "Logg inn"
+    },
+    "errors": {
+      "firstNameRequired": "Skriv inn fornavnet ditt",
+      "lastNameRequired": "Skriv inn etternavnet ditt",
+      "nameTooLong": "Navnet kan ha høyst 100 tegn",
+      "emailInvalid": "Skriv inn en gyldig e-postadresse, for eksempel navn@eksempel.no",
+      "passwordRequired": "Skriv inn passordet ditt",
+      "passwordTooShort": "Passordet må ha minst {min} tegn",
+      "emailTaken": "Det finnes allerede en konto med denne e-postadressen. Vil du logge inn i stedet?",
+      "invalidCredentials": "E-postadressen eller passordet er feil",
+      "unavailable": "Tjenesten er ikke tilgjengelig akkurat nå. Prøv igjen om litt."
+    }
+  },
+  "overview": {
+    "welcome": "Velkommen, {name}",
+    "placeholder": "Her kommer oversikten over selskapene du følger og de siste varslene."
   }
 }

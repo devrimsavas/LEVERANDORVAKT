@@ -1,11 +1,13 @@
 // The Leverandørvakt mark: a shield (protection) with a watching eye.
 // Colors come from the theme, so it works in light and dark mode.
-export function LogoMark({ size = 32 }: { size?: number }) {
+export function LogoMark({ size = 30 }: { size?: number }) {
+  // The view box is cut tight around the shield, so the mark lines up
+  // exactly with the page content below it
   return (
     <svg
-      width={size}
+      width={(size * 23) / 27}
       height={size}
-      viewBox="0 0 32 32"
+      viewBox="4.5 2.5 23 27"
       aria-hidden="true"
       focusable="false"
     >
