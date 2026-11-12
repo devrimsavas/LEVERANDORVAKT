@@ -355,7 +355,13 @@ describe("GET /api/trends/industries", () => {
     expect(res.body.industries).toEqual([
       { code: "55", description: "Industry 55", count: 2 },
     ]);
-    expect(res.body.limitations[0]).toContain("could not be loaded from SSB");
+    expect(res.body.limitations).toEqual([
+      {
+        code: "INDUSTRY_NAMES_UNAVAILABLE",
+        reason: expect.stringContaining("could not be loaded from SSB"),
+        params: {},
+      },
+    ]);
   });
 
   it("gives a total that the industries add up to, even when the monthly count in the cache is older", async () => {
@@ -387,7 +393,16 @@ describe("GET /api/trends/industries", () => {
       total: MAX_BREAKDOWN_REGISTRATIONS + 1,
       industries: [],
     });
-    expect(res.body.limitations[0]).toContain("Choose a shorter period");
+    expect(res.body.limitations).toEqual([
+      {
+        code: "TOO_MANY_REGISTRATIONS",
+        reason: expect.stringContaining("Choose a shorter period"),
+        params: {
+          total: MAX_BREAKDOWN_REGISTRATIONS + 1,
+          max: MAX_BREAKDOWN_REGISTRATIONS,
+        },
+      },
+    ]);
     // Only the count was asked for, no company was downloaded
     expect(
       searches().every((url) => url.searchParams.get("size") === "1"),
@@ -398,6 +413,36 @@ describe("GET /api/trends/industries", () => {
     const res = await request(app).get("/api/trends/industries?level=sector");
 
     expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /api/trends/industry-divisions", () => {
+  it("lists the main industries from SSB by code, and keeps the list", async () => {
+    const first = await request(app).get("/api/trends/industry-divisions");
+    await request(app).get("/api/trends/industry-divisions");
+
+    expect(first.status).toBe(200);
+    expect(first.body.map((d: { code: string }) => d.code)).toEqual([
+      "41",
+      "55",
+      "56",
+      "62",
+    ]);
+    expect(first.body[1]).toEqual({
+      code: "55",
+      name: "Overnattingsvirksomhet",
+    });
+    expect(
+      brreg.requests.filter((url) => url.hostname === "data.ssb.no"),
+    ).toHaveLength(1);
+  });
+
+  it("returns 502 when SSB cannot be reached", async () => {
+    brreg.industryDivisions = null;
+
+    const res = await request(app).get("/api/trends/industry-divisions");
+
+    expect(res.status).toBe(502);
   });
 });
 

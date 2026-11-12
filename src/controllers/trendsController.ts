@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import {
   getIndustryBreakdown,
+  getIndustryDivisions,
   getMunicipalities,
   getRegistrationTrend,
   parseIndustryLevel,
@@ -80,5 +81,16 @@ export const listMunicipalities = async (_req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(502).json({ error: "Could not reach Kartverket" });
+  }
+};
+
+// GET /api/trends/industry-divisions
+export const listIndustryDivisions = async (_req: Request, res: Response) => {
+  // #swagger.tags = ["Trends"]
+  try {
+    res.json(await getIndustryDivisions());
+  } catch (error) {
+    console.error(error);
+    res.status(502).json({ error: "Could not reach Statistics Norway" });
   }
 };

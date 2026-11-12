@@ -55,7 +55,21 @@ export interface IndustryBreakdown {
   otherCount: number;
   // Registrations without an industry ("00.000 Uoppgitt" or none at all)
   unspecifiedCount: number;
-  limitations: string[];
+  limitations: TrendLimitation[];
+}
+
+// Something the breakdown could not do. reason is ready-made English text;
+// clients can write their own from code and params.
+export interface TrendLimitation {
+  code: "INDUSTRY_NAMES_UNAVAILABLE" | "TOO_MANY_REGISTRATIONS";
+  reason: string;
+  params: Record<string, string | number | null>;
+}
+
+// A main industry in the Standard Industrial Classification, e.g. 62
+export interface IndustryDivision {
+  code: string;
+  name: string;
 }
 
 export interface Municipality {

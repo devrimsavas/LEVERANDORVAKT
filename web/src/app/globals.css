@@ -58,3 +58,21 @@ main {
   flex-wrap: wrap;
   gap: var(--ds-size-2);
 }
+
+/* Chart series colors. Series 1 is the theme's accent; series 2 is an
+   orange checked for colorblind separation and contrast against the
+   surface in both modes. */
+:root {
+  --chart-series-1: var(--ds-color-accent-base-default);
+  --chart-series-2: #eb6834;
+}
+
+[data-color-scheme="dark"] {
+  --chart-series-2: #d95926;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-color-scheme="auto"] {
+    --chart-series-2: #d95926;
+  }
+}

@@ -542,5 +542,47 @@
       "high": "Høy",
       "notAssessed": "Ikke vurdert"
     }
+  },
+  "trends": {
+    "title": "Trender",
+    "lead": "Nye selskaper registrert per måned, sammenlignet med de samme månedene året før, og de vanligste bransjene. Filtrer på kommune, hovedbransje og organisasjonsform.",
+    "filters": {
+      "municipality": "Kommune",
+      "allNorway": "Hele Norge",
+      "industry": "Hovedbransje",
+      "allIndustries": "Alle bransjer",
+      "form": "Organisasjonsform",
+      "allForms": "Alle former",
+      "period": "Periode",
+      "months": "Siste {count} måneder",
+      "apply": "Vis"
+    },
+    "unavailable": "Brønnøysundregistrene kan ikke nås akkurat nå. Prøv igjen om litt.",
+    "summaryLabel": "Sammendrag",
+    "summary": {
+      "total": "Nye selskaper, siste {months} måneder, {place}",
+      "previous": "Samme måneder året før",
+      "change": "Endring"
+    },
+    "chart": {
+      "title": "Nye selskaper per måned",
+      "current": "Denne perioden",
+      "previous": "Året før",
+      "partial": "Måneden er ikke over: den sammenlignes med de samme dagene året før."
+    },
+    "partialNote": "Inneværende måned er ikke over, så den sammenlignes med de samme dagene i måneden året før.",
+    "showTable": "Vis tallene som tabell",
+    "table": {
+      "month": "Måned",
+      "partial": "ikke over"
+    },
+    "industries": {
+      "title": "De vanligste bransjene i perioden",
+      "none": "Ingen selskaper ble registrert i perioden.",
+      "tooMany": "{total} registreringer er for mange til å fordele på bransjer (høyst {max}). Velg en kommune, en bransje eller en kortere periode.",
+      "rest": "Andre bransjer: {other}. Uten bransje: {unspecified}. Totalt: {total}.",
+      "namesUnavailable": "Bransjenavnene kunne ikke hentes fra Statistisk sentralbyrå, så de vises med kode."
+    },
+    "source": "Kilde: Enhetsregisteret (registreringsdato), Statistisk sentralbyrå (bransjenavn) og Kartverket (kommuner). Selskaper som senere er slettet, telles ikke med."
   }
 }

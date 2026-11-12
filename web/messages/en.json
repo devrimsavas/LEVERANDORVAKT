@@ -542,5 +542,47 @@
       "high": "High",
       "notAssessed": "Not assessed"
     }
+  },
+  "trends": {
+    "title": "Trends",
+    "lead": "New companies registered per month, compared with the same months a year earlier, and the most common industries. Filter by municipality, main industry and organization form.",
+    "filters": {
+      "municipality": "Municipality",
+      "allNorway": "All of Norway",
+      "industry": "Main industry",
+      "allIndustries": "All industries",
+      "form": "Organization form",
+      "allForms": "All forms",
+      "period": "Period",
+      "months": "Last {count} months",
+      "apply": "Show"
+    },
+    "unavailable": "The Brønnøysund Register cannot be reached right now. Try again in a little while.",
+    "summaryLabel": "Summary",
+    "summary": {
+      "total": "New companies, last {months} months, {place}",
+      "previous": "Same months a year earlier",
+      "change": "Change"
+    },
+    "chart": {
+      "title": "New companies per month",
+      "current": "This period",
+      "previous": "A year earlier",
+      "partial": "This month is not over: it is compared with the same days a year earlier."
+    },
+    "partialNote": "The current month is not over, so it is compared with the same days of the month a year earlier.",
+    "showTable": "Show the numbers as a table",
+    "table": {
+      "month": "Month",
+      "partial": "not over"
+    },
+    "industries": {
+      "title": "Most common industries in the period",
+      "none": "No companies were registered in the period.",
+      "tooMany": "{total} registrations are too many to break down by industry (at most {max}). Choose a municipality, an industry or a shorter period.",
+      "rest": "Other industries: {other}. Without an industry: {unspecified}. Total: {total}.",
+      "namesUnavailable": "Industry names could not be loaded from Statistics Norway, so they are shown by code."
+    },
+    "source": "Source: the Central Coordinating Register for Legal Entities (registration date), Statistics Norway (industry names) and the Norwegian Mapping Authority (municipalities). Companies that have since been struck off are not counted."
   }
 }

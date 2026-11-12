@@ -10,11 +10,13 @@ import { mapWithLimit } from "../utils/concurrency.js";
 import type {
   IndustryBreakdown,
   IndustryCount,
+  IndustryDivision,
   IndustryLevel,
   MonthCount,
   Municipality,
   RegistrationFilters,
   RegistrationTrend,
+  TrendLimitation,
 } from "../types/trends.js";
 
 // How long cached answers are kept
@@ -255,16 +257,19 @@ function isUnspecified(code: string | null): boolean {
 // Adds up the detailed counts per main industry (the first two digits)
 async function byDivision(
   detailed: DetailedCount[],
-  limitations: string[],
+  limitations: TrendLimitation[],
 ): Promise<IndustryCount[]> {
   let names: Record<string, string> = {};
   try {
     names = await getIndustryDivisionNames();
   } catch (error) {
     console.error("Trends: could not load industry names from SSB", error);
-    limitations.push(
-      "The names of the main industries could not be loaded from SSB; they are shown by code.",
-    );
+    limitations.push({
+      code: "INDUSTRY_NAMES_UNAVAILABLE",
+      reason:
+        "The names of the main industries could not be loaded from SSB; they are shown by code.",
+      params: {},
+    });
   }
 
   const divisions = new Map<string, IndustryCount>();
@@ -305,7 +310,11 @@ export async function getIndustryBreakdown(
       otherCount: 0,
       unspecifiedCount: 0,
       limitations: [
-        `${total} registrations are too many to break down by industry (at most ${MAX_BREAKDOWN_REGISTRATIONS}). Choose a shorter period, a municipality or an industry.`,
+        {
+          code: "TOO_MANY_REGISTRATIONS",
+          reason: `${total} registrations are too many to break down by industry (at most ${MAX_BREAKDOWN_REGISTRATIONS}). Choose a shorter period, a municipality or an industry.`,
+          params: { total, max: MAX_BREAKDOWN_REGISTRATIONS },
+        },
       ],
     };
   }
@@ -335,7 +344,7 @@ export async function getIndustryBreakdown(
     },
   );
 
-  const limitations: string[] = [];
+  const limitations: TrendLimitation[] = [];
   const specified = detailed.filter((d) => !isUnspecified(d.code));
   const unspecifiedCount = detailed
     .filter((d) => isUnspecified(d.code))
@@ -366,6 +375,14 @@ function getIndustryDivisionNames(): Promise<Record<string, string>> {
   return cached("industry-divisions", INDUSTRY_NAMES_TTL, () =>
     fetchIndustryDivisions(new Date()),
   );
+}
+
+// All main industries, for choosing one in a list, by code
+export async function getIndustryDivisions(): Promise<IndustryDivision[]> {
+  const names = await getIndustryDivisionNames();
+  return Object.entries(names)
+    .map(([code, name]) => ({ code, name }))
+    .sort((a, b) => a.code.localeCompare(b.code));
 }
 
 // All municipalities, for choosing one in a list

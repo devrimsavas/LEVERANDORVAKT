@@ -1,6 +1,7 @@
 import express from "express";
 import {
   industryBreakdown,
+  listIndustryDivisions,
   listMunicipalities,
   registrationTrend,
 } from "../controllers/trendsController.js";
@@ -11,5 +12,6 @@ const router = express.Router();
 router.get("/registrations", registrationTrend);
 router.get("/industries", industryBreakdown);
 router.get("/municipalities", listMunicipalities);
+router.get("/industry-divisions", listIndustryDivisions);
 
 export default router;
