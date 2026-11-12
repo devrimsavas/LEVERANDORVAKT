@@ -256,6 +256,8 @@
     "tabs": {
       "overview": "Oversikt",
       "roles": "Roller",
+      "accounts": "Regnskap",
+      "risk": "Risiko",
       "changes": "Endringer"
     },
     "status": {
@@ -296,7 +298,7 @@
       "website": "Hjemmeside",
       "lastAccounts": "Siste årsregnskap",
       "followedSince": "Fulgt siden",
-      "lastChecked": "Sist sjekket",
+      "lastChecked": "Data sist hentet fra Brreg",
       "lastChanged": "Siste endring",
       "noChanges": "Ingen endringer siden du begynte å følge",
       "unknown": "Ikke registrert"
@@ -327,6 +329,32 @@
       "newer": "Nyere",
       "older": "Eldre",
       "pageOf": "Side {page} av {total}"
+    },
+    "accounts": {
+      "unavailable": "Årsregnskapet kunne ikke lastes akkurat nå. Prøv igjen om litt.",
+      "unsupported": "Regnskapsregisteret gir ikke nøkkeltall for denne typen selskap, for eksempel banker og forsikringsselskaper.",
+      "notChecked": "Regnskapet er ikke sjekket ennå. Leverandørvakt sjekker regnskapet til fulgte selskaper én gang i døgnet.",
+      "none": "Det er ikke levert noe årsregnskap ennå.",
+      "own": "Selskapets eget regnskap",
+      "group": "Konsernregnskap",
+      "groupNote": "Selskapet er morselskap i et konsern. Risikovurderingen bruker selskapets eget regnskap, fordi ansvaret ligger hos selskapet selv.",
+      "source": "Beløp i valutaen selskapet rapporterte i. Kilde: Regnskapsregisteret.",
+      "figure": "Nøkkeltall",
+      "rows": {
+        "revenue": "Driftsinntekter",
+        "operatingProfit": "Driftsresultat",
+        "profitBeforeTax": "Resultat før skatt",
+        "netProfit": "Årsresultat",
+        "totalAssets": "Sum eiendeler",
+        "equity": "Egenkapital",
+        "totalDebt": "Sum gjeld",
+        "cash": "Bankinnskudd og kontanter",
+        "equityRatio": "Egenkapitalandel",
+        "audit": "Revisjon"
+      },
+      "audited": "Revidert",
+      "notAudited": "Ikke revidert",
+      "liquidation": "Avviklingsregnskap"
     }
   },
   "orgForms": {
@@ -375,6 +403,96 @@
     "accountsUnsupported": "Ikke tilgjengelig"
   },
   "risk": {
+    "unavailable": "Risikoen kunne ikke vurderes akkurat nå. Prøv igjen om litt.",
+    "levelLabel": "Risikonivå",
+    "scoreLabel": "Poeng",
+    "score": "{score} av 100",
+    "assessedAt": "Vurdert {date}",
+    "signalsTitle": "Varselsignaler",
+    "noSignals": "Ingen varselsignaler ble funnet i registerdataene.",
+    "points": "+{points} poeng",
+    "limitationsTitle": "Dette kunne ikke sjekkes",
+    "howTitle": "Hvordan vurderes risikoen?",
+    "howText": "Hvert varselsignal gir poeng. 20 poeng eller mer gir middels risiko, 40 eller mer gir høy risiko. Kritiske signaler, som konkurs, gir høy risiko alene. Informasjonssignaler er nyttige å vite, men gir ingen poeng. Reglene bruker bare offentlige registerdata, og listen over viser hva som ikke kunne sjekkes.",
+    "disclaimer": "Bygger bare på offentlige registerdata. Dette er støtte til din egen vurdering, ikke en kredittvurdering.",
+    "signals": {
+      "STRUCK_OFF": {
+        "title": "Slettet fra registeret",
+        "detail": "{date, select, none {Selskapet er slettet fra Enhetsregisteret.} other {Selskapet ble slettet fra Enhetsregisteret {date}.}}"
+      },
+      "BANKRUPT": {
+        "title": "Konkurs",
+        "detail": "Det er åpnet konkurs i selskapet."
+      },
+      "UNDER_LIQUIDATION": {
+        "title": "Under avvikling",
+        "detail": "Selskapet er under frivillig avvikling."
+      },
+      "FORCED_LIQUIDATION": {
+        "title": "Tvangsavvikling",
+        "detail": "Selskapet er under tvangsavvikling eller tvangsoppløsning."
+      },
+      "LIQUIDATION_ACCOUNTS": {
+        "title": "Avviklingsregnskap",
+        "detail": "Regnskapet for {year} ble satt opp fordi selskapet avvikles."
+      },
+      "ACCOUNTS_OVERDUE": {
+        "title": "Årsregnskapet for {dueYear} er forsinket",
+        "detail": "Fristen var {deadline}. {lastFiledYear, select, none {Det er ikke levert noe regnskap.} other {Siste leverte regnskap er for {lastFiledYear}.}}"
+      },
+      "ACCOUNTS_MISSING_TWO_YEARS": {
+        "title": "Årsregnskap for {firstMissingYear} og {dueYear} mangler",
+        "detail": "Regnskapet for {dueYear} skulle vært levert innen {deadline}. {lastFiledYear, select, none {Det er ikke levert noe regnskap.} other {Siste leverte regnskap er for {lastFiledYear}.}}"
+      },
+      "NEGATIVE_EQUITY": {
+        "title": "Negativ egenkapital",
+        "detail": "Egenkapitalen var {equity} ved utgangen av {year}: gjelden er større enn eiendelene."
+      },
+      "LOW_EQUITY_RATIO": {
+        "title": "Lav egenkapitalandel",
+        "detail": "Egenkapitalen var {ratio} av totalkapitalen ved utgangen av {year}."
+      },
+      "LOSS_TWO_YEARS": {
+        "title": "Underskudd to år på rad",
+        "detail": "Årsresultatet var {previousResult} i {previousYear} og {result} i {year}."
+      },
+      "LOSS_LAST_YEAR": {
+        "title": "Underskudd i fjor",
+        "detail": "Årsresultatet var {result} i {year}."
+      },
+      "AUDITOR_LEFT": {
+        "title": "Revisor har gått av eller er byttet",
+        "detail": "Revisor er byttet {count, plural, one {én gang} other {# ganger}} de siste 12 månedene."
+      },
+      "FREQUENT_CEO_CHANGES": {
+        "title": "Hyppige bytter av daglig leder",
+        "detail": "Daglig leder er byttet {count} ganger de siste 12 månedene."
+      },
+      "FREQUENT_ADDRESS_CHANGES": {
+        "title": "Hyppige adresseendringer",
+        "detail": "Forretningsadressen er endret {count} ganger de siste 12 månedene."
+      },
+      "YOUNG_COMPANY": {
+        "title": "Mindre enn ett år gammelt",
+        "detail": "Selskapet ble stiftet {foundedDate} og har ingen historikk ennå."
+      },
+      "AUDIT_OPTED_OUT": {
+        "title": "Ikke revidert",
+        "detail": "Selskapet har valgt bort revisjon av regnskapet for {year}. Det er lovlig for små selskaper, men ingen revisor har kontrollert tallene."
+      },
+      "unknown": {
+        "title": "Varselsignal",
+        "detail": "Se registeret for detaljer."
+      }
+    },
+    "limitations": {
+      "ACCOUNTS_NOT_COVERED": "Regnskapsregisteret gir ikke nøkkeltall for denne typen selskap (for eksempel banker).",
+      "ACCOUNTS_UNAVAILABLE": "Årsregnskapet kunne ikke hentes, så nøkkeltallene ble ikke sjekket.",
+      "ACCOUNTS_DEADLINE_UNKNOWN": "Stiftelsesdatoen er ukjent, så forsinket regnskap kunne ikke sjekkes.",
+      "CHANGE_HISTORY_UNKNOWN": "Du følger ikke selskapet, så bytter av daglig leder, revisor og adresse er ukjent. Følg det for å ta dem med fra nå av.",
+      "CHANGE_HISTORY_PARTIAL": "Endringer er bare kjent fra selskapet først ble fulgt, {since}.",
+      "unknown": "Noen data kunne ikke sjekkes."
+    },
     "level": {
       "low": "Lav",
       "medium": "Middels",

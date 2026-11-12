@@ -256,6 +256,8 @@
     "tabs": {
       "overview": "Overview",
       "roles": "Roles",
+      "accounts": "Accounts",
+      "risk": "Risk",
       "changes": "Changes"
     },
     "status": {
@@ -296,7 +298,7 @@
       "website": "Website",
       "lastAccounts": "Latest annual accounts",
       "followedSince": "Following since",
-      "lastChecked": "Last checked",
+      "lastChecked": "Data last fetched from Brreg",
       "lastChanged": "Last change",
       "noChanges": "No changes since you started following",
       "unknown": "Not registered"
@@ -327,6 +329,32 @@
       "newer": "Newer",
       "older": "Older",
       "pageOf": "Page {page} of {total}"
+    },
+    "accounts": {
+      "unavailable": "The annual accounts could not be loaded right now. Try again in a little while.",
+      "unsupported": "The Register of Company Accounts gives no key figures for this kind of company, for example banks and insurance companies.",
+      "notChecked": "The accounts have not been checked yet. Leverandørvakt checks the accounts of followed companies once a day.",
+      "none": "No annual accounts have been filed yet.",
+      "own": "The company's own accounts",
+      "group": "Group accounts",
+      "groupNote": "The company is the parent of a group. The risk assessment uses the company's own accounts, because the liability lies with the company itself.",
+      "source": "Amounts in the currency the company reported in. Source: the Register of Company Accounts.",
+      "figure": "Key figure",
+      "rows": {
+        "revenue": "Revenue",
+        "operatingProfit": "Operating profit",
+        "profitBeforeTax": "Profit before tax",
+        "netProfit": "Net result",
+        "totalAssets": "Total assets",
+        "equity": "Equity",
+        "totalDebt": "Total debt",
+        "cash": "Cash and bank deposits",
+        "equityRatio": "Equity ratio",
+        "audit": "Audit"
+      },
+      "audited": "Audited",
+      "notAudited": "Not audited",
+      "liquidation": "Liquidation accounts"
     }
   },
   "orgForms": {
@@ -375,6 +403,96 @@
     "accountsUnsupported": "Not available"
   },
   "risk": {
+    "unavailable": "The risk could not be assessed right now. Try again in a little while.",
+    "levelLabel": "Risk level",
+    "scoreLabel": "Score",
+    "score": "{score} of 100",
+    "assessedAt": "Assessed {date}",
+    "signalsTitle": "Warning signs",
+    "noSignals": "No warning signs were found in the register data.",
+    "points": "+{points} points",
+    "limitationsTitle": "What could not be checked",
+    "howTitle": "How is the risk assessed?",
+    "howText": "Every warning sign adds points. 20 points or more gives medium risk, 40 or more gives high risk. Critical signs, like bankruptcy, give high risk on their own. Information signs are worth knowing but add no points. The rules only use public register data, and the list above shows what they could not check.",
+    "disclaimer": "Based on public register data only. This is support for your own assessment, not a credit rating.",
+    "signals": {
+      "STRUCK_OFF": {
+        "title": "Struck off the register",
+        "detail": "{date, select, none {The company has been struck off the Central Coordinating Register.} other {The company was struck off the Central Coordinating Register on {date}.}}"
+      },
+      "BANKRUPT": {
+        "title": "Bankrupt",
+        "detail": "Bankruptcy proceedings have been opened."
+      },
+      "UNDER_LIQUIDATION": {
+        "title": "Being wound up",
+        "detail": "The company is under voluntary liquidation."
+      },
+      "FORCED_LIQUIDATION": {
+        "title": "Forced liquidation",
+        "detail": "The company is under forced liquidation or forced dissolution."
+      },
+      "LIQUIDATION_ACCOUNTS": {
+        "title": "Liquidation accounts",
+        "detail": "The accounts for {year} were drawn up because the company is being wound up."
+      },
+      "ACCOUNTS_OVERDUE": {
+        "title": "Annual accounts for {dueYear} are overdue",
+        "detail": "They were due by {deadline}. {lastFiledYear, select, none {No accounts have been filed.} other {The latest filed accounts are for {lastFiledYear}.}}"
+      },
+      "ACCOUNTS_MISSING_TWO_YEARS": {
+        "title": "Annual accounts for {firstMissingYear} and {dueYear} are missing",
+        "detail": "The accounts for {dueYear} were due by {deadline}. {lastFiledYear, select, none {No accounts have been filed.} other {The latest filed accounts are for {lastFiledYear}.}}"
+      },
+      "NEGATIVE_EQUITY": {
+        "title": "Negative equity",
+        "detail": "Equity was {equity} at the end of {year}: debts are larger than assets."
+      },
+      "LOW_EQUITY_RATIO": {
+        "title": "Low equity ratio",
+        "detail": "Equity was {ratio} of total assets at the end of {year}."
+      },
+      "LOSS_TWO_YEARS": {
+        "title": "Losses two years in a row",
+        "detail": "The net result was {previousResult} in {previousYear} and {result} in {year}."
+      },
+      "LOSS_LAST_YEAR": {
+        "title": "Loss last year",
+        "detail": "The net result was {result} in {year}."
+      },
+      "AUDITOR_LEFT": {
+        "title": "Auditor left or was replaced",
+        "detail": "The auditor changed {count, plural, one {once} other {# times}} in the last 12 months."
+      },
+      "FREQUENT_CEO_CHANGES": {
+        "title": "Frequent CEO changes",
+        "detail": "The CEO changed {count} times in the last 12 months."
+      },
+      "FREQUENT_ADDRESS_CHANGES": {
+        "title": "Frequent address changes",
+        "detail": "The business address changed {count} times in the last 12 months."
+      },
+      "YOUNG_COMPANY": {
+        "title": "Less than a year old",
+        "detail": "The company was founded on {foundedDate} and has no track record yet."
+      },
+      "AUDIT_OPTED_OUT": {
+        "title": "Not audited",
+        "detail": "The company has chosen not to have its accounts for {year} audited. This is legal for small companies, but no auditor has checked the figures."
+      },
+      "unknown": {
+        "title": "Warning sign",
+        "detail": "See the register for details."
+      }
+    },
+    "limitations": {
+      "ACCOUNTS_NOT_COVERED": "The accounts register gives no key figures for this kind of company (for example banks).",
+      "ACCOUNTS_UNAVAILABLE": "The annual accounts could not be fetched, so the key figures were not checked.",
+      "ACCOUNTS_DEADLINE_UNKNOWN": "The founding date is unknown, so overdue accounts could not be checked.",
+      "CHANGE_HISTORY_UNKNOWN": "You do not follow the company, so changes of CEO, auditor and address are unknown. Follow it to include them from now on.",
+      "CHANGE_HISTORY_PARTIAL": "Changes are known only since the company was first followed, on {since}.",
+      "unknown": "Some data could not be checked."
+    },
     "level": {
       "low": "Low",
       "medium": "Medium",

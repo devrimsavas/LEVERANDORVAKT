@@ -167,3 +167,128 @@
     gap: var(--ds-size-1);
   }
 }
+
+.stack {
+  display: grid;
+  gap: var(--ds-size-4);
+}
+
+.source {
+  margin: 0;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.figures {
+  min-width: 36rem;
+}
+
+.figures tbody th {
+  font-weight: var(--ds-font-weight-medium);
+}
+
+.number {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.currency {
+  display: block;
+  font-size: var(--ds-body-xs-font-size);
+  font-weight: var(--ds-font-weight-regular);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.negative {
+  color: var(--ds-color-danger-text-subtle);
+}
+
+.riskSummary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--ds-size-8);
+  padding: var(--ds-size-5);
+  border-radius: var(--ds-border-radius-lg);
+  background: var(--ds-color-neutral-background-tinted);
+}
+
+.riskSummary > div {
+  display: grid;
+  gap: var(--ds-size-2);
+  justify-items: start;
+}
+
+.riskLabel {
+  font-size: var(--ds-body-sm-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.score {
+  font-size: var(--ds-heading-sm-font-size);
+  font-weight: var(--ds-font-weight-semibold);
+}
+
+.signals {
+  display: grid;
+  gap: var(--ds-size-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.signal {
+  padding: var(--ds-size-4) var(--ds-size-5);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-left-width: 4px;
+  border-radius: var(--ds-border-radius-md);
+}
+
+.signal[data-severity="critical"] {
+  border-left-color: var(--ds-color-danger-base-default);
+}
+
+.signal[data-severity="warning"] {
+  border-left-color: var(--ds-color-warning-base-default);
+}
+
+.signal[data-severity="info"] {
+  border-left-color: var(--ds-color-info-base-default);
+}
+
+.signal p {
+  margin: var(--ds-size-2) 0 0;
+}
+
+.signalHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-size-3);
+}
+
+.signalTitle {
+  font-weight: var(--ds-font-weight-semibold);
+}
+
+.points {
+  margin-left: auto;
+  font-size: var(--ds-body-sm-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.limitations {
+  margin: var(--ds-size-2) 0 0;
+  padding-left: var(--ds-size-5);
+}
+
+.howItWorks summary {
+  cursor: pointer;
+  color: var(--ds-color-accent-text-subtle);
+  font-weight: var(--ds-font-weight-medium);
+}
+
+.howItWorks p {
+  max-width: 48rem;
+}

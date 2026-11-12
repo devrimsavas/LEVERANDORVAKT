@@ -4,6 +4,7 @@ import type {
   RiskInput,
   RiskLevel,
   RiskLimitation,
+  RiskParams,
   RiskSignal,
   RiskSignalCode,
 } from "../types/risk.js";
@@ -64,6 +65,7 @@ function signal(
   code: RiskSignalCode,
   title: string,
   detail: string,
+  params: RiskParams = {},
 ): RiskSignal {
   const points =
     code in RISK_RULES.points
@@ -74,7 +76,7 @@ function signal(
     : points > 0
       ? "warning"
       : "info";
-  return { code, severity, points, title, detail };
+  return { code, severity, points, title, detail, params };
 }
 
 // The newest year whose accounts must have been filed by `now`
@@ -95,6 +97,13 @@ function formatDeadline(year: number): string {
   return `${RISK_RULES.accountsDueDay} July ${year + 1}`;
 }
 
+// The filing deadline for a year's accounts as an ISO date, e.g. 2026-07-31
+function deadlineDate(year: number): string {
+  const month = String(RISK_RULES.accountsDueMonth).padStart(2, "0");
+  const day = String(RISK_RULES.accountsDueDay).padStart(2, "0");
+  return `${year + 1}-${month}-${day}`;
+}
+
 function registerSignals(input: RiskInput): RiskSignal[] {
   const signals: RiskSignal[] = [];
   const company = input.company;
@@ -107,6 +116,7 @@ function registerSignals(input: RiskInput): RiskSignal[] {
         input.struckOff.date
           ? `The company was struck off the Central Coordinating Register on ${input.struckOff.date}.`
           : "The company has been struck off the Central Coordinating Register.",
+        { date: input.struckOff.date },
       ),
     );
   }
@@ -152,6 +162,7 @@ function youngCompanySignal(input: RiskInput, now: Date): RiskSignal[] {
           "YOUNG_COMPANY",
           "Less than a year old",
           `The company was founded on ${founded} and has no track record yet.`,
+          { foundedDate: founded },
         ),
       ]
     : [];
@@ -180,6 +191,7 @@ function filingSignals(
       code: "ACCOUNTS_DEADLINE_UNKNOWN",
       reason:
         "The founding date is unknown, so overdue accounts cannot be checked.",
+      params: {},
     });
     return [];
   }
@@ -200,6 +212,12 @@ function filingSignals(
         "ACCOUNTS_MISSING_TWO_YEARS",
         `Annual accounts for ${dueYear - 1} and ${dueYear} are missing`,
         `Accounts for ${dueYear} were due by ${formatDeadline(dueYear)}. ${lastText}`,
+        {
+          firstMissingYear: dueYear - 1,
+          dueYear,
+          deadline: deadlineDate(dueYear),
+          lastFiledYear: last,
+        },
       ),
     ];
   }
@@ -209,6 +227,11 @@ function filingSignals(
         "ACCOUNTS_OVERDUE",
         `Annual accounts for ${dueYear} are overdue`,
         `Accounts for ${dueYear} were due by ${formatDeadline(dueYear)}. ${lastText}`,
+        {
+          dueYear,
+          deadline: deadlineDate(dueYear),
+          lastFiledYear: last,
+        },
       ),
     ];
   }
@@ -229,6 +252,7 @@ function accountsSignals(
       code: "ACCOUNTS_NOT_COVERED",
       reason:
         "The accounts register does not give key figures for this kind of company (e.g. banks).",
+      params: {},
     });
     return [];
   }
@@ -237,6 +261,7 @@ function accountsSignals(
       code: "ACCOUNTS_UNAVAILABLE",
       reason:
         "The annual accounts could not be fetched, so the key figures were not checked.",
+      params: {},
     });
     return [];
   }
@@ -259,6 +284,7 @@ function accountsSignals(
         "LIQUIDATION_ACCOUNTS",
         "Liquidation accounts",
         `The accounts for ${latest.year} were drawn up because the company is being wound up.`,
+        { year: latest.year },
       ),
     );
   }
@@ -269,6 +295,7 @@ function accountsSignals(
         "NEGATIVE_EQUITY",
         "Negative equity",
         `Equity was ${money(equity, latest.currency)} at the end of ${latest.year}: debts are larger than assets.`,
+        { year: latest.year, equity, currency: latest.currency },
       ),
     );
   } else if (
@@ -283,6 +310,7 @@ function accountsSignals(
         "LOW_EQUITY_RATIO",
         "Low equity ratio",
         `Equity was ${ratio} % of total assets at the end of ${latest.year}.`,
+        { year: latest.year, ratio },
       ),
     );
   }
@@ -301,11 +329,20 @@ function accountsSignals(
             "LOSS_TWO_YEARS",
             "Losses two years in a row",
             `Net result was ${money(previous.figures.netProfit!, previous.currency)} in ${previous.year} and ${money(netProfit, latest.currency)} in ${latest.year}.`,
+            {
+              previousYear: previous.year,
+              previousResult: previous.figures.netProfit,
+              previousCurrency: previous.currency,
+              year: latest.year,
+              result: netProfit,
+              currency: latest.currency,
+            },
           )
         : signal(
             "LOSS_LAST_YEAR",
             "Loss last year",
             `Net result was ${money(netProfit, latest.currency)} in ${latest.year}.`,
+            { year: latest.year, result: netProfit, currency: latest.currency },
           ),
     );
   }
@@ -316,6 +353,7 @@ function accountsSignals(
         "AUDIT_OPTED_OUT",
         "Not audited",
         `The company has chosen not to have its accounts audited (${latest.year}). This is legal for small companies, but the figures have not been checked by an auditor.`,
+        { year: latest.year },
       ),
     );
   }
@@ -334,6 +372,7 @@ function historySignals(
       code: "CHANGE_HISTORY_UNKNOWN",
       reason:
         "The company is not followed, so changes of CEO, auditor and address are unknown.",
+      params: {},
     });
     return [];
   }
@@ -343,6 +382,7 @@ function historySignals(
     limitations.push({
       code: "CHANGE_HISTORY_PARTIAL",
       reason: `Changes are known only since the company was first followed on ${input.history.since.toISOString().slice(0, 10)}.`,
+      params: { since: input.history.since.toISOString().slice(0, 10) },
     });
   }
 
@@ -363,6 +403,7 @@ function historySignals(
         "AUDITOR_LEFT",
         "Auditor left or was replaced",
         `The auditor changed ${auditorChanges.length === 1 ? "once" : `${auditorChanges.length} times`} in the last 12 months.`,
+        { count: auditorChanges.length },
       ),
     );
   }
@@ -374,6 +415,7 @@ function historySignals(
         "FREQUENT_CEO_CHANGES",
         "Frequent CEO changes",
         `The CEO changed ${ceoChanges} times in the last 12 months.`,
+        { count: ceoChanges },
       ),
     );
   }
@@ -385,6 +427,7 @@ function historySignals(
         "FREQUENT_ADDRESS_CHANGES",
         "Frequent address changes",
         `The business address changed ${addressChanges} times in the last 12 months.`,
+        { count: addressChanges },
       ),
     );
   }

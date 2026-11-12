@@ -106,6 +106,68 @@ const limitationCodes = (risk: { limitations: { code: string }[] }) =>
   risk.limitations.map((l) => l.code);
 
 describe("assessRisk", () => {
+  // Clients write their own text from code + params, so every signal and
+  // limitation must carry its values, not only the English sentences
+  it("gives every signal and limitation its values as params", () => {
+    const risk = assessRisk(
+      input({
+        company: company({
+          isBankrupt: true,
+          lastAnnualAccountsYear: 2023,
+          foundedDate: "2015-03-01",
+        }),
+        accounts: {
+          status: "available",
+          list: [
+            own(
+              2025,
+              { equity: -250000, netProfit: -100000 },
+              { auditOptedOut: true },
+            ),
+            own(2024, { netProfit: -50000 }),
+          ],
+        },
+        history: {
+          since: daysAgo(200),
+          changes: [
+            change("roles.auditor", 10, "OLD REVISJON AS", "NEW REVISJON AS"),
+          ],
+        },
+      }),
+      NOW,
+    );
+
+    const params = Object.fromEntries(
+      [...risk.signals, ...risk.limitations].map((item) => [
+        item.code,
+        item.params,
+      ]),
+    );
+    expect(params).toEqual({
+      BANKRUPT: {},
+      ACCOUNTS_MISSING_TWO_YEARS: {
+        firstMissingYear: 2024,
+        dueYear: 2025,
+        deadline: "2026-07-31",
+        lastFiledYear: 2023,
+      },
+      NEGATIVE_EQUITY: { year: 2025, equity: -250000, currency: "NOK" },
+      LOSS_TWO_YEARS: {
+        previousYear: 2024,
+        previousResult: -50000,
+        previousCurrency: "NOK",
+        year: 2025,
+        result: -100000,
+        currency: "NOK",
+      },
+      AUDIT_OPTED_OUT: { year: 2025 },
+      AUDITOR_LEFT: { count: 1 },
+      CHANGE_HISTORY_PARTIAL: {
+        since: daysAgo(200).toISOString().slice(0, 10),
+      },
+    });
+  });
+
   it("gives a healthy company a low risk with no signals", () => {
     const risk = assessRisk(input(), NOW);
 
@@ -161,6 +223,7 @@ describe("assessRisk", () => {
       expect(risk.signals[0]).toMatchObject({
         code: "ACCOUNTS_OVERDUE",
         title: "Annual accounts for 2025 are overdue",
+        params: { dueYear: 2025, deadline: "2026-07-31", lastFiledYear: 2024 },
       });
       expect(risk.signals[0]!.detail).toContain("31 July 2026");
     });
@@ -296,6 +359,14 @@ describe("assessRisk", () => {
       expect(twoYears.signals.map((s) => [s.code, s.points])).toEqual([
         ["LOSS_TWO_YEARS", 20],
       ]);
+      expect(twoYears.signals[0]!.params).toEqual({
+        previousYear: 2024,
+        previousResult: -1,
+        previousCurrency: "NOK",
+        year: 2025,
+        result: -1,
+        currency: "NOK",
+      });
       expect(oneYear.signals.map((s) => [s.code, s.points])).toEqual([
         ["LOSS_LAST_YEAR", 10],
       ]);
@@ -427,6 +498,7 @@ describe("assessRisk", () => {
 
       expect(limitationCodes(risk)).toEqual(["CHANGE_HISTORY_PARTIAL"]);
       expect(risk.limitations[0]!.reason).toContain("2026-10-12");
+      expect(risk.limitations[0]!.params).toEqual({ since: "2026-10-12" });
     });
   });
 

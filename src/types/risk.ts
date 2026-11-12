@@ -27,12 +27,18 @@ export type RiskSignalCode =
   | "YOUNG_COMPANY"
   | "AUDIT_OPTED_OUT";
 
+// The values a signal or limitation is about (years, amounts, dates), so a
+// client can write its own text in any language. title, detail and reason
+// stay as ready-made English text, e.g. for the AI assistant.
+export type RiskParams = Record<string, string | number | null>;
+
 export interface RiskSignal {
   code: RiskSignalCode;
   severity: RiskSignalSeverity;
   points: number;
   title: string;
   detail: string;
+  params: RiskParams;
 }
 
 // Something that could not be checked, or only partly,
@@ -47,6 +53,7 @@ export type RiskLimitationCode =
 export interface RiskLimitation {
   code: RiskLimitationCode;
   reason: string;
+  params: RiskParams;
 }
 
 export interface RiskAssessment {

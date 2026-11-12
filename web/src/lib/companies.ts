@@ -1,10 +1,12 @@
 import "server-only";
 import { apiFetch } from "./api";
 import type {
+  AccountsResult,
   ChangeItem,
   Company,
   CompanyRoles,
   Paginated,
+  RiskAssessment,
   WatchlistItem,
   WatchlistRow,
 } from "./companyTypes";
@@ -89,6 +91,38 @@ export async function getWatchlist(
   sort: WatchlistSort,
 ): Promise<Loaded<WatchlistRow[]>> {
   const result = await apiFetch<WatchlistRow[]>(`/api/watchlist?sort=${sort}`);
+  return result.ok
+    ? { status: "ok", data: result.data }
+    : { status: "unavailable" };
+}
+
+// A followed company's accounts and risk come from stored data (including
+// its change history); any other company is checked live
+function companyDataPath(orgNumber: string, followed: boolean, part: string) {
+  return followed
+    ? `/api/watchlist/${orgNumber}/${part}`
+    : `/api/companies/${orgNumber}/${part}`;
+}
+
+export async function getCompanyAccounts(
+  orgNumber: string,
+  followed: boolean,
+): Promise<Loaded<AccountsResult>> {
+  const result = await apiFetch<AccountsResult>(
+    companyDataPath(orgNumber, followed, "accounts"),
+  );
+  return result.ok
+    ? { status: "ok", data: result.data }
+    : { status: "unavailable" };
+}
+
+export async function getCompanyRisk(
+  orgNumber: string,
+  followed: boolean,
+): Promise<Loaded<RiskAssessment>> {
+  const result = await apiFetch<RiskAssessment>(
+    companyDataPath(orgNumber, followed, "risk"),
+  );
   return result.ok
     ? { status: "ok", data: result.data }
     : { status: "unavailable" };

@@ -129,6 +129,10 @@
 
 /* App header: more links, so they move into the menu earlier */
 
+.userName {
+  white-space: nowrap;
+}
+
 .userEmail {
   display: block;
   font-weight: var(--ds-font-weight-regular);

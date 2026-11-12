@@ -81,3 +81,66 @@ export const RISK_COLOR = {
   medium: "warning",
   high: "danger",
 } as const satisfies Record<RiskLevel, string>;
+
+// Annual accounts (GET .../accounts). Figures are in the currency the
+// company reported in; null when Brreg does not give the figure.
+export interface AnnualAccountsFigures {
+  revenue: number | null;
+  operatingExpenses: number | null;
+  operatingProfit: number | null;
+  netFinancialItems: number | null;
+  profitBeforeTax: number | null;
+  taxExpense: number | null;
+  netProfit: number | null;
+  totalAssets: number | null;
+  fixedAssets: number | null;
+  currentAssets: number | null;
+  cash: number | null;
+  equity: number | null;
+  totalDebt: number | null;
+  shortTermDebt: number | null;
+  longTermDebt: number | null;
+}
+
+export interface AnnualAccounts {
+  year: number;
+  periodStart: string;
+  periodEnd: string;
+  type: "company" | "group";
+  currency: string | null;
+  accountingRules: string | null;
+  audited: boolean;
+  auditOptedOut: boolean;
+  liquidation: boolean;
+  figures: AnnualAccountsFigures;
+}
+
+export interface AccountsResult {
+  // null: a followed company whose accounts have not been checked yet
+  status: "available" | "unsupported" | null;
+  accounts: AnnualAccounts[];
+}
+
+// Risk report (GET .../risk). The client writes the texts from code and
+// params; the API's English title/detail are not shown.
+export type RiskParams = Record<string, string | number | null>;
+
+export interface RiskSignal {
+  code: string;
+  severity: "critical" | "warning" | "info";
+  points: number;
+  params: RiskParams;
+}
+
+export interface RiskLimitation {
+  code: string;
+  params: RiskParams;
+}
+
+export interface RiskAssessment {
+  level: RiskLevel;
+  score: number;
+  signals: RiskSignal[];
+  limitations: RiskLimitation[];
+  assessedAt: string;
+}

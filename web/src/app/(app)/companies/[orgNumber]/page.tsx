@@ -12,9 +12,11 @@ import { NoteEditor } from "@/components/company/NoteEditor";
 import { OverviewTab } from "@/components/company/OverviewTab";
 import { RolesTab } from "@/components/company/RolesTab";
 import { ChangesTab } from "@/components/company/ChangesTab";
+import { AccountsTab } from "@/components/company/AccountsTab";
+import { RiskTab } from "@/components/company/RiskTab";
 import styles from "@/components/company/company.module.css";
 
-const TABS = ["overview", "roles", "changes"] as const;
+const TABS = ["overview", "roles", "accounts", "risk", "changes"] as const;
 type Tab = (typeof TABS)[number];
 
 export async function generateMetadata({
@@ -115,6 +117,15 @@ export default async function CompanyPage({
       <section className={styles.panel} aria-label={t(`tabs.${tab}`)}>
         {tab === "overview" && <OverviewTab company={company} watch={watch} />}
         {tab === "roles" && <RolesTab roles={roles} />}
+        {tab === "accounts" && (
+          <AccountsTab
+            orgNumber={company.orgNumber}
+            followed={watch !== null}
+          />
+        )}
+        {tab === "risk" && (
+          <RiskTab orgNumber={company.orgNumber} followed={watch !== null} />
+        )}
         {tab === "changes" &&
           (watch ? (
             <ChangesTab orgNumber={company.orgNumber} page={page} />
