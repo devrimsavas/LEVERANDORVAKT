@@ -162,8 +162,10 @@
       "passwordTooShort": "Passordet må ha minst {min} tegn",
       "emailTaken": "Det finnes allerede en konto med denne e-postadressen. Vil du logge inn i stedet?",
       "invalidCredentials": "E-postadressen eller passordet er feil",
-      "unavailable": "Tjenesten er ikke tilgjengelig akkurat nå. Prøv igjen om litt."
-    }
+      "unavailable": "Tjenesten er ikke tilgjengelig akkurat nå. Prøv igjen om litt.",
+      "passwordMismatch": "Passordene er ikke like"
+    },
+    "confirmPassword": "Gjenta passordet"
   },
   "overview": {
     "welcome": "Velkommen, {name}",

@@ -19,6 +19,7 @@ export type AuthErrorKey =
   | "emailInvalid"
   | "passwordRequired"
   | "passwordTooShort"
+  | "passwordMismatch"
   | "emailTaken"
   | "invalidCredentials"
   | "unavailable";
@@ -26,7 +27,10 @@ export type AuthErrorKey =
 export interface AuthFormState {
   formError?: AuthErrorKey;
   fieldErrors?: Partial<
-    Record<"firstName" | "lastName" | "email" | "password", AuthErrorKey>
+    Record<
+      "firstName" | "lastName" | "email" | "password" | "confirmPassword",
+      AuthErrorKey
+    >
   >;
   // Typed values are sent back so the form keeps them; never the password
   values?: { firstName?: string; lastName?: string; email?: string };
@@ -81,6 +85,7 @@ export async function registerAction(
   const lastName = text(formData, "lastName").trim();
   const email = text(formData, "email").trim();
   const password = text(formData, "password");
+  const confirmPassword = text(formData, "confirmPassword");
   const values = { firstName, lastName, email };
 
   const fieldErrors: AuthFormState["fieldErrors"] = {};
@@ -91,8 +96,12 @@ export async function registerAction(
   else if (lastName.length > MAX_NAME_LENGTH)
     fieldErrors.lastName = "nameTooLong";
   if (!EMAIL_PATTERN.test(email)) fieldErrors.email = "emailInvalid";
-  if (password.length < MIN_PASSWORD_LENGTH)
+  if (password.length < MIN_PASSWORD_LENGTH) {
     fieldErrors.password = "passwordTooShort";
+  } else if (confirmPassword !== password) {
+    // Typed twice, so a typo does not lock the user out of the new account
+    fieldErrors.confirmPassword = "passwordMismatch";
+  }
   if (Object.keys(fieldErrors).length > 0) return { fieldErrors, values };
 
   const created = await apiFetch("/api/auth/register", {

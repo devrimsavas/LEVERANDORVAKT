@@ -61,6 +61,14 @@ export function RegisterForm() {
         error={error("password")}
         required
       />
+      <Textfield
+        label={t("confirmPassword")}
+        name="confirmPassword"
+        type="password"
+        autoComplete="new-password"
+        error={error("confirmPassword")}
+        required
+      />
       <Button type="submit" loading={pending} disabled={pending}>
         {t("register.submit")}
       </Button>

@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml/badge.svg)](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml)
 
-_Last updated: 11.11.2026_
+_Last updated: 12.11.2026_
 
-> ⚠️ **Under active development** — the backend for following companies, detecting changes (company data, roles and annual accounts) and notifying users, an explainable risk assessment and an AI assistant with tool calling are in place and covered by tests. Deployment and the frontend are next. See the [Roadmap](#roadmap).
+> ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages and trends; the assistant and notification pages, the admin page and end-to-end tests are next, then production hardening and deployment. See the [Roadmap](#roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
 
@@ -37,6 +37,33 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 ### Planned
 
 - **Ownership** — shareholders from Skatteetaten's shareholder register, imported by a separate Python service
+- **Email notifications** — critical changes at once, the rest as a daily digest, in the user's language
+- **Account features** — password reset, deleting your account and downloading your data (GDPR)
+
+## Web App
+
+The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It runs on its own port and talks to the API from its server, never from the browser.
+
+### Pages
+
+| Page                   | What it shows                                                                                                                                                                                |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing (`/`)          | What the service does, an example of its notifications, the features and the open data sources                                                                                               |
+| Log in, Create account | Forms with a message per field and the new password typed twice; a new account is logged in right away                                                                                                                        |
+| Overview               | A welcome guide for new users; otherwise the number of followed companies, the ones that need attention, the risk split across the watchlist and the latest notifications                    |
+| Watchlist              | Every followed company with its risk level, last change, latest accounts and the start of your note, sorted by name or highest risk                                                          |
+| Search                 | Search by name, or go straight to a company by its organization number                                                                                                                       |
+| Company                | Follow / stop following, a private note, and tabs for overview, roles, annual accounts (chart and table), risk (level, score, warning signs, what could not be checked) and detected changes |
+| Trends                 | New companies per month against a year earlier, and the ten most common industries, filtered by municipality, main industry, organization form and period                                    |
+| Notification bell      | In the header on every app page: unread count, the latest notifications, mark as read; refreshed every minute while the page is visible, with the count in the browser tab                   |
+
+### How it is built
+
+- **The token never reaches the browser (BFF).** The login form posts to the Next server, which logs in against the API and keeps the JWT in an `httpOnly`, `SameSite=Lax` cookie with the token's lifetime. Pages and server actions call the API with it as a Bearer token, so page scripts cannot read it and the API needs no CORS. A proxy (`src/proxy.ts`) sends visitors without a session to the login page and back to the page they asked for; only paths on the site are accepted as the target.
+- **Designsystemet.** Components and design tokens from [Designsystemet](https://www.designsystemet.no), the Norwegian public sector's design system, with our own theme generated from `designsystemet.config.json`, Inter as the font and Aksel icons. Light and dark mode follow the operating system until the user chooses; the choice is kept in a cookie, so the page is rendered in the right colors from the start.
+- **English and Norwegian.** Texts are in `web/messages/en.json` and `nb.json` (next-intl), chosen by a cookie or the browser's language; a missing or misspelled key is a type error. The API sends risk signals, limitations and changes as codes with `params` (years, amounts, dates), and the web app writes the sentences itself, with amounts and dates in the reader's format.
+- **Charts that can be read without color.** Recharts with the theme's tokens: the accounts chart (revenue, net result or equity per year, losses below the zero line) and the trends line chart (this period solid, a year earlier dashed). Every chart has a legend or a title naming its series, a tooltip on hover and keyboard focus, and the same numbers in a table. The second series color was checked for color-blind separation and contrast in both modes. Risk levels and severities always carry their name next to the color.
+- **URLs hold the state.** Search queries, filters, sorting and company tabs are in the URL, so every view can be bookmarked, shared and reached with the back button.
 
 ## Tech Stack
 
@@ -52,6 +79,10 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 | API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                                                                                                                                             |
 | Testing        | Vitest + Supertest, GitHub Actions CI                                                                                                                                                                      |
 | Containers     | Docker (multi-stage image) and Docker Compose for the API and PostgreSQL                                                                                                                                   |
+| Web app        | Next.js 16 (App Router, server components and server actions), React 19, TypeScript                                                                                                                        |
+| Design         | Designsystemet (React components, CSS and a generated theme), Aksel icons, Inter                                                                                                                           |
+| Languages      | next-intl (English and Norwegian Bokmål)                                                                                                                                                                   |
+| Charts         | Recharts                                                                                                                                                                                                   |
 | Data source    | [Brønnøysund Register Centre open API](https://data.brreg.no) (Central Coordinating Register and Register of Company Accounts; free, no API key), Kartverket municipality API, SSB industry classification |
 
 ## Architecture
@@ -308,6 +339,19 @@ LEVERANDORVAKT/
 │   │   └── setup.ts              # Empties all tables before every test
 │   ├── fixtures/                 # Fictional data shaped like real Brreg responses
 │   └── *.test.ts                 # One test file per area (auth, companies, watchlist, ...)
+├── web/                          # The Next.js web app
+│   ├── messages/                 # en.json and nb.json: every text in both languages
+│   ├── designsystemet.config.json # Theme colors; npm run theme generates src/theme from it
+│   └── src/
+│       ├── app/
+│       │   ├── (public)/         # Landing, log in, create account (public header and footer)
+│       │   ├── (app)/            # Overview, watchlist, search, companies, trends, ... (login required)
+│       │   └── api/notifications/ # Route the bell polls; calls the API with the session token
+│       ├── components/           # Header, footer, bell, company tabs, charts, overview cards
+│       ├── i18n/                 # Language choice (cookie or browser) and loading the messages
+│       ├── lib/                  # API client, session cookie, server actions, shared types
+│       ├── theme/                # Generated Designsystemet theme (do not edit by hand)
+│       └── proxy.ts              # Sends visitors without a session to the login page
 ├── .github/workflows/
 │   ├── ci.yml                    # Type check, tests and a Docker Compose smoke test on every push
 │   └── portfolio-rebuild.yml     # Rebuilds the portfolio site when the README changes
@@ -418,6 +462,19 @@ npm run dev
 ```
 
 On startup the app connects to the database and applies any pending migrations automatically. The server runs at `http://localhost:3000` and the API docs at `http://localhost:3000/api/docs`.
+
+#### 7. Run the web app
+
+In a second terminal, with the API running:
+
+```bash
+cd web
+npm install
+cp .env.example .env.local   # API_URL=http://localhost:3000
+npm run dev
+```
+
+The web app runs at `http://localhost:3001`. In `web/`, `npm run typecheck` checks the types, `npm run lint` runs ESLint and `npm run theme` generates the theme again after changing `designsystemet.config.json`.
 
 #### Available scripts
 
@@ -536,8 +593,27 @@ GitHub Actions runs two jobs on every push: the type check and all tests against
 
 - [x] Docker Compose for local development
 - [ ] Deployment (Render + Aiven PostgreSQL)
-- [ ] Frontend
 - [ ] Usage guide with scenarios
+
+### Web app
+
+- [x] Next.js app with a Designsystemet theme, light and dark mode, English and Norwegian
+- [x] Landing page, log in and create account, with the token kept on the server (BFF)
+- [x] App header with menu, user menu and a notification bell
+- [x] Overview, watchlist, search and company pages (overview, roles, accounts, risk, changes)
+- [x] Charts: annual accounts per year, new companies per month
+- [x] Trends with municipality, industry, form and period filters
+- [ ] Assistant and notifications pages
+- [ ] About and contact pages
+- [ ] Admin page and an in-app guide
+- [ ] End-to-end tests (Playwright) and the web app in CI and Docker Compose
+
+### Production readiness
+
+- [ ] Limits on login and registration attempts, security headers
+- [ ] Password reset, deleting an account and downloading your data (GDPR)
+- [ ] Email notifications: critical changes at once, the rest as a daily digest
+- [ ] Logging and error alerts
 
 ## Data Source
 

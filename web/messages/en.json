@@ -162,8 +162,10 @@
       "passwordTooShort": "The password must be at least {min} characters",
       "emailTaken": "There is already an account with this email address. Log in instead?",
       "invalidCredentials": "The email address or password is wrong",
-      "unavailable": "The service is not available right now. Try again in a little while."
-    }
+      "unavailable": "The service is not available right now. Try again in a little while.",
+      "passwordMismatch": "The passwords are not the same"
+    },
+    "confirmPassword": "Repeat password"
   },
   "overview": {
     "welcome": "Welcome, {name}",

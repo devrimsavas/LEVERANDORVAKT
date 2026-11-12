@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="4.5 2.5 23 27" width="32" height="32">
+  <!-- The Leverandørvakt mark: a shield with a watching eye -->
+  <path d="M16 2.5 27.5 6.5v8.6c0 7.1-4.8 12.6-11.5 14.4C9.3 27.7 4.5 22.2 4.5 15.1V6.5Z" fill="#0062ba"/>
+  <path d="M8.5 15.5c2-3.2 4.6-4.8 7.5-4.8s5.5 1.6 7.5 4.8c-2 3.2-4.6 4.8-7.5 4.8s-5.5-1.6-7.5-4.8Z" fill="#ffffff"/>
+  <circle cx="16" cy="15.5" r="2.6" fill="#0062ba"/>
+</svg>
