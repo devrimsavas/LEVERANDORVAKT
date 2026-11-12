@@ -4,29 +4,47 @@ import { Heading, Link } from "@digdir/designsystemet-react";
 import type { RiskLevel, WatchlistRow } from "@/lib/companyTypes";
 import styles from "./overview.module.css";
 
-type Part = RiskLevel | "notAssessed";
-const PARTS: Part[] = ["high", "medium", "low", "notAssessed"];
+export type RiskPart = RiskLevel | "notAssessed";
+const PARTS: RiskPart[] = ["high", "medium", "low", "notAssessed"];
 
-// How the followed companies split across risk levels: a thin segmented bar
-// above a list that gives each level's name, count and share. The list
-// carries the figures, so the bar has no text, and the level names mean
-// the colors are never the only way to read it.
-export async function RiskSplit({ rows }: { rows: WatchlistRow[] }) {
+// Counts per risk level for the companies in a watchlist
+export function countRiskLevels(
+  rows: WatchlistRow[],
+): Record<RiskPart, number> {
+  const counts = { high: 0, medium: 0, low: 0, notAssessed: 0 };
+  for (const row of rows) counts[row.risk.level ?? "notAssessed"] += 1;
+  return counts;
+}
+
+interface RiskSplitProps {
+  id: string;
+  title: string;
+  counts: Record<RiskPart, number>;
+  link?: { href: string; text: string };
+}
+
+// How companies split across risk levels: a thin segmented bar above a
+// list that gives each level's name, count and share. The list carries
+// the figures, so the bar has no text, and the level names mean the
+// colors are never the only way to read it. Used on the overview (your
+// watchlist) and the admin page (every stored company).
+export async function RiskSplit({
+  id,
+  title,
+  counts: byPart,
+  link,
+}: RiskSplitProps) {
   const t = await getTranslations("overview.risk");
   const level = await getTranslations("risk.level");
   const format = await getFormatter();
 
-  const counts = PARTS.map((part) => ({
-    part,
-    count: rows.filter((row) => (row.risk.level ?? "notAssessed") === part)
-      .length,
-  }));
-  const total = rows.length;
+  const counts = PARTS.map((part) => ({ part, count: byPart[part] }));
+  const total = counts.reduce((sum, { count }) => sum + count, 0);
 
   return (
-    <section className={styles.card} aria-labelledby="risk-split">
-      <Heading id="risk-split" level={2} data-size="xs">
-        {t("title")}
+    <section className={styles.card} aria-labelledby={id}>
+      <Heading id={id} level={2} data-size="xs">
+        {title}
       </Heading>
       <div className={styles.bar} aria-hidden="true">
         {counts
@@ -61,9 +79,11 @@ export async function RiskSplit({ rows }: { rows: WatchlistRow[] }) {
           </li>
         ))}
       </ul>
-      <Link asChild data-size="sm">
-        <NextLink href="/watchlist?sort=risk">{t("link")}</NextLink>
-      </Link>
+      {link && (
+        <Link asChild data-size="sm">
+          <NextLink href={link.href}>{link.text}</NextLink>
+        </Link>
+      )}
     </section>
   );
 }

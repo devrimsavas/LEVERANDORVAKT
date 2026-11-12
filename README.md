@@ -4,7 +4,7 @@
 
 _Last updated: 12.11.2026_
 
-> ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages, trends, notifications and the assistant; the admin page, an in-app guide and end-to-end tests are next, then production hardening and deployment. See the [Roadmap](#roadmap).
+> ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages, trends, notifications, the assistant and an admin page; an in-app guide and end-to-end tests are next, then production hardening and deployment. See the [Roadmap](#roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
 
@@ -59,6 +59,7 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 | Notifications          | All notifications with what changed (before → after), unread filter, mark one or all as read, 20 per page                                                                                                    |
 | Assistant              | Ask in plain language and get answers in Markdown (tables, lists, links), with the tools each answer is based on; example questions, earlier conversations to reopen or delete, and the questions left today |
 | About, Contact         | What the project is and how it is built; where to reach the author                                                                                                                                           |
+| Admin                  | Only for admins (others get "not found"): the background jobs with their state and a button to run each now, the data in numbers, risk levels of all stored companies, and the users with search and paging  |
 
 ### How it is built
 
@@ -611,7 +612,8 @@ GitHub Actions runs two jobs on every push: the type check and all tests against
 - [x] Trends with municipality, industry, form and period filters
 - [x] Assistant and notifications pages
 - [x] About and contact pages
-- [ ] Admin page and an in-app guide
+- [x] Admin page
+- [ ] In-app guide and onboarding
 - [ ] End-to-end tests (Playwright) and the web app in CI and Docker Compose
 
 ### Production readiness

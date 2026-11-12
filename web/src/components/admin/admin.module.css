@@ -1,0 +1,181 @@
+.page {
+  display: grid;
+  gap: var(--ds-size-8);
+  padding-block: var(--ds-size-10) var(--ds-size-12);
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--ds-size-4);
+}
+
+.lead {
+  margin: var(--ds-size-2) 0 0;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.muted {
+  margin: 0;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.section {
+  display: grid;
+  gap: var(--ds-size-4);
+  min-width: 0;
+}
+
+/* Background jobs */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ds-size-5);
+  align-items: stretch;
+}
+
+.card {
+  display: grid;
+  align-content: start;
+  gap: var(--ds-size-4);
+  min-width: 0;
+  padding: var(--ds-size-5);
+  border: 1px solid var(--ds-color-neutral-border-subtle);
+  border-radius: var(--ds-border-radius-lg);
+}
+
+.cardHead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-size-3);
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--ds-size-2) var(--ds-size-4);
+  margin: 0;
+}
+
+.facts dt {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.facts dd {
+  margin: 0;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--ds-body-sm-font-size);
+}
+
+.run {
+  display: grid;
+  justify-items: start;
+  gap: var(--ds-size-3);
+}
+
+/* Numbers */
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ds-size-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tile {
+  display: grid;
+  align-content: start;
+  gap: var(--ds-size-1);
+  padding: var(--ds-size-5);
+  border-radius: var(--ds-border-radius-lg);
+  background: var(--ds-color-neutral-background-tinted);
+}
+
+.tileLabel {
+  font-size: var(--ds-body-sm-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.tileValue {
+  font-size: var(--ds-heading-lg-font-size);
+  font-weight: var(--ds-font-weight-semibold);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The model name is text, not a number */
+.tileText {
+  font-size: var(--ds-heading-xs-font-size);
+  overflow-wrap: anywhere;
+}
+
+.tileSub {
+  font-size: var(--ds-body-sm-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+/* Users */
+
+.search {
+  max-width: 32rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 44rem;
+}
+
+.name {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-size-2);
+}
+
+.email {
+  overflow-wrap: anywhere;
+}
+
+.number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-size-4);
+}
+
+@media (max-width: 52rem) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 30rem) {
+  .tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

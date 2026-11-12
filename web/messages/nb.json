@@ -747,5 +747,81 @@
       "confirm": "Slett",
       "cancel": "Avbryt"
     }
+  },
+  "admin": {
+    "title": "Admin",
+    "lead": "Bakgrunnsjobbene, dataene i tall og brukerne. Status fra {time}.",
+    "leadNoStatus": "Bakgrunnsjobbene, dataene i tall og brukerne.",
+    "refresh": "Oppdater",
+    "statusFailed": "Systemstatusen kunne ikke lastes. Kjører API-et?",
+    "never": "Aldri",
+    "companies": "{count, plural, one {# selskap} other {# selskaper}}",
+    "jobs": {
+      "title": "Bakgrunnsjobber",
+      "state": {
+        "running": "Kjører",
+        "idle": "Venter",
+        "notStarted": "Ikke startet"
+      },
+      "changeDetection": {
+        "title": "Endringssjekk",
+        "text": "Leser Brregs oppdateringsstrømmer for selskaper og roller, og lagrer hva som er endret i de fulgte selskapene.",
+        "lastRun": "Siste kjøring",
+        "updateFeed": "Posisjon i selskapsstrømmen",
+        "roleFeed": "Posisjon i rollestrømmen"
+      },
+      "accountsCheck": {
+        "title": "Sjekk av årsregnskap",
+        "text": "Henter nye årsregnskap for fulgte selskaper og ser etter varseltegn.",
+        "lastChecked": "Sist sjekket selskap",
+        "due": "Venter på sjekk"
+      }
+    },
+    "run": {
+      "button": "Kjør nå",
+      "running": "Kjører … dette kan ta litt tid",
+      "initialized": "Første kjøring: startpunktene i strømmene er lagret. Endringer blir funnet fra neste kjøring.",
+      "done": "Ferdig: {checked, plural, one {# selskap} other {# selskaper}} sjekket, {changes, plural, one {# endring} other {# endringer}} funnet, {failed} feilet.",
+      "alreadyRunning": "Denne jobben kjører allerede. Oppdater siden om litt.",
+      "failed": "Kjøringen feilet. Se loggen til API-et for årsaken."
+    },
+    "numbers": {
+      "title": "I tall",
+      "users": "Brukere",
+      "admins": "{count, plural, one {# administrator} other {# administratorer}}",
+      "companies": "Lagrede selskaper",
+      "companiesSub": "{followed} fulgt · {struckOff} slettet",
+      "watchlistEntries": "Oppføringer i overvåkingslister",
+      "watchlistSub": "Én per bruker og selskap",
+      "notifications": "Varsler",
+      "unread": "{count} ulest",
+      "questions": "Spørsmål til assistenten, siste 24 timer",
+      "conversations": "{count, plural, one {# samtale} other {# samtaler}} lagret",
+      "model": "Assistentens modell",
+      "modelOff": "Slått av",
+      "modelSub": "Settes med AI_PROVIDER i API-ets .env"
+    },
+    "riskTitle": "Risikonivå for alle lagrede selskaper",
+    "users": {
+      "title": "Brukere",
+      "titleCount": "Brukere ({count})",
+      "searchLabel": "Søk etter brukere",
+      "searchPlaceholder": "Navn eller e-post",
+      "search": "Søk",
+      "clear": "Tøm",
+      "failed": "Brukerne kunne ikke lastes.",
+      "empty": "Ingen brukere ennå.",
+      "noMatch": "Ingen brukere passer til «{q}».",
+      "name": "Navn",
+      "email": "E-post",
+      "followed": "Følger",
+      "created": "Opprettet",
+      "lastLogin": "Siste innlogging",
+      "admin": "Admin",
+      "pages": "Brukersider",
+      "newer": "Nyere",
+      "older": "Eldre",
+      "pageOf": "Side {page} av {total}"
+    }
   }
 }

@@ -747,5 +747,81 @@
       "confirm": "Delete",
       "cancel": "Cancel"
     }
+  },
+  "admin": {
+    "title": "Admin",
+    "lead": "The background jobs, the data in numbers and the users. Status from {time}.",
+    "leadNoStatus": "The background jobs, the data in numbers and the users.",
+    "refresh": "Refresh",
+    "statusFailed": "The system status could not be loaded. Is the API running?",
+    "never": "Never",
+    "companies": "{count, plural, one {# company} other {# companies}}",
+    "jobs": {
+      "title": "Background jobs",
+      "state": {
+        "running": "Running",
+        "idle": "Waiting",
+        "notStarted": "Not started"
+      },
+      "changeDetection": {
+        "title": "Change detection",
+        "text": "Reads Brreg's update feeds for companies and roles, and records what changed in the followed companies.",
+        "lastRun": "Last run",
+        "updateFeed": "Company feed position",
+        "roleFeed": "Role feed position"
+      },
+      "accountsCheck": {
+        "title": "Annual accounts check",
+        "text": "Fetches new annual accounts for followed companies and looks for warning signs.",
+        "lastChecked": "Last company checked",
+        "due": "Due for a check"
+      }
+    },
+    "run": {
+      "button": "Run now",
+      "running": "Running… this can take a while",
+      "initialized": "First run: the starting points in the feeds are recorded. Changes are found from the next run.",
+      "done": "Done: {checked, plural, one {# company} other {# companies}} checked, {changes, plural, one {# change} other {# changes}} found, {failed} failed.",
+      "alreadyRunning": "This job is already running. Refresh the page in a little while.",
+      "failed": "The run failed. See the API's log for the reason."
+    },
+    "numbers": {
+      "title": "In numbers",
+      "users": "Users",
+      "admins": "{count, plural, one {# admin} other {# admins}}",
+      "companies": "Stored companies",
+      "companiesSub": "{followed} followed · {struckOff} struck off",
+      "watchlistEntries": "Watchlist entries",
+      "watchlistSub": "One per user and company",
+      "notifications": "Notifications",
+      "unread": "{count} unread",
+      "questions": "Assistant questions, last 24 hours",
+      "conversations": "{count, plural, one {# conversation} other {# conversations}} stored",
+      "model": "Assistant model",
+      "modelOff": "Turned off",
+      "modelSub": "Set by AI_PROVIDER in the API's .env"
+    },
+    "riskTitle": "Risk levels of all stored companies",
+    "users": {
+      "title": "Users",
+      "titleCount": "Users ({count})",
+      "searchLabel": "Search users",
+      "searchPlaceholder": "Name or email",
+      "search": "Search",
+      "clear": "Clear",
+      "failed": "The users could not be loaded.",
+      "empty": "No users yet.",
+      "noMatch": "No users match “{q}”.",
+      "name": "Name",
+      "email": "Email",
+      "followed": "Following",
+      "created": "Created",
+      "lastLogin": "Last login",
+      "admin": "Admin",
+      "pages": "User pages",
+      "newer": "Newer",
+      "older": "Older",
+      "pageOf": "Page {page} of {total}"
+    }
   }
 }

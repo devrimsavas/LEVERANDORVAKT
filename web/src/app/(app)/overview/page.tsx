@@ -16,7 +16,7 @@ import { SEVERITY_COLOR } from "@/lib/notificationTypes";
 import { formatOrgNumber } from "@/lib/orgNumber";
 import { requireUser } from "@/lib/user";
 import { RiskTag } from "@/components/company/RiskTag";
-import { RiskSplit } from "@/components/overview/RiskSplit";
+import { RiskSplit, countRiskLevels } from "@/components/overview/RiskSplit";
 import styles from "@/components/overview/overview.module.css";
 
 const ATTENTION_LIMIT = 5;
@@ -149,7 +149,12 @@ export default async function OverviewPage() {
           )}
         </section>
 
-        <RiskSplit rows={rows} />
+        <RiskSplit
+          id="risk-split"
+          title={t("risk.title")}
+          counts={countRiskLevels(rows)}
+          link={{ href: "/watchlist?sort=risk", text: t("risk.link") }}
+        />
 
         <section
           className={`${styles.card} ${styles.wide}`}
