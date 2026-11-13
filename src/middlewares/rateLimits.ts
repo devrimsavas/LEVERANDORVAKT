@@ -84,6 +84,29 @@ export const registerLimit = rateLimit({
   handler: tooMany("Too many new accounts from this address. Try again later."),
 });
 
+// Password reset emails for one account, from any address: stops filling
+// someone's inbox
+export const passwordResetPerAccountLimit = rateLimit({
+  ...common,
+  windowMs: 60 * MINUTE,
+  limit: envLimit("PASSWORD_RESETS_PER_ACCOUNT", 5),
+  keyGenerator: (req) => {
+    const email: unknown = req.body?.email;
+    return `reset:${typeof email === "string" ? normalizeEmail(email) : ""}`;
+  },
+  identifier: "password-reset-account",
+  handler: tooMany("Too many password reset emails. Try again later."),
+});
+
+// Password reset emails from one address, for any accounts
+export const passwordResetPerAddressLimit = rateLimit({
+  ...common,
+  windowMs: 60 * MINUTE,
+  limit: envLimit("PASSWORD_RESETS_PER_ADDRESS", 20),
+  identifier: "password-reset-address",
+  handler: tooMany("Too many password reset emails. Try again later."),
+});
+
 // Every request from one address. High enough for the web app, whose pages
 // call the API several times each, and for the bell asking every minute.
 export const apiLimit = rateLimit({

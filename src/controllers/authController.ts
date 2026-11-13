@@ -10,6 +10,14 @@ import {
   dismissOnboarding,
   getOnboarding,
 } from "../services/onboardingService.js";
+import {
+  InvalidResetTokenError,
+  isResetTokenValid,
+  requestPasswordReset,
+  resetPassword,
+} from "../services/passwordResetService.js";
+import { toEmailLanguage } from "../services/email/templates.js";
+import { loginPerAccountLimit } from "../middlewares/rateLimits.js";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD_LENGTH = 8;
@@ -140,5 +148,71 @@ export const dismissMyOnboarding = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Could not close the getting-started list" });
+  }
+};
+
+// POST /api/auth/password-reset
+export const requestPasswordResetHandler = async (
+  req: Request,
+  res: Response,
+) => {
+  // #swagger.tags = ["Auth"]
+  /* #swagger.description = "Sends a password reset link if an account has this email. Always answers 202, so it does not reveal who has an account. language (en or nb) is the language of the email." */
+  const { email, language } = req.body ?? {};
+
+  if (typeof email !== "string" || !EMAIL_PATTERN.test(email.trim())) {
+    res.status(400).json({ error: "A valid email is required" });
+    return;
+  }
+
+  // Answered before the work is done, so the time it takes cannot tell
+  // whether the account exists either
+  res.status(202).json({
+    message: "If an account has this email, a reset link has been sent",
+  });
+  requestPasswordReset(email, toEmailLanguage(language)).catch((error) => {
+    console.error("Password reset email failed:", error);
+  });
+};
+
+// POST /api/auth/password-reset/check
+export const checkPasswordResetToken = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Auth"]
+  /* #swagger.description = "Whether a reset link still works" */
+  const { token } = req.body ?? {};
+  try {
+    res.json({ valid: await isResetTokenValid(token) });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Could not check the link" });
+  }
+};
+
+// POST /api/auth/password-reset/confirm
+export const confirmPasswordReset = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Auth"]
+  /* #swagger.description = "Sets a new password with a reset link. Every existing session of the user ends." */
+  const { token, password } = req.body ?? {};
+
+  if (typeof password !== "string" || password.length < MIN_PASSWORD_LENGTH) {
+    res.status(400).json({
+      error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,
+    });
+    return;
+  }
+
+  try {
+    const email = await resetPassword(token, password);
+    // The user has proved they own the account, so earlier wrong
+    // passwords no longer hold them back
+    await loginPerAccountLimit.resetKey(`account:${email}`);
+    res.status(204).end();
+  } catch (error) {
+    if (error instanceof InvalidResetTokenError) {
+      res.status(400).json({ error: error.message });
+      return;
+    }
+    console.error(error);
+    res.status(500).json({ error: "Could not set the new password" });
   }
 };

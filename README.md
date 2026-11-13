@@ -30,6 +30,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Regional trends** — new companies registered per month by municipality, industry and organization form, each month compared with the same month a year earlier, plus the most common industries in a period; answers are cached because past months hardly change
 - **Versioned database migrations** — schema changes are tracked as numbered migration files and applied automatically on startup
 - **AI assistant** — questions in plain language ("Which of my suppliers have the highest risk?") answered with tool calling over the app's own service functions; read-only, per-user conversations, a daily question limit (with a status endpoint showing what is left), and a choice of model provider (local Ollama, Ollama Cloud or Gemini) in `.env`
+- **Password reset by email** — a link that works once, for an hour, sent with Resend in the user's language; only a hash of the token is stored, and the reset ends every other session
 - **Rate limits and security headers** — failed logins limited per account and per address, new accounts and all API requests per address, with a `429` that says when to try again; security headers with Helmet on the API and a nonce-based content security policy on the web app
 - **Admin overview** — an admin-only status of the background jobs and the data, and a read-only list of users
 - **Interactive API documentation** — Swagger UI at `/api/docs`
@@ -47,21 +48,22 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 
 ### Pages
 
-| Page                   | What it shows                                                                                                                                                                                                                                                                     |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Landing (`/`)          | What the service does, an example of its notifications, the features and the open data sources                                                                                                                                                                                    |
-| Log in, Create account | Forms with a message per field and the new password typed twice; a new account is logged in right away                                                                                                                                                                            |
-| Overview               | A "getting started" checklist (follow a company, write a note, ask the assistant) ticked from your own data and closed for good when you choose; the number of followed companies, the ones that need attention, the risk split across the watchlist and the latest notifications |
-| Watchlist              | Every followed company with its risk level, last change, latest accounts and the start of your note, sorted by name or highest risk                                                                                                                                               |
-| Search                 | Search by name, or go straight to a company by its organization number                                                                                                                                                                                                            |
-| Company                | Follow / stop following, a private note, and tabs for overview, roles, annual accounts (chart and table), risk (level, score, warning signs, what could not be checked) and detected changes                                                                                      |
-| Trends                 | New companies per month against a year earlier, and the ten most common industries, filtered by municipality, main industry, organization form and period                                                                                                                         |
-| Notification bell      | In the header on every app page: unread count, the latest notifications, mark as read; refreshed every minute while the page is visible, with the count in the browser tab                                                                                                        |
-| Notifications          | All notifications with what changed (before → after), unread filter, mark one or all as read, 20 per page                                                                                                                                                                         |
-| Assistant              | Ask in plain language and get answers in Markdown (tables, lists, links), with the tools each answer is based on; example questions, earlier conversations to reopen or delete, and the questions left today                                                                      |
-| About, Contact         | What the project is and how it is built; where to reach the author                                                                                                                                                                                                                |
-| Guide                  | Public: how to get started, what is watched, how to read the risk level, notifications, accounts, trends and the assistant, and scenarios such as a supplier going bankrupt or late accounts                                                                                      |
-| Admin                  | Only for admins (others get "not found"): the background jobs with their state and a button to run each now, the data in numbers, risk levels of all stored companies, and the users with search and paging                                                                       |
+| Page                            | What it shows                                                                                                                                                                                                                                                                     |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing (`/`)                   | What the service does, an example of its notifications, the features and the open data sources                                                                                                                                                                                    |
+| Log in, Create account          | Forms with a message per field and the new password typed twice; a new account is logged in right away                                                                                                                                                                            |
+| Forgot password, Reset password | Ask for a reset link by email (the same answer whether or not the account exists), then choose a new password from the link; an old or used link says so at once                                                                                                                  |
+| Overview                        | A "getting started" checklist (follow a company, write a note, ask the assistant) ticked from your own data and closed for good when you choose; the number of followed companies, the ones that need attention, the risk split across the watchlist and the latest notifications |
+| Watchlist                       | Every followed company with its risk level, last change, latest accounts and the start of your note, sorted by name or highest risk                                                                                                                                               |
+| Search                          | Search by name, or go straight to a company by its organization number                                                                                                                                                                                                            |
+| Company                         | Follow / stop following, a private note, and tabs for overview, roles, annual accounts (chart and table), risk (level, score, warning signs, what could not be checked) and detected changes                                                                                      |
+| Trends                          | New companies per month against a year earlier, and the ten most common industries, filtered by municipality, main industry, organization form and period                                                                                                                         |
+| Notification bell               | In the header on every app page: unread count, the latest notifications, mark as read; refreshed every minute while the page is visible, with the count in the browser tab                                                                                                        |
+| Notifications                   | All notifications with what changed (before → after), unread filter, mark one or all as read, 20 per page                                                                                                                                                                         |
+| Assistant                       | Ask in plain language and get answers in Markdown (tables, lists, links), with the tools each answer is based on; example questions, earlier conversations to reopen or delete, and the questions left today                                                                      |
+| About, Contact                  | What the project is and how it is built; where to reach the author                                                                                                                                                                                                                |
+| Guide                           | Public: how to get started, what is watched, how to read the risk level, notifications, accounts, trends and the assistant, and scenarios such as a supplier going bankrupt or late accounts                                                                                      |
+| Admin                           | Only for admins (others get "not found"): the background jobs with their state and a button to run each now, the data in numbers, risk levels of all stored companies, and the users with search and paging                                                                       |
 
 ### How it is built
 
@@ -85,6 +87,7 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 | Migrations     | Umzug                                                                                                                                                                                                      |
 | Authentication | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs`                                                                                                                                         |
 | Security       | `helmet` (security headers), `express-rate-limit` (rate limits)                                                                                                                                            |
+| Email          | Resend's HTTP API, behind one interface (or the console in development)                                                                                                                                    |
 | AI             | Ollama (`ollama` client, local or Ollama Cloud) or the Gemini API, behind one provider interface                                                                                                           |
 | API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                                                                                                                                             |
 | Testing        | Vitest + Supertest (API), Playwright (web app, end to end), GitHub Actions CI                                                                                                                              |
@@ -123,6 +126,8 @@ Services do not know about HTTP, so the same functions can be reused by the sche
 - **Own data model instead of the raw registry format.** `BrregEnhet` describes the API's Norwegian, nested format; `Company` is the app's own flat, English shape; `toCompany` converts between them. If the registry changes a field, only the mapper changes.
 - **Two user identifiers.** `id` is an internal auto-increment primary key used for relations between tables. `public_id` is a UUID used in the API and in tokens, so user numbers cannot be guessed and the number of users is not revealed.
 - **Rate limits that cannot be dodged by changing address.** Wrong passwords are counted per account from any address (so guessing one user's password stops even with many IP addresses) and per address for any account (so a list of leaked passwords cannot be tried across many accounts); successful logins never count. The client's address comes from `X-Forwarded-For` only when the request arrives from a trusted proxy (`TRUST_PROXY`: this machine and private networks by default, i.e. the web app or Docker), so a caller on the internet cannot pretend to be someone else. The web app sends the visitor's address on, since every request to the API comes from its server.
+- **Password reset that reveals nothing.** The request always answers `202` with the same text, and before the work is done, so neither the answer nor the time it takes tells whether an account has the email. The token in the link is 32 random bytes; only its SHA-256 hash is stored, so a copy of the database cannot reset passwords. A new link replaces the old one, a link works once for an hour, and the reset ends every earlier session: `requireAuth` refuses tokens issued before `password_changed_at`. Tokens carry the time they were made to the millisecond (`iatMs`), since the standard `iat` has whole seconds and a session started in the same second as the reset would otherwise survive it. A successful reset also lifts the lock from earlier wrong passwords.
+- **Email behind one interface.** `EMAIL_PROVIDER=log` (the default) writes emails to the console, so development needs no account; `resend` sends them with Resend's HTTP API. The tests use a fake Resend, and the end-to-end tests read the emails from it to follow the reset link.
 - **User roles are never taken from client input.** New users are always `user`; the admin account is created once from environment variables.
 - **Same error for unknown email and wrong password**, so the login endpoint cannot be used to find out which emails are registered.
 - **Migrations instead of `sequelize.sync()`.** Every schema change is an explicit, reviewable file that runs the same way locally and in production, without guessing or losing data.
@@ -183,13 +188,16 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 
 ### Authentication
 
-| Method | Endpoint                          | Description                                                                                                 |
-| ------ | --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| POST   | `/api/auth/register`              | Create an account (`firstName`, `lastName`, `email`, `password`)                                            |
-| POST   | `/api/auth/login`                 | Log in and receive a JWT together with the user's public data                                               |
-| GET    | `/api/auth/me`                    | Get the logged-in user's profile (requires token)                                                           |
-| GET    | `/api/auth/me/onboarding`         | The getting-started steps done, read from the user's data, and whether the list was closed (requires token) |
-| POST   | `/api/auth/me/onboarding/dismiss` | Close the getting-started list for good (requires token)                                                    |
+| Method | Endpoint                           | Description                                                                                                                      |
+| ------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/api/auth/register`               | Create an account (`firstName`, `lastName`, `email`, `password`)                                                                 |
+| POST   | `/api/auth/login`                  | Log in and receive a JWT together with the user's public data                                                                    |
+| POST   | `/api/auth/password-reset`         | Email a reset link if an account has this email (`language`: `en` or `nb`); always `202`, so it never reveals who has an account |
+| POST   | `/api/auth/password-reset/check`   | Whether a reset link still works                                                                                                 |
+| POST   | `/api/auth/password-reset/confirm` | Set a new password with a reset link; ends every earlier session                                                                 |
+| GET    | `/api/auth/me`                     | Get the logged-in user's profile (requires token)                                                                                |
+| GET    | `/api/auth/me/onboarding`          | The getting-started steps done, read from the user's data, and whether the list was closed (requires token)                      |
+| POST   | `/api/auth/me/onboarding/dismiss`  | Close the getting-started list for good (requires token)                                                                         |
 
 ### Watchlist
 
@@ -260,18 +268,19 @@ List endpoints return `{ items, page, pageSize, totalItems, totalPages }` (defau
 
 ### `users`
 
-| Column                     | Type         | Notes                                                        |
-| -------------------------- | ------------ | ------------------------------------------------------------ |
-| `id`                       | integer      | Internal primary key, never exposed                          |
-| `public_id`                | UUID         | Public user number, used in the API and in tokens            |
-| `first_name`               | varchar(100) | Required                                                     |
-| `last_name`                | varchar(100) | Required                                                     |
-| `email`                    | varchar(255) | Required, unique, stored in lower case                       |
-| `password_hash`            | varchar      | bcrypt hash, never returned by the API                       |
-| `role`                     | varchar(20)  | `user` (default) or `admin`                                  |
-| `last_login_at`            | timestamp    | Updated on every successful login                            |
-| `onboarding_dismissed_at`  | timestamp    | When the getting-started list was closed; `null` while shown |
-| `created_at`, `updated_at` | timestamp    | Managed automatically                                        |
+| Column                     | Type         | Notes                                                                 |
+| -------------------------- | ------------ | --------------------------------------------------------------------- |
+| `id`                       | integer      | Internal primary key, never exposed                                   |
+| `public_id`                | UUID         | Public user number, used in the API and in tokens                     |
+| `first_name`               | varchar(100) | Required                                                              |
+| `last_name`                | varchar(100) | Required                                                              |
+| `email`                    | varchar(255) | Required, unique, stored in lower case                                |
+| `password_hash`            | varchar      | bcrypt hash, never returned by the API                                |
+| `role`                     | varchar(20)  | `user` (default) or `admin`                                           |
+| `last_login_at`            | timestamp    | Updated on every successful login                                     |
+| `password_changed_at`      | timestamp    | When the password was last reset; tokens issued before it are refused |
+| `onboarding_dismissed_at`  | timestamp    | When the getting-started list was closed; `null` while shown          |
+| `created_at`, `updated_at` | timestamp    | Managed automatically                                                 |
 
 ### Other tables
 
@@ -281,6 +290,7 @@ List endpoints return `{ items, page, pageSize, totalItems, totalPages }` (defau
 | `annual_accounts`                               | Every set of annual accounts seen: period, type (company / group), currency, audit and liquidation flags, key figures (JSONB); one row per company, type and period |
 | `assistant_conversations`, `assistant_messages` | The user's conversations with the assistant: questions, answers and the tools each answer used (tool calls themselves are not stored)                               |
 | `assistant_usage`                               | One row per question, for the daily limit; holds no content and is kept when a conversation is deleted                                                              |
+| `password_reset_tokens`                         | Reset links sent: the SHA-256 hash of the token (never the token), the user and when it expires; a new link replaces the old one and the row is deleted when used   |
 | `trend_cache`                                   | Answers from Brreg and Kartverket that change slowly: past months for 30 days, the current month for 6 hours, the municipality list for a day                       |
 | `watchlist_entries`                             | Which user follows which company, with the user's note (unique per user and company)                                                                                |
 | `company_changes`                               | Every detected change: field, old and new value, severity, and the feed event that revealed it                                                                      |
@@ -311,6 +321,10 @@ LEVERANDORVAKT/
 │   ├── services/
 │   │   ├── brregService.ts       # Calls the Brønnøysund APIs: companies, roles, annual accounts and both update feeds
 │   │   ├── authService.ts        # Registration, login, JWT
+│   │   ├── passwordResetService.ts # Reset links: hashed tokens, the email, the new password
+│   │   ├── email/
+│   │   │   ├── emailSender.ts    # Sends email with Resend, or writes it to the console (EMAIL_PROVIDER)
+│   │   │   └── templates.ts      # The emails' text and HTML, in English and Norwegian
 │   │   ├── userService.ts        # Maps the public user id in tokens to the internal id
 │   │   ├── onboardingService.ts  # Getting-started steps, read from the user's data
 │   │   ├── watchlistService.ts   # Following companies, notes, change history
@@ -457,6 +471,15 @@ LOGIN_FAILURES_PER_ADDRESS=30
 REGISTRATIONS_PER_ADDRESS=10
 REQUESTS_PER_ADDRESS=1500
 TRUST_PROXY=loopback, linklocal, uniquelocal
+PASSWORD_RESETS_PER_ACCOUNT=5
+PASSWORD_RESETS_PER_ADDRESS=20
+
+# Email: "log" writes emails to the console; "resend" sends them with Resend
+EMAIL_PROVIDER=log
+RESEND_API_KEY=
+EMAIL_FROM=Leverandørvakt <onboarding@resend.dev>
+# Where the web app runs, for the links in emails
+WEB_APP_URL=http://localhost:3001
 
 # AI assistant: "ollama" or "gemini"; leave empty to turn it off
 AI_PROVIDER=ollama
@@ -470,6 +493,8 @@ GEMINI_MODEL=
 ```
 
 The admin account is created once on the first startup from the `ADMIN_*` values; an existing user is never promoted to admin. Setting `CHANGE_DETECTION_INTERVAL_MINUTES` or `ACCOUNTS_CHECK_INTERVAL_HOURS` to `0` turns that job off. The rate limits are kept in the API's memory, so they count per API process and start again on a restart.
+
+With `EMAIL_PROVIDER=log` the emails, such as the password reset link, are printed in the API's console. To send real email, create a free account at [Resend](https://resend.com), create an API key and set `EMAIL_PROVIDER=resend` and `RESEND_API_KEY`. Resend's own sender `onboarding@resend.dev` only delivers to the address the Resend account was made with; to send to anyone, verify your own domain in Resend and use an address on it in `EMAIL_FROM`.
 
 For the assistant with a local model, install [Ollama](https://ollama.com), pull a model that supports tool calling (e.g. `ollama pull qwen3`) and set `OLLAMA_MODEL` to its name. For Ollama Cloud, set `OLLAMA_HOST=https://ollama.com` and an `OLLAMA_API_KEY`. For Gemini, set `AI_PROVIDER=gemini` with a key from Google AI Studio.
 
@@ -555,6 +580,7 @@ The API's tests run with **Vitest** and **Supertest** against a real PostgreSQL 
 | `tests/notifications.test.ts`   | Notifications created end to end from detected changes, unread filter, pagination, unread count, marking one or all as read (first read time is kept), users cannot read or change each other's notifications                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `tests/admin.test.ts`           | Admin account created once from environment variables (never by promoting an existing user), admin-only change detection endpoint (`401` / `403` / `200`), `409` when a run is already in progress, `502` when Brreg cannot be reached; admin-only accounts check endpoint (`403` / `200` / `409`); system status (change detection position, accounts checks due but never struck-off companies, jobs running now, followed companies counted once, risk levels, unread notifications, assistant questions in the last 24 hours, provider or `null`); user list newest first with followed counts, paging, search by email, first and last name (`%` matched as plain text), no password hashes or internal ids |
 | `tests/security.test.ts`        | Security headers on answers and errors (no `X-Powered-By`); failed logins per account from any address, however the email is written, without stopping other accounts, successful logins never counted; failed logins and new accounts per address with other addresses going on; all API requests per address; `429` with `Retry-After` and `retryAfterSeconds`; `X-Forwarded-For` trusted only from this machine and private networks                                                                                                                                                                                                                                                                          |
+| `tests/passwordReset.test.ts`   | The reset email (address, sender, API key, English and Norwegian, the name escaped in HTML), the same `202` and no email for an unknown address, only a hash stored, a new link replacing the old one, a failed send logged without changing the answer, `EMAIL_PROVIDER=log`, the per-account limit; checking links; setting the password once, expired and made-up links, a short password, other users untouched, earlier sessions ended, a login lock lifted                                                                                                                                                                                                                                                 |
 
 ### Running the tests
 
@@ -584,18 +610,19 @@ Migrations are applied to the test database automatically.
 
 The Playwright tests in `web/e2e` run in Chromium against the real web app and API, on a desktop screen and, for `phone.spec.ts`, as a Pixel 7. Every test also fails if the browser blocks anything under the content security policy. See [Run the end-to-end tests](#8-run-the-end-to-end-tests).
 
-| Test file               | What it covers                                                                                                                                                                                         |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `public.spec.ts`        | Landing page and header, switching language and color scheme (kept after reload), guide, about and contact, app pages sending visitors to log in                                                       |
-| `auth.spec.ts`          | Creating an account, a message per wrong field, a wrong password, going back to the page asked for after logging in, logging out                                                                       |
-| `companies.spec.ts`     | Search by name and by organization number, roles, accounts and risk tabs, following, a private note in the watchlist, stopping following                                                               |
-| `notifications.spec.ts` | A followed supplier going bankrupt in the fake register: change detection, the bell, a critical notification, marking all as read                                                                      |
-| `assistant.spec.ts`     | A question answered with a tool call, a Markdown table, "based on", HTML shown as text and never run, unsafe links and images dropped, the conversation kept, the daily limit, deleting a conversation |
-| `admin.spec.ts`         | Normal users neither see nor reach the admin page; the admin runs a job and finds a user                                                                                                               |
-| `onboarding.spec.ts`    | The getting-started list following the user's progress, closed for good                                                                                                                                |
-| `trends.spec.ts`        | The chart and filtering by municipality                                                                                                                                                                |
-| `phone.spec.ts`         | No sideways scrolling on public and app pages, the menu on a phone                                                                                                                                     |
-| `security.spec.ts`      | Security headers and a new nonce on every page, an injected inline script not running, the login form saying how long to wait after too many wrong passwords                                           |
+| Test file                | What it covers                                                                                                                                                                                                                         |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public.spec.ts`         | Landing page and header, switching language and color scheme (kept after reload), guide, about and contact, app pages sending visitors to log in                                                                                       |
+| `auth.spec.ts`           | Creating an account, a message per wrong field, a wrong password, going back to the page asked for after logging in, logging out                                                                                                       |
+| `companies.spec.ts`      | Search by name and by organization number, roles, accounts and risk tabs, following, a private note in the watchlist, stopping following                                                                                               |
+| `notifications.spec.ts`  | A followed supplier going bankrupt in the fake register: change detection, the bell, a critical notification, marking all as read                                                                                                      |
+| `assistant.spec.ts`      | A question answered with a tool call, a Markdown table, "based on", HTML shown as text and never run, unsafe links and images dropped, the conversation kept, the daily limit, deleting a conversation                                 |
+| `admin.spec.ts`          | Normal users neither see nor reach the admin page; the admin runs a job and finds a user                                                                                                                                               |
+| `onboarding.spec.ts`     | The getting-started list following the user's progress, closed for good                                                                                                                                                                |
+| `trends.spec.ts`         | The chart and filtering by municipality                                                                                                                                                                                                |
+| `phone.spec.ts`          | No sideways scrolling on public and app pages, the menu on a phone                                                                                                                                                                     |
+| `security.spec.ts`       | Security headers and a new nonce on every page, an injected inline script not running, the login form saying how long to wait after too many wrong passwords                                                                           |
+| `password-reset.spec.ts` | Forgot password → the email from the fake Resend → the link → a new password → logging in with it; the link working once, the session on another device ended, the form's checks, the same answer for an unknown email, a made-up link |
 
 ### Continuous integration
 
@@ -676,7 +703,8 @@ GitHub Actions runs three jobs on every push: the API's type check and all its t
 ### Production readiness
 
 - [x] Limits on login and registration attempts, security headers
-- [ ] Password reset, deleting an account and downloading your data (GDPR)
+- [x] Password reset by email
+- [ ] Deleting an account and downloading your data (GDPR)
 - [ ] Email notifications: critical changes at once, the rest as a daily digest
 - [ ] Logging and error alerts
 

@@ -17,6 +17,8 @@ export default defineConfig({
       LOGIN_FAILURES_PER_ACCOUNT: "100000",
       LOGIN_FAILURES_PER_ADDRESS: "100000",
       REQUESTS_PER_ADDRESS: "1000000",
+      PASSWORD_RESETS_PER_ACCOUNT: "100000",
+      PASSWORD_RESETS_PER_ADDRESS: "100000",
     },
     globalSetup: ["tests/helpers/globalSetup.ts"],
     setupFiles: ["tests/helpers/setup.ts"],

@@ -1,8 +1,8 @@
 // Loaded before the API when the web app's end-to-end tests run
 // (npm run e2e:api, started by web/playwright.config.ts). It:
 //   1. creates a fresh, empty database for the run,
-//   2. replaces fetch, so Brreg, Kartverket, SSB and the language model are
-//      answered by fakes with example companies and never by the network,
+//   2. replaces fetch, so Brreg, Kartverket, SSB, the language model and
+//      Resend (email) are answered by fakes and never by the network,
 //   3. opens a small control server the tests use to make things happen in
 //      the fake register, such as a company going bankrupt.
 // Never used in production: the normal start command does not load it.
@@ -15,6 +15,7 @@ import {
   brregRoller,
   createFakeBrreg,
 } from "../helpers/fakeRegister.js";
+import { createFakeResend } from "../helpers/fakeResend.js";
 import type { BrregRegnskap } from "../../src/types/regnskap.js";
 
 // ---- 1. A fresh database ----
@@ -172,15 +173,28 @@ fake.extraHandlers.push(async (url, init) => {
   });
 });
 
+// Emails go to a fake Resend; the tests read them from the control server
+const resend = createFakeResend();
+fake.extraHandlers.push(resend.handler);
+
 globalThis.fetch = fakeFetch as typeof fetch;
 
 // ---- 3. Control server for the tests ----
 
 // POST /companies/{orgNumber}/bankrupt marks the company as bankrupt in
-// the fake register and puts it in the update feed, as Brreg would
+// the fake register and puts it in the update feed, as Brreg would.
+// GET /emails?to={address} gives the emails sent to that address.
 const controlPort = Number(process.env.E2E_CONTROL_PORT ?? 3199);
 http
   .createServer((request, response) => {
+    const url = new URL(request.url ?? "/", "http://control");
+    if (request.method === "GET" && url.pathname === "/emails") {
+      const to = url.searchParams.get("to");
+      const emails = resend.sent.filter((email) => email.to.includes(to ?? ""));
+      response.writeHead(200, { "Content-Type": "application/json" });
+      response.end(JSON.stringify(emails));
+      return;
+    }
     const match = request.url?.match(/^\/companies\/(\d{9})\/bankrupt$/);
     const company = match ? fake.companies.get(match[1]!) : undefined;
     if (request.method !== "POST" || company?.kind !== "active") {

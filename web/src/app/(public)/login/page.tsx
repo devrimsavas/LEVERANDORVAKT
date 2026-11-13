@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const t = await getTranslations("auth");
-  const { next, expired } = await searchParams;
+  const { next, expired, reset } = await searchParams;
   // Only a path on this site is passed on to the form
   const nextPath = typeof next === "string" ? safeNextPath(next) : undefined;
 
@@ -24,12 +24,22 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
           {t("login.title")}
         </Heading>
         <Paragraph>{t("login.lead")}</Paragraph>
+        {reset && (
+          <Alert data-color="success" style={{ marginTop: "var(--ds-size-4)" }}>
+            {t("login.passwordChanged")}
+          </Alert>
+        )}
         {expired && (
           <Alert data-color="info" style={{ marginTop: "var(--ds-size-4)" }}>
             {t("login.expired")}
           </Alert>
         )}
         <LoginForm next={nextPath} />
+        <Paragraph className={styles.forgot}>
+          <Link asChild>
+            <NextLink href="/forgot-password">{t("login.forgot")}</NextLink>
+          </Link>
+        </Paragraph>
         <Paragraph className={styles.switch}>
           {t("login.noAccount")}{" "}
           <Link asChild>

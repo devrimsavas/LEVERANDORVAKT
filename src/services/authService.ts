@@ -108,9 +108,12 @@ export async function loginUser(
     >,
   };
 
-  // "sub" holds the public user number, not the internal database id
+  // "sub" holds the public user number, not the internal database id.
+  // "iatMs" is when the token was made, to the millisecond (the standard
+  // "iat" has whole seconds), so a password reset can end every session
+  // started before it, even one from the same second.
   const token = jwt.sign(
-    { sub: user.publicId, role: user.role },
+    { sub: user.publicId, role: user.role, iatMs: Date.now() },
     getJwtSecret(),
     options,
   );

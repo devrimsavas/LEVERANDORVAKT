@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { apiFetch } from "./api";
 import { endSession, startSession } from "./session";
 import { safeNextPath } from "./redirect";
+import { retryMinutes, text } from "./formData";
 import {
   EMAIL_PATTERN,
   MAX_NAME_LENGTH,
@@ -24,6 +25,8 @@ export type AuthErrorKey =
   | "invalidCredentials"
   | "tooManyLogins"
   | "tooManyAccounts"
+  | "tooManyResets"
+  | "linkInvalid"
   | "unavailable";
 
 export interface AuthFormState {
@@ -36,18 +39,10 @@ export interface AuthFormState {
   >;
   // Typed values are sent back so the form keeps them; never the password
   values?: { firstName?: string; lastName?: string; email?: string };
-  // With tooManyLogins and tooManyAccounts: when to try again
+  // With tooManyLogins, tooManyAccounts and tooManyResets: when to try again
   retryMinutes?: number;
-}
-
-// Whole minutes, never 0, for "try again in X minutes"
-function minutes(seconds: number | undefined): number {
-  return Math.max(1, Math.ceil((seconds ?? 60) / 60));
-}
-
-function text(formData: FormData, name: string): string {
-  const value = formData.get(name);
-  return typeof value === "string" ? value : "";
+  // The password reset form: the email has been handled
+  sent?: boolean;
 }
 
 async function logIn(email: string, password: string) {
@@ -75,7 +70,7 @@ export async function loginAction(
   if (!result.ok && result.status === 429) {
     return {
       formError: "tooManyLogins",
-      retryMinutes: minutes(result.retryAfterSeconds),
+      retryMinutes: retryMinutes(result.retryAfterSeconds),
       values,
     };
   }
@@ -132,7 +127,7 @@ export async function registerAction(
     if (created.status === 429) {
       return {
         formError: "tooManyAccounts",
-        retryMinutes: minutes(created.retryAfterSeconds),
+        retryMinutes: retryMinutes(created.retryAfterSeconds),
         values,
       };
     }

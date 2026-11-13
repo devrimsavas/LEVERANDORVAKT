@@ -27,6 +27,11 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  // The web app is a project of its own inside the repository; without
+  // this, Next.js sees the API's package-lock.json in the folder above and
+  // takes that as the root
+  turbopack: { root: __dirname },
+  outputFileTracingRoot: __dirname,
   // Do not tell that the site is built with Next.js
   poweredByHeader: false,
   async headers() {

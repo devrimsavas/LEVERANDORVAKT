@@ -7,6 +7,8 @@ import {
 } from "../src/services/trendsService.js";
 import { useFakeBrreg } from "./helpers/fakeBrreg.js";
 
+
+
 const brreg = useFakeBrreg();
 
 // Every test runs on the same day, so "the current month" never moves

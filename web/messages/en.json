@@ -146,7 +146,9 @@
       "submit": "Log in",
       "noAccount": "No account yet?",
       "toRegister": "Create an account",
-      "expired": "Your session has ended. Log in again to continue."
+      "expired": "Your session has ended. Log in again to continue.",
+      "forgot": "Forgot your password?",
+      "passwordChanged": "Your password has been changed. Log in with the new one."
     },
     "register": {
       "title": "Create an account",
@@ -167,9 +169,25 @@
       "unavailable": "The service is not available right now. Try again in a little while.",
       "passwordMismatch": "The passwords are not the same",
       "tooManyLogins": "Too many failed attempts. Wait {minutes, plural, one {# minute} other {# minutes}} and try again.",
-      "tooManyAccounts": "Too many new accounts from your network. Wait {minutes, plural, one {# minute} other {# minutes}} and try again."
+      "tooManyAccounts": "Too many new accounts from your network. Wait {minutes, plural, one {# minute} other {# minutes}} and try again.",
+      "tooManyResets": "Too many reset emails asked for. Wait {minutes, plural, one {# minute} other {# minutes}} and try again.",
+      "linkInvalid": "This link no longer works. It may have been used already, or it is more than 60 minutes old."
     },
-    "confirmPassword": "Repeat password"
+    "confirmPassword": "Repeat password",
+    "forgot": {
+      "title": "Forgot your password?",
+      "lead": "Enter the email address of your account, and we will send you a link to choose a new password.",
+      "submit": "Send link",
+      "sent": "If an account has the address {email}, a link to choose a new password is on its way. It works for 60 minutes. Check your spam folder if it does not arrive.",
+      "toLogin": "Back to log in"
+    },
+    "reset": {
+      "title": "Choose a new password",
+      "lead": "Your other sessions end when the password is changed.",
+      "password": "New password",
+      "submit": "Save the new password",
+      "newLink": "Ask for a new link"
+    }
   },
   "overview": {
     "welcome": "Welcome, {name}",

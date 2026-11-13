@@ -40,6 +40,11 @@ export class User extends Model {
   @Column({ type: DataType.DATE, allowNull: true })
   declare lastLoginAt: Date | null;
 
+  // When the password was last changed (reset); sessions started before
+  // it are no longer accepted
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare passwordChangedAt: Date | null;
+
   // When the "getting started" list was closed; null while it is shown
   @Column({ type: DataType.DATE, allowNull: true })
   declare onboardingDismissedAt: Date | null;

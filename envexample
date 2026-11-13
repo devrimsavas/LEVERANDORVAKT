@@ -24,6 +24,19 @@ REQUESTS_PER_ADDRESS=1500
 # trusts this machine and private networks (the web app, Docker); a hosting
 # platform may need a number of hops instead, e.g. 1.
 TRUST_PROXY=loopback, linklocal, uniquelocal
+# Password reset emails per account and per address in an hour
+PASSWORD_RESETS_PER_ACCOUNT=5
+PASSWORD_RESETS_PER_ADDRESS=20
+
+# Email. EMAIL_PROVIDER is "log" (write emails to the console, the default) or
+# "resend" (send them with https://resend.com, needs RESEND_API_KEY).
+# onboarding@resend.dev only delivers to the address the Resend account was made
+# with; verify your own domain in Resend to send to anyone.
+EMAIL_PROVIDER=log
+RESEND_API_KEY=
+EMAIL_FROM=Leverandørvakt <onboarding@resend.dev>
+# Where the web app runs, for the links in emails
+WEB_APP_URL=http://localhost:3001
 
 # AI assistant. AI_PROVIDER is "ollama" or "gemini"; leave it empty to turn the assistant off.
 AI_PROVIDER=ollama

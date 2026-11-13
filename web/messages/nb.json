@@ -146,7 +146,9 @@
       "submit": "Logg inn",
       "noAccount": "Har du ikke konto?",
       "toRegister": "Opprett konto",
-      "expired": "Økten din er avsluttet. Logg inn igjen for å fortsette."
+      "expired": "Økten din er avsluttet. Logg inn igjen for å fortsette.",
+      "forgot": "Glemt passordet?",
+      "passwordChanged": "Passordet ditt er endret. Logg inn med det nye."
     },
     "register": {
       "title": "Opprett konto",
@@ -167,9 +169,25 @@
       "unavailable": "Tjenesten er ikke tilgjengelig akkurat nå. Prøv igjen om litt.",
       "passwordMismatch": "Passordene er ikke like",
       "tooManyLogins": "For mange mislykkede forsøk. Vent {minutes, plural, one {# minutt} other {# minutter}} og prøv igjen.",
-      "tooManyAccounts": "For mange nye kontoer fra nettverket ditt. Vent {minutes, plural, one {# minutt} other {# minutter}} og prøv igjen."
+      "tooManyAccounts": "For mange nye kontoer fra nettverket ditt. Vent {minutes, plural, one {# minutt} other {# minutter}} og prøv igjen.",
+      "tooManyResets": "Du har bedt om for mange e-poster. Vent {minutes, plural, one {# minutt} other {# minutter}} og prøv igjen.",
+      "linkInvalid": "Denne lenken virker ikke lenger. Den kan være brukt allerede, eller den er over 60 minutter gammel."
     },
-    "confirmPassword": "Gjenta passordet"
+    "confirmPassword": "Gjenta passordet",
+    "forgot": {
+      "title": "Glemt passordet?",
+      "lead": "Skriv inn e-postadressen til kontoen din, så sender vi deg en lenke for å velge et nytt passord.",
+      "submit": "Send lenke",
+      "sent": "Hvis en konto har adressen {email}, er en lenke for å velge nytt passord på vei. Den virker i 60 minutter. Sjekk søppelpostmappen hvis den ikke kommer.",
+      "toLogin": "Tilbake til innlogging"
+    },
+    "reset": {
+      "title": "Velg nytt passord",
+      "lead": "De andre øktene dine avsluttes når passordet endres.",
+      "password": "Nytt passord",
+      "submit": "Lagre det nye passordet",
+      "newLink": "Be om en ny lenke"
+    }
   },
   "overview": {
     "welcome": "Velkommen, {name}",

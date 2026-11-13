@@ -32,6 +32,11 @@
   text-align: center;
 }
 
+.forgot {
+  margin-top: var(--ds-size-4);
+  text-align: center;
+}
+
 @media (max-width: 36rem) {
   .page {
     padding-block: var(--ds-size-8);
