@@ -23,7 +23,9 @@ export function LoginForm({ next }: { next: string | undefined }) {
     <form action={action} className={styles.form} noValidate>
       {state.formError && (
         <Alert data-color="danger" role="alert">
-          {t(`errors.${state.formError}`)}
+          {t(`errors.${state.formError}`, {
+            minutes: state.retryMinutes ?? 1,
+          })}
         </Alert>
       )}
       {next && <input type="hidden" name="next" value={next} />}

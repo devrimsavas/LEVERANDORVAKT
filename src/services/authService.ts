@@ -33,7 +33,7 @@ export interface LoginResult {
   user: PublicUser;
 }
 
-function normalizeEmail(email: string): string {
+export function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 

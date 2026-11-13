@@ -13,6 +13,18 @@ ADMIN_LAST_NAME=User
 CHANGE_DETECTION_INTERVAL_MINUTES=10
 ACCOUNTS_CHECK_INTERVAL_HOURS=24
 
+# Rate limits (the defaults are shown). Failed logins are counted per account
+# and per address in 15 minutes, new accounts per address in an hour, and all
+# API requests per address in 15 minutes.
+LOGIN_FAILURES_PER_ACCOUNT=10
+LOGIN_FAILURES_PER_ADDRESS=30
+REGISTRATIONS_PER_ADDRESS=10
+REQUESTS_PER_ADDRESS=1500
+# Proxies whose X-Forwarded-For is trusted for the client's address. The default
+# trusts this machine and private networks (the web app, Docker); a hosting
+# platform may need a number of hops instead, e.g. 1.
+TRUST_PROXY=loopback, linklocal, uniquelocal
+
 # AI assistant. AI_PROVIDER is "ollama" or "gemini"; leave it empty to turn the assistant off.
 AI_PROVIDER=ollama
 AI_TIMEOUT_SECONDS=60

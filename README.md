@@ -30,6 +30,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Regional trends** — new companies registered per month by municipality, industry and organization form, each month compared with the same month a year earlier, plus the most common industries in a period; answers are cached because past months hardly change
 - **Versioned database migrations** — schema changes are tracked as numbered migration files and applied automatically on startup
 - **AI assistant** — questions in plain language ("Which of my suppliers have the highest risk?") answered with tool calling over the app's own service functions; read-only, per-user conversations, a daily question limit (with a status endpoint showing what is left), and a choice of model provider (local Ollama, Ollama Cloud or Gemini) in `.env`
+- **Rate limits and security headers** — failed logins limited per account and per address, new accounts and all API requests per address, with a `429` that says when to try again; security headers with Helmet on the API and a nonce-based content security policy on the web app
 - **Admin overview** — an admin-only status of the background jobs and the data, and a read-only list of users
 - **Interactive API documentation** — Swagger UI at `/api/docs`
 - **Automated tests and CI** — Vitest + Supertest against a real PostgreSQL database for the API, Playwright end-to-end tests in a real browser for the web app, run by GitHub Actions on every push
@@ -65,6 +66,7 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 ### How it is built
 
 - **Model answers are shown safely.** The assistant's Markdown is rendered with `react-markdown`, which never runs HTML from the text: a `<script>` in an answer is shown as plain text, only `http(s)` links are kept, and images are dropped.
+- **A content security policy with a nonce.** `src/proxy.ts` makes a random nonce for every page and sends a policy that only lets scripts carrying it run; Next.js puts it on its own scripts. HTML slipped into a page, such as an inline event handler, does not run. The other security headers (no framing, no MIME sniffing, HSTS and so on) are set in `next.config.ts`. Every end-to-end test fails if the browser blocks anything under the policy, so it is never stricter than the app needs.
 - **The token never reaches the browser (BFF).** The login form posts to the Next server, which logs in against the API and keeps the JWT in an `httpOnly`, `SameSite=Lax` cookie with the token's lifetime. Pages and server actions call the API with it as a Bearer token, so page scripts cannot read it and the API needs no CORS. A proxy (`src/proxy.ts`) sends visitors without a session to the login page and back to the page they asked for; only paths on the site are accepted as the target.
 - **Designsystemet.** Components and design tokens from [Designsystemet](https://www.designsystemet.no), the Norwegian public sector's design system, with our own theme generated from `designsystemet.config.json`, Inter as the font and Aksel icons. Light and dark mode follow the operating system until the user chooses; the choice is kept in a cookie, so the page is rendered in the right colors from the start.
 - **English and Norwegian.** Texts are in `web/messages/en.json` and `nb.json` (next-intl), chosen by a cookie or the browser's language; a missing or misspelled key is a type error. The API sends risk signals, limitations and changes as codes with `params` (years, amounts, dates), and the web app writes the sentences itself, with amounts and dates in the reader's format.
@@ -82,6 +84,7 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 | ORM            | Sequelize with `sequelize-typescript` (decorator models)                                                                                                                                                   |
 | Migrations     | Umzug                                                                                                                                                                                                      |
 | Authentication | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs`                                                                                                                                         |
+| Security       | `helmet` (security headers), `express-rate-limit` (rate limits)                                                                                                                                            |
 | AI             | Ollama (`ollama` client, local or Ollama Cloud) or the Gemini API, behind one provider interface                                                                                                           |
 | API docs       | Swagger / OpenAPI 3 (`swagger-autogen` + `swagger-ui-express`)                                                                                                                                             |
 | Testing        | Vitest + Supertest (API), Playwright (web app, end to end), GitHub Actions CI                                                                                                                              |
@@ -119,6 +122,7 @@ Services do not know about HTTP, so the same functions can be reused by the sche
 
 - **Own data model instead of the raw registry format.** `BrregEnhet` describes the API's Norwegian, nested format; `Company` is the app's own flat, English shape; `toCompany` converts between them. If the registry changes a field, only the mapper changes.
 - **Two user identifiers.** `id` is an internal auto-increment primary key used for relations between tables. `public_id` is a UUID used in the API and in tokens, so user numbers cannot be guessed and the number of users is not revealed.
+- **Rate limits that cannot be dodged by changing address.** Wrong passwords are counted per account from any address (so guessing one user's password stops even with many IP addresses) and per address for any account (so a list of leaked passwords cannot be tried across many accounts); successful logins never count. The client's address comes from `X-Forwarded-For` only when the request arrives from a trusted proxy (`TRUST_PROXY`: this machine and private networks by default, i.e. the web app or Docker), so a caller on the internet cannot pretend to be someone else. The web app sends the visitor's address on, since every request to the API comes from its server.
 - **User roles are never taken from client input.** New users are always `user`; the admin account is created once from environment variables.
 - **Same error for unknown email and wrong password**, so the login endpoint cannot be used to find out which emails are registered.
 - **Migrations instead of `sequelize.sync()`.** Every schema change is an explicit, reviewable file that runs the same way locally and in production, without guessing or losing data.
@@ -447,6 +451,13 @@ ADMIN_LAST_NAME=User
 CHANGE_DETECTION_INTERVAL_MINUTES=10
 ACCOUNTS_CHECK_INTERVAL_HOURS=24
 
+# Rate limits (defaults shown) and the proxies trusted for client addresses
+LOGIN_FAILURES_PER_ACCOUNT=10
+LOGIN_FAILURES_PER_ADDRESS=30
+REGISTRATIONS_PER_ADDRESS=10
+REQUESTS_PER_ADDRESS=1500
+TRUST_PROXY=loopback, linklocal, uniquelocal
+
 # AI assistant: "ollama" or "gemini"; leave empty to turn it off
 AI_PROVIDER=ollama
 AI_TIMEOUT_SECONDS=60
@@ -458,7 +469,7 @@ GEMINI_API_KEY=
 GEMINI_MODEL=
 ```
 
-The admin account is created once on the first startup from the `ADMIN_*` values; an existing user is never promoted to admin. Setting `CHANGE_DETECTION_INTERVAL_MINUTES` or `ACCOUNTS_CHECK_INTERVAL_HOURS` to `0` turns that job off.
+The admin account is created once on the first startup from the `ADMIN_*` values; an existing user is never promoted to admin. Setting `CHANGE_DETECTION_INTERVAL_MINUTES` or `ACCOUNTS_CHECK_INTERVAL_HOURS` to `0` turns that job off. The rate limits are kept in the API's memory, so they count per API process and start again on a restart.
 
 For the assistant with a local model, install [Ollama](https://ollama.com), pull a model that supports tool calling (e.g. `ollama pull qwen3`) and set `OLLAMA_MODEL` to its name. For Ollama Cloud, set `OLLAMA_HOST=https://ollama.com` and an `OLLAMA_API_KEY`. For Gemini, set `AI_PROVIDER=gemini` with a key from Google AI Studio.
 
@@ -543,6 +554,7 @@ The API's tests run with **Vitest** and **Supertest** against a real PostgreSQL 
 | `tests/trends.test.ts`          | Parameter rules and defaults, monthly counts against the same month a year earlier (the current month against the same days), filters (also by the start of an industry code), the current month marked as not over, answers served from the cache, the current month fetched again after 6 hours, industry breakdown by main industry with SSB names or by full code, companies without an industry counted apart, top ten and the rest, paging through large months, refusing periods that are too large, municipalities from Kartverket, Brreg, SSB and Kartverket errors                                                                                                                                     |
 | `tests/notifications.test.ts`   | Notifications created end to end from detected changes, unread filter, pagination, unread count, marking one or all as read (first read time is kept), users cannot read or change each other's notifications                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `tests/admin.test.ts`           | Admin account created once from environment variables (never by promoting an existing user), admin-only change detection endpoint (`401` / `403` / `200`), `409` when a run is already in progress, `502` when Brreg cannot be reached; admin-only accounts check endpoint (`403` / `200` / `409`); system status (change detection position, accounts checks due but never struck-off companies, jobs running now, followed companies counted once, risk levels, unread notifications, assistant questions in the last 24 hours, provider or `null`); user list newest first with followed counts, paging, search by email, first and last name (`%` matched as plain text), no password hashes or internal ids |
+| `tests/security.test.ts`        | Security headers on answers and errors (no `X-Powered-By`); failed logins per account from any address, however the email is written, without stopping other accounts, successful logins never counted; failed logins and new accounts per address with other addresses going on; all API requests per address; `429` with `Retry-After` and `retryAfterSeconds`; `X-Forwarded-For` trusted only from this machine and private networks                                                                                                                                                                                                                                                                          |
 
 ### Running the tests
 
@@ -570,7 +582,7 @@ Migrations are applied to the test database automatically.
 
 ### End-to-end tests
 
-The Playwright tests in `web/e2e` run in Chromium against the real web app and API, on a desktop screen and, for `phone.spec.ts`, as a Pixel 7. See [Run the end-to-end tests](#8-run-the-end-to-end-tests).
+The Playwright tests in `web/e2e` run in Chromium against the real web app and API, on a desktop screen and, for `phone.spec.ts`, as a Pixel 7. Every test also fails if the browser blocks anything under the content security policy. See [Run the end-to-end tests](#8-run-the-end-to-end-tests).
 
 | Test file               | What it covers                                                                                                                                                                                         |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -583,6 +595,7 @@ The Playwright tests in `web/e2e` run in Chromium against the real web app and A
 | `onboarding.spec.ts`    | The getting-started list following the user's progress, closed for good                                                                                                                                |
 | `trends.spec.ts`        | The chart and filtering by municipality                                                                                                                                                                |
 | `phone.spec.ts`         | No sideways scrolling on public and app pages, the menu on a phone                                                                                                                                     |
+| `security.spec.ts`      | Security headers and a new nonce on every page, an injected inline script not running, the login form saying how long to wait after too many wrong passwords                                           |
 
 ### Continuous integration
 
@@ -662,7 +675,7 @@ GitHub Actions runs three jobs on every push: the API's type check and all its t
 
 ### Production readiness
 
-- [ ] Limits on login and registration attempts, security headers
+- [x] Limits on login and registration attempts, security headers
 - [ ] Password reset, deleting an account and downloading your data (GDPR)
 - [ ] Email notifications: critical changes at once, the rest as a daily digest
 - [ ] Logging and error alerts

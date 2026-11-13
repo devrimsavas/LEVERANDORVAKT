@@ -22,6 +22,8 @@ export type AuthErrorKey =
   | "passwordMismatch"
   | "emailTaken"
   | "invalidCredentials"
+  | "tooManyLogins"
+  | "tooManyAccounts"
   | "unavailable";
 
 export interface AuthFormState {
@@ -34,6 +36,13 @@ export interface AuthFormState {
   >;
   // Typed values are sent back so the form keeps them; never the password
   values?: { firstName?: string; lastName?: string; email?: string };
+  // With tooManyLogins and tooManyAccounts: when to try again
+  retryMinutes?: number;
+}
+
+// Whole minutes, never 0, for "try again in X minutes"
+function minutes(seconds: number | undefined): number {
+  return Math.max(1, Math.ceil((seconds ?? 60) / 60));
 }
 
 function text(formData: FormData, name: string): string {
@@ -63,6 +72,13 @@ export async function loginAction(
   if (Object.keys(fieldErrors).length > 0) return { fieldErrors, values };
 
   const result = await logIn(email, password);
+  if (!result.ok && result.status === 429) {
+    return {
+      formError: "tooManyLogins",
+      retryMinutes: minutes(result.retryAfterSeconds),
+      values,
+    };
+  }
   if (!result.ok) {
     return {
       formError:
@@ -112,6 +128,13 @@ export async function registerAction(
   if (!created.ok) {
     if (created.status === 409) {
       return { fieldErrors: { email: "emailTaken" }, values };
+    }
+    if (created.status === 429) {
+      return {
+        formError: "tooManyAccounts",
+        retryMinutes: minutes(created.retryAfterSeconds),
+        values,
+      };
     }
     return { formError: "unavailable", values };
   }

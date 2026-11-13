@@ -3,6 +3,8 @@
 // It does not connect to the database or listen on a port;
 // that happens in server.ts, so tests can import the app safely.
 import express from "express";
+import helmet from "helmet";
+import { apiLimit } from "./middlewares/rateLimits.js";
 //swagger
 import swaggerUi from "swagger-ui-express";
 import { existsSync, readFileSync } from "node:fs";
@@ -26,6 +28,38 @@ import assistantRouter from "./routes/assistant.js";
 import trendsRouter from "./routes/trends.js";
 
 const app = express();
+
+// The proxies in front of the API whose X-Forwarded-For header is trusted
+// for the client's address (req.ip), which the rate limits count by. The
+// default trusts this machine and private networks: the web app on the
+// same machine or in the same Docker network. A hosting platform may need
+// a number of hops instead, e.g. TRUST_PROXY=1. A request straight from
+// the internet is never trusted, so it cannot pretend to be someone else.
+const trustProxy =
+  process.env.TRUST_PROXY ?? "loopback, linklocal, uniquelocal";
+app.set(
+  "trust proxy",
+  /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy,
+);
+
+// Security headers. The API answers with JSON; the content security policy
+// still allows what the Swagger UI at /api/docs needs.
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        "script-src": ["'self'"],
+        "style-src": ["'self'", "'unsafe-inline'"],
+        "img-src": ["'self'", "data:"],
+        // HTTPS is enforced by the HSTS header instead, so the docs also
+        // work over plain http://localhost
+        "upgrade-insecure-requests": null,
+      },
+    },
+  }),
+);
+
+app.use("/api", apiLimit);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 

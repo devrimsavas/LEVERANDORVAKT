@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 test.describe("public pages", () => {
   test("the landing page explains the service and links onward", async ({

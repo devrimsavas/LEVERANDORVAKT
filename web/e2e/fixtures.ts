@@ -75,6 +75,18 @@ interface Fixtures {
 }
 
 export const test = base.extend<Fixtures>({
+  // Every page fails its test if the browser blocks anything under the
+  // content security policy, so a policy that is too strict is found here
+  page: async ({ page }, use) => {
+    const blocked: string[] = [];
+    page.on("console", (message) => {
+      if (/Content Security Policy/i.test(message.text())) {
+        blocked.push(message.text());
+      }
+    });
+    await use(page);
+    expect(blocked, "blocked by the content security policy").toEqual([]);
+  },
   user: async ({ page, request }, use) => {
     const user = newUser();
     const res = await request.post(`${API_URL}/api/auth/register`, {

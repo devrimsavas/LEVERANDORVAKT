@@ -165,7 +165,9 @@
       "emailTaken": "Det finnes allerede en konto med denne e-postadressen. Vil du logge inn i stedet?",
       "invalidCredentials": "E-postadressen eller passordet er feil",
       "unavailable": "Tjenesten er ikke tilgjengelig akkurat nå. Prøv igjen om litt.",
-      "passwordMismatch": "Passordene er ikke like"
+      "passwordMismatch": "Passordene er ikke like",
+      "tooManyLogins": "For mange mislykkede forsøk. Vent {minutes, plural, one {# minutt} other {# minutter}} og prøv igjen.",
+      "tooManyAccounts": "For mange nye kontoer fra nettverket ditt. Vent {minutes, plural, one {# minutt} other {# minutter}} og prøv igjen."
     },
     "confirmPassword": "Gjenta passordet"
   },

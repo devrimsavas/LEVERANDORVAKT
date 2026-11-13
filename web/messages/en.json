@@ -165,7 +165,9 @@
       "emailTaken": "There is already an account with this email address. Log in instead?",
       "invalidCredentials": "The email address or password is wrong",
       "unavailable": "The service is not available right now. Try again in a little while.",
-      "passwordMismatch": "The passwords are not the same"
+      "passwordMismatch": "The passwords are not the same",
+      "tooManyLogins": "Too many failed attempts. Wait {minutes, plural, one {# minute} other {# minutes}} and try again.",
+      "tooManyAccounts": "Too many new accounts from your network. Wait {minutes, plural, one {# minute} other {# minutes}} and try again."
     },
     "confirmPassword": "Repeat password"
   },

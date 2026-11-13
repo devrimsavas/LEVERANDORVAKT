@@ -1,5 +1,4 @@
-import { expect, test } from "@playwright/test";
-import { logIn, newUser } from "./fixtures";
+import { expect, logIn, newUser, test } from "./fixtures";
 
 test.describe("accounts", () => {
   test("creating an account logs in and shows the overview", async ({
