@@ -11,6 +11,12 @@ import {
 } from "../controllers/authController.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 import {
+  changeMyPassword,
+  deleteMyAccount,
+  exportMyData,
+} from "../controllers/accountController.js";
+import {
+  passwordCheckLimit,
   loginPerAccountLimit,
   loginPerAddressLimit,
   registerLimit,
@@ -31,6 +37,9 @@ router.post(
 router.post("/password-reset/check", checkPasswordResetToken);
 router.post("/password-reset/confirm", confirmPasswordReset);
 router.get("/me", requireAuth, me);
+router.delete("/me", requireAuth, passwordCheckLimit, deleteMyAccount);
+router.post("/me/password", requireAuth, passwordCheckLimit, changeMyPassword);
+router.get("/me/export", requireAuth, exportMyData);
 router.get("/me/onboarding", requireAuth, getMyOnboarding);
 router.post("/me/onboarding/dismiss", requireAuth, dismissMyOnboarding);
 

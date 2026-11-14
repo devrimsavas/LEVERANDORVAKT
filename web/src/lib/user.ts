@@ -10,6 +10,7 @@ export interface CurrentUser {
   lastName: string;
   email: string;
   role: "user" | "admin";
+  createdAt: string;
 }
 
 // The logged-in user, asked from the API once per request (cache shares the

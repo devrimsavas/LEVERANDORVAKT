@@ -1,6 +1,7 @@
 import NextLink from "next/link";
 import { getTranslations } from "next-intl/server";
 import {
+  Alert,
   Button,
   Card,
   Heading,
@@ -31,12 +32,20 @@ const FEATURES = [
 
 const STEPS = ["search", "follow", "notified"] as const;
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: PageProps<"/">) {
   const t = await getTranslations("home");
   const footer = await getTranslations("footer");
+  const { deleted } = await searchParams;
 
   return (
     <>
+      {deleted && (
+        <div className={`container ${styles.notice}`}>
+          <Alert data-color="success" role="status">
+            {t("accountDeleted")}
+          </Alert>
+        </div>
+      )}
       <section className={styles.hero}>
         <div className={`container ${styles.heroInner}`}>
           <div className={styles.heroText}>

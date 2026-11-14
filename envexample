@@ -27,6 +27,9 @@ TRUST_PROXY=loopback, linklocal, uniquelocal
 # Password reset emails per account and per address in an hour
 PASSWORD_RESETS_PER_ACCOUNT=5
 PASSWORD_RESETS_PER_ADDRESS=20
+# Wrong passwords per user in 15 minutes when changing the password or
+# deleting the account
+PASSWORD_CHECK_FAILURES_PER_ACCOUNT=10
 
 # Email. EMAIL_PROVIDER is "log" (write emails to the console, the default) or
 # "resend" (send them with https://resend.com, needs RESEND_API_KEY).

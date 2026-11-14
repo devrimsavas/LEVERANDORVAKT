@@ -30,6 +30,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Regional trends** — new companies registered per month by municipality, industry and organization form, each month compared with the same month a year earlier, plus the most common industries in a period; answers are cached because past months hardly change
 - **Versioned database migrations** — schema changes are tracked as numbered migration files and applied automatically on startup
 - **AI assistant** — questions in plain language ("Which of my suppliers have the highest risk?") answered with tool calling over the app's own service functions; read-only, per-user conversations, a daily question limit (with a status endpoint showing what is left), and a choice of model provider (local Ollama, Ollama Cloud or Gemini) in `.env`
+- **Your data, your account (GDPR)** — download everything stored about you as one JSON file, change your password, or delete the account and everything that belongs to it
 - **Password reset by email** — a link that works once, for an hour, sent with Resend in the user's language; only a hash of the token is stored, and the reset ends every other session
 - **Rate limits and security headers** — failed logins limited per account and per address, new accounts and all API requests per address, with a `429` that says when to try again; security headers with Helmet on the API and a nonce-based content security policy on the web app
 - **Admin overview** — an admin-only status of the background jobs and the data, and a read-only list of users
@@ -53,6 +54,7 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 | Landing (`/`)                   | What the service does, an example of its notifications, the features and the open data sources                                                                                                                                                                                    |
 | Log in, Create account          | Forms with a message per field and the new password typed twice; a new account is logged in right away                                                                                                                                                                            |
 | Forgot password, Reset password | Ask for a reset link by email (the same answer whether or not the account exists), then choose a new password from the link; an old or used link says so at once                                                                                                                  |
+| Settings                        | The account's name, email and start date; changing the password (other devices are logged out); downloading all your data as JSON; deleting the account after typing the password                                                                                                 |
 | Overview                        | A "getting started" checklist (follow a company, write a note, ask the assistant) ticked from your own data and closed for good when you choose; the number of followed companies, the ones that need attention, the risk split across the watchlist and the latest notifications |
 | Watchlist                       | Every followed company with its risk level, last change, latest accounts and the start of your note, sorted by name or highest risk                                                                                                                                               |
 | Search                          | Search by name, or go straight to a company by its organization number                                                                                                                                                                                                            |
@@ -127,6 +129,7 @@ Services do not know about HTTP, so the same functions can be reused by the sche
 - **Two user identifiers.** `id` is an internal auto-increment primary key used for relations between tables. `public_id` is a UUID used in the API and in tokens, so user numbers cannot be guessed and the number of users is not revealed.
 - **Rate limits that cannot be dodged by changing address.** Wrong passwords are counted per account from any address (so guessing one user's password stops even with many IP addresses) and per address for any account (so a list of leaked passwords cannot be tried across many accounts); successful logins never count. The client's address comes from `X-Forwarded-For` only when the request arrives from a trusted proxy (`TRUST_PROXY`: this machine and private networks by default, i.e. the web app or Docker), so a caller on the internet cannot pretend to be someone else. The web app sends the visitor's address on, since every request to the API comes from its server.
 - **Password reset that reveals nothing.** The request always answers `202` with the same text, and before the work is done, so neither the answer nor the time it takes tells whether an account has the email. The token in the link is 32 random bytes; only its SHA-256 hash is stored, so a copy of the database cannot reset passwords. A new link replaces the old one, a link works once for an hour, and the reset ends every earlier session: `requireAuth` refuses tokens issued before `password_changed_at`. Tokens carry the time they were made to the millisecond (`iatMs`), since the standard `iat` has whole seconds and a session started in the same second as the reset would otherwise survive it. A successful reset also lifts the lock from earlier wrong passwords.
+- **Data export and deletion that leave nothing out.** The export lists everything stored about the user (profile, followed companies and notes, notifications with what changed, assistant conversations and when questions were asked) under public ids only, never the password hash, internal ids or reset links, and is sent with `Cache-Control: no-store`. Deleting the account needs the password and removes the user's rows through the database's `ON DELETE CASCADE`, in one transaction; companies stay, since they are register data shared with other users. The last admin cannot be deleted, and wrong passwords on these endpoints are limited per user, so a stolen session cannot guess the password.
 - **Email behind one interface.** `EMAIL_PROVIDER=log` (the default) writes emails to the console, so development needs no account; `resend` sends them with Resend's HTTP API. The tests use a fake Resend, and the end-to-end tests read the emails from it to follow the reset link.
 - **User roles are never taken from client input.** New users are always `user`; the admin account is created once from environment variables.
 - **Same error for unknown email and wrong password**, so the login endpoint cannot be used to find out which emails are registered.
@@ -188,16 +191,19 @@ Full, interactive documentation is available at `/api/docs` when the server is r
 
 ### Authentication
 
-| Method | Endpoint                           | Description                                                                                                                      |
-| ------ | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| POST   | `/api/auth/register`               | Create an account (`firstName`, `lastName`, `email`, `password`)                                                                 |
-| POST   | `/api/auth/login`                  | Log in and receive a JWT together with the user's public data                                                                    |
-| POST   | `/api/auth/password-reset`         | Email a reset link if an account has this email (`language`: `en` or `nb`); always `202`, so it never reveals who has an account |
-| POST   | `/api/auth/password-reset/check`   | Whether a reset link still works                                                                                                 |
-| POST   | `/api/auth/password-reset/confirm` | Set a new password with a reset link; ends every earlier session                                                                 |
-| GET    | `/api/auth/me`                     | Get the logged-in user's profile (requires token)                                                                                |
-| GET    | `/api/auth/me/onboarding`          | The getting-started steps done, read from the user's data, and whether the list was closed (requires token)                      |
-| POST   | `/api/auth/me/onboarding/dismiss`  | Close the getting-started list for good (requires token)                                                                         |
+| Method | Endpoint                           | Description                                                                                                                          |
+| ------ | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| POST   | `/api/auth/register`               | Create an account (`firstName`, `lastName`, `email`, `password`)                                                                     |
+| POST   | `/api/auth/login`                  | Log in and receive a JWT together with the user's public data                                                                        |
+| POST   | `/api/auth/password-reset`         | Email a reset link if an account has this email (`language`: `en` or `nb`); always `202`, so it never reveals who has an account     |
+| POST   | `/api/auth/password-reset/check`   | Whether a reset link still works                                                                                                     |
+| POST   | `/api/auth/password-reset/confirm` | Set a new password with a reset link; ends every earlier session                                                                     |
+| GET    | `/api/auth/me`                     | Get the logged-in user's profile (requires token)                                                                                    |
+| POST   | `/api/auth/me/password`            | Change the password after checking the current one; ends every session and answers with a new token for this device (requires token) |
+| GET    | `/api/auth/me/export`              | Everything stored about the user as a JSON file to download (requires token)                                                         |
+| DELETE | `/api/auth/me`                     | Delete the account and everything that belongs to it, after checking the password; never the last admin (requires token)             |
+| GET    | `/api/auth/me/onboarding`          | The getting-started steps done, read from the user's data, and whether the list was closed (requires token)                          |
+| POST   | `/api/auth/me/onboarding/dismiss`  | Close the getting-started list for good (requires token)                                                                             |
 
 ### Watchlist
 
@@ -322,6 +328,7 @@ LEVERANDORVAKT/
 │   │   ├── brregService.ts       # Calls the Brønnøysund APIs: companies, roles, annual accounts and both update feeds
 │   │   ├── authService.ts        # Registration, login, JWT
 │   │   ├── passwordResetService.ts # Reset links: hashed tokens, the email, the new password
+│   │   ├── accountService.ts     # Changing the password, exporting all data, deleting the account
 │   │   ├── email/
 │   │   │   ├── emailSender.ts    # Sends email with Resend, or writes it to the console (EMAIL_PROVIDER)
 │   │   │   └── templates.ts      # The emails' text and HTML, in English and Norwegian
@@ -473,6 +480,7 @@ REQUESTS_PER_ADDRESS=1500
 TRUST_PROXY=loopback, linklocal, uniquelocal
 PASSWORD_RESETS_PER_ACCOUNT=5
 PASSWORD_RESETS_PER_ADDRESS=20
+PASSWORD_CHECK_FAILURES_PER_ACCOUNT=10
 
 # Email: "log" writes emails to the console; "resend" sends them with Resend
 EMAIL_PROVIDER=log
@@ -582,6 +590,7 @@ The API's tests run with **Vitest** and **Supertest** against a real PostgreSQL 
 | `tests/admin.test.ts`           | Admin account created once from environment variables (never by promoting an existing user), admin-only change detection endpoint (`401` / `403` / `200`), `409` when a run is already in progress, `502` when Brreg cannot be reached; admin-only accounts check endpoint (`403` / `200` / `409`); system status (change detection position, accounts checks due but never struck-off companies, jobs running now, followed companies counted once, risk levels, unread notifications, assistant questions in the last 24 hours, provider or `null`); user list newest first with followed counts, paging, search by email, first and last name (`%` matched as plain text), no password hashes or internal ids |
 | `tests/security.test.ts`        | Security headers on answers and errors (no `X-Powered-By`); failed logins per account from any address, however the email is written, without stopping other accounts, successful logins never counted; failed logins and new accounts per address with other addresses going on; all API requests per address; `429` with `Retry-After` and `retryAfterSeconds`; `X-Forwarded-For` trusted only from this machine and private networks                                                                                                                                                                                                                                                                          |
 | `tests/passwordReset.test.ts`   | The reset email (address, sender, API key, English and Norwegian, the name escaped in HTML), the same `202` and no email for an unknown address, only a hash stored, a new link replacing the old one, a failed send logged without changing the answer, `EMAIL_PROVIDER=log`, the per-account limit; checking links; setting the password once, expired and made-up links, a short password, other users untouched, earlier sessions ended, a login lock lifted                                                                                                                                                                                                                                                 |
+| `tests/account.test.ts`         | Changing the password (a new token here, every other session ended even from the same second, a wrong current password, a short new one, the per-user limit); the export (every kind of data, a JSON attachment with `no-store`, no password hash, internal ids or reset links, only the user's own data); deleting (everything of the user gone, companies and other users kept, the email free again, a wrong or missing password, the last admin kept)                                                                                                                                                                                                                                                        |
 
 ### Running the tests
 
@@ -611,19 +620,20 @@ Migrations are applied to the test database automatically.
 
 The Playwright tests in `web/e2e` run in Chromium against the real web app and API, on a desktop screen and, for `phone.spec.ts`, as a Pixel 7. Every test also fails if the browser blocks anything under the content security policy. See [Run the end-to-end tests](#8-run-the-end-to-end-tests).
 
-| Test file                | What it covers                                                                                                                                                                                                                         |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public.spec.ts`         | Landing page and header, switching language and color scheme (kept after reload), guide, about and contact, app pages sending visitors to log in                                                                                       |
-| `auth.spec.ts`           | Creating an account, a message per wrong field, a wrong password, going back to the page asked for after logging in, logging out                                                                                                       |
-| `companies.spec.ts`      | Search by name and by organization number, roles, accounts and risk tabs, following, a private note in the watchlist, stopping following                                                                                               |
-| `notifications.spec.ts`  | A followed supplier going bankrupt in the fake register: change detection, the bell, a critical notification, marking all as read                                                                                                      |
-| `assistant.spec.ts`      | A question answered with a tool call, a Markdown table, "based on", HTML shown as text and never run, unsafe links and images dropped, the conversation kept, the daily limit, deleting a conversation                                 |
-| `admin.spec.ts`          | Normal users neither see nor reach the admin page; the admin runs a job and finds a user                                                                                                                                               |
-| `onboarding.spec.ts`     | The getting-started list following the user's progress, closed for good                                                                                                                                                                |
-| `trends.spec.ts`         | The chart and filtering by municipality                                                                                                                                                                                                |
-| `phone.spec.ts`          | No sideways scrolling on public and app pages, the menu on a phone                                                                                                                                                                     |
-| `security.spec.ts`       | Security headers and a new nonce on every page, an injected inline script not running, the login form saying how long to wait after too many wrong passwords                                                                           |
-| `password-reset.spec.ts` | Forgot password → the email from the fake Resend → the link → a new password → logging in with it; the link working once, the session on another device ended, the form's checks, the same answer for an unknown email, a made-up link |
+| Test file                | What it covers                                                                                                                                                                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public.spec.ts`         | Landing page and header, switching language and color scheme (kept after reload), guide, about and contact, app pages sending visitors to log in                                                                                                                          |
+| `auth.spec.ts`           | Creating an account, a message per wrong field, a wrong password, going back to the page asked for after logging in, logging out                                                                                                                                          |
+| `companies.spec.ts`      | Search by name and by organization number, roles, accounts and risk tabs, following, a private note in the watchlist, stopping following                                                                                                                                  |
+| `notifications.spec.ts`  | A followed supplier going bankrupt in the fake register: change detection, the bell, a critical notification, marking all as read                                                                                                                                         |
+| `assistant.spec.ts`      | A question answered with a tool call, a Markdown table, "based on", HTML shown as text and never run, unsafe links and images dropped, the conversation kept, the daily limit, deleting a conversation                                                                    |
+| `admin.spec.ts`          | Normal users neither see nor reach the admin page; the admin runs a job and finds a user                                                                                                                                                                                  |
+| `onboarding.spec.ts`     | The getting-started list following the user's progress, closed for good                                                                                                                                                                                                   |
+| `trends.spec.ts`         | The chart and filtering by municipality                                                                                                                                                                                                                                   |
+| `phone.spec.ts`          | No sideways scrolling on public and app pages, the menu on a phone                                                                                                                                                                                                        |
+| `security.spec.ts`       | Security headers and a new nonce on every page, an injected inline script not running, the login form saying how long to wait after too many wrong passwords                                                                                                              |
+| `password-reset.spec.ts` | Forgot password → the email from the fake Resend → the link → a new password → logging in with it; the link working once, the session on another device ended, the form's checks, the same answer for an unknown email, a made-up link                                    |
+| `settings.spec.ts`       | The settings page from the user menu, changing the password (this device stays logged in, another is logged out), a wrong current password, downloading the data file and reading it, deleting the account (a wrong password first, then logged out and unable to log in) |
 
 ### Continuous integration
 
@@ -705,7 +715,7 @@ GitHub Actions runs three jobs on every push: the API's type check and all its t
 
 - [x] Limits on login and registration attempts, security headers
 - [x] Password reset by email
-- [ ] Deleting an account and downloading your data (GDPR)
+- [x] Account settings: changing the password, downloading your data and deleting the account (GDPR)
 - [ ] Email notifications: critical changes at once, the rest as a daily digest
 - [ ] Logging and error alerts
 

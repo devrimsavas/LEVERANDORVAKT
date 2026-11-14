@@ -232,3 +232,8 @@
     grid-row: 2;
   }
 }
+
+/* "Your account has been deleted", above the hero */
+.notice {
+  padding-top: var(--ds-size-6);
+}

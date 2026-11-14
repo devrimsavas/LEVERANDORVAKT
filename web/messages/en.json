@@ -16,7 +16,8 @@
     "colorScheme": "Switch between light and dark mode",
     "overview": "Overview",
     "logOut": "Log out",
-    "guide": "Guide"
+    "guide": "Guide",
+    "settings": "Settings"
   },
   "home": {
     "hero": {
@@ -119,7 +120,8 @@
       "title": "Start watching your suppliers today",
       "text": "Create an account, follow your first company and let Leverandørvakt keep watch.",
       "button": "Create an account"
-    }
+    },
+    "accountDeleted": "Your account and all its data have been deleted."
   },
   "footer": {
     "tagline": "Early warnings about your suppliers and customers.",
@@ -171,7 +173,10 @@
       "tooManyLogins": "Too many failed attempts. Wait {minutes, plural, one {# minute} other {# minutes}} and try again.",
       "tooManyAccounts": "Too many new accounts from your network. Wait {minutes, plural, one {# minute} other {# minutes}} and try again.",
       "tooManyResets": "Too many reset emails asked for. Wait {minutes, plural, one {# minute} other {# minutes}} and try again.",
-      "linkInvalid": "This link no longer works. It may have been used already, or it is more than 60 minutes old."
+      "linkInvalid": "This link no longer works. It may have been used already, or it is more than 60 minutes old.",
+      "passwordWrong": "The password is wrong",
+      "tooManyChecks": "Too many wrong passwords. Wait {minutes, plural, one {# minute} other {# minutes}} and try again.",
+      "lastAdmin": "This is the only admin account, so it cannot be deleted. Make another user admin first."
     },
     "confirmPassword": "Repeat password",
     "forgot": {
@@ -1006,6 +1011,40 @@
       "text": "Follow your first company and the overview page will guide you through the rest.",
       "start": "Go to the overview",
       "about": "About Leverandørvakt"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "lead": "Your account, your password and your data.",
+    "account": {
+      "title": "Your account",
+      "name": "Name",
+      "email": "Email",
+      "since": "Member since"
+    },
+    "password": {
+      "title": "Change password",
+      "text": "Every other device where you are logged in is logged out when the password changes.",
+      "current": "Current password",
+      "new": "New password",
+      "submit": "Change password",
+      "changed": "Your password has been changed. Other devices have been logged out."
+    },
+    "data": {
+      "title": "Download your data",
+      "text": "Everything Leverandørvakt stores about you in one file: your account, the companies you follow and your notes, your notifications and your conversations with the assistant.",
+      "button": "Download my data (JSON)",
+      "failed": "The file could not be made. Try again in a little while."
+    },
+    "delete": {
+      "heading": "Delete account",
+      "intro": "Deletes your account and everything that belongs to it: followed companies and notes, notifications and conversations. It cannot be undone.",
+      "button": "Delete my account",
+      "title": "Delete your account?",
+      "text": "Your account and all its data are deleted at once and cannot be brought back. Type your password to confirm.",
+      "password": "Password",
+      "confirm": "Delete my account",
+      "cancel": "Cancel"
     }
   }
 }

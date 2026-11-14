@@ -2,7 +2,7 @@
 
 import NextLink from "next/link";
 import { Button, Dropdown } from "@digdir/designsystemet-react";
-import { BookIcon, PersonCircleIcon } from "@navikt/aksel-icons";
+import { BookIcon, CogIcon, PersonCircleIcon } from "@navikt/aksel-icons";
 import { logoutAction } from "@/lib/authActions";
 import styles from "./SiteHeader.module.css";
 
@@ -12,15 +12,18 @@ interface UserMenuProps {
   label: string;
   logoutLabel: string;
   guideLabel: string;
+  settingsLabel: string;
 }
 
-// The logged-in user's name, with the guide and log out behind it
+// The logged-in user's name, with the settings, the guide and log out
+// behind it
 export function UserMenu({
   name,
   email,
   label,
   logoutLabel,
   guideLabel,
+  settingsLabel,
 }: UserMenuProps) {
   return (
     <div className={styles.userMenu}>
@@ -34,6 +37,14 @@ export function UserMenu({
           <span className={styles.userEmail}>{email}</span>
         </Dropdown.Heading>
         <Dropdown.List>
+          <Dropdown.Item>
+            <Dropdown.Button asChild>
+              <NextLink href="/settings">
+                <CogIcon aria-hidden />
+                {settingsLabel}
+              </NextLink>
+            </Dropdown.Button>
+          </Dropdown.Item>
           <Dropdown.Item>
             <Dropdown.Button asChild>
               <NextLink href="/guide">

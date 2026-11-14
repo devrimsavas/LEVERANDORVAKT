@@ -20,7 +20,7 @@ import { toEmailLanguage } from "../services/email/templates.js";
 import { loginPerAccountLimit } from "../middlewares/rateLimits.js";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const MIN_PASSWORD_LENGTH = 8;
+export const MIN_PASSWORD_LENGTH = 8;
 const MAX_NAME_LENGTH = 100;
 
 function isValidName(value: unknown): value is string {

@@ -107,6 +107,19 @@ export const passwordResetPerAddressLimit = rateLimit({
   handler: tooMany("Too many password reset emails. Try again later."),
 });
 
+// Wrong passwords when a logged-in user changes their password or deletes
+// their account: a stolen session cannot be used to guess the password.
+// Runs after requireAuth, so it counts per user.
+export const passwordCheckLimit = rateLimit({
+  ...common,
+  windowMs: 15 * MINUTE,
+  limit: envLimit("PASSWORD_CHECK_FAILURES_PER_ACCOUNT", 10),
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => `user:${req.auth?.userId ?? ""}`,
+  identifier: "password-check",
+  handler: tooMany("Too many wrong passwords. Try again later."),
+});
+
 // Every request from one address. High enough for the web app, whose pages
 // call the API several times each, and for the bell asking every minute.
 export const apiLimit = rateLimit({

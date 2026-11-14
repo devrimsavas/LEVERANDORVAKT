@@ -16,7 +16,8 @@
     "colorScheme": "Bytt mellom lys og mørk modus",
     "overview": "Oversikt",
     "logOut": "Logg ut",
-    "guide": "Veiledning"
+    "guide": "Veiledning",
+    "settings": "Innstillinger"
   },
   "home": {
     "hero": {
@@ -119,7 +120,8 @@
       "title": "Begynn å følge leverandørene dine i dag",
       "text": "Opprett en konto, følg ditt første selskap og la Leverandørvakt holde vakt.",
       "button": "Opprett konto"
-    }
+    },
+    "accountDeleted": "Kontoen din og alle dataene er slettet."
   },
   "footer": {
     "tagline": "Tidlig varsel om leverandørene og kundene dine.",
@@ -171,7 +173,10 @@
       "tooManyLogins": "For mange mislykkede forsøk. Vent {minutes, plural, one {# minutt} other {# minutter}} og prøv igjen.",
       "tooManyAccounts": "For mange nye kontoer fra nettverket ditt. Vent {minutes, plural, one {# minutt} other {# minutter}} og prøv igjen.",
       "tooManyResets": "Du har bedt om for mange e-poster. Vent {minutes, plural, one {# minutt} other {# minutter}} og prøv igjen.",
-      "linkInvalid": "Denne lenken virker ikke lenger. Den kan være brukt allerede, eller den er over 60 minutter gammel."
+      "linkInvalid": "Denne lenken virker ikke lenger. Den kan være brukt allerede, eller den er over 60 minutter gammel.",
+      "passwordWrong": "Passordet er feil",
+      "tooManyChecks": "For mange feil passord. Vent {minutes, plural, one {# minutt} other {# minutter}} og prøv igjen.",
+      "lastAdmin": "Dette er den eneste administratorkontoen, så den kan ikke slettes. Gjør en annen bruker til administrator først."
     },
     "confirmPassword": "Gjenta passordet",
     "forgot": {
@@ -1006,6 +1011,40 @@
       "text": "Følg ditt første selskap, så viser oversiktssiden deg resten.",
       "start": "Gå til oversikten",
       "about": "Om Leverandørvakt"
+    }
+  },
+  "settings": {
+    "title": "Innstillinger",
+    "lead": "Kontoen din, passordet ditt og dataene dine.",
+    "account": {
+      "title": "Kontoen din",
+      "name": "Navn",
+      "email": "E-post",
+      "since": "Medlem siden"
+    },
+    "password": {
+      "title": "Endre passord",
+      "text": "Alle andre enheter der du er logget inn, blir logget ut når passordet endres.",
+      "current": "Nåværende passord",
+      "new": "Nytt passord",
+      "submit": "Endre passord",
+      "changed": "Passordet ditt er endret. Andre enheter er logget ut."
+    },
+    "data": {
+      "title": "Last ned dataene dine",
+      "text": "Alt Leverandørvakt lagrer om deg i én fil: kontoen din, selskapene du følger og notatene dine, varslene dine og samtalene med assistenten.",
+      "button": "Last ned dataene mine (JSON)",
+      "failed": "Filen kunne ikke lages. Prøv igjen om litt."
+    },
+    "delete": {
+      "heading": "Slett konto",
+      "intro": "Sletter kontoen din og alt som hører til: fulgte selskaper og notater, varsler og samtaler. Det kan ikke angres.",
+      "button": "Slett kontoen min",
+      "title": "Slette kontoen din?",
+      "text": "Kontoen og alle dataene slettes med en gang og kan ikke hentes tilbake. Skriv passordet ditt for å bekrefte.",
+      "password": "Passord",
+      "confirm": "Slett kontoen min",
+      "cancel": "Avbryt"
     }
   }
 }

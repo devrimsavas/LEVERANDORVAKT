@@ -27,22 +27,33 @@ export type AuthErrorKey =
   | "tooManyAccounts"
   | "tooManyResets"
   | "linkInvalid"
+  | "passwordWrong"
+  | "tooManyChecks"
+  | "lastAdmin"
   | "unavailable";
 
 export interface AuthFormState {
   formError?: AuthErrorKey;
   fieldErrors?: Partial<
     Record<
-      "firstName" | "lastName" | "email" | "password" | "confirmPassword",
+      | "firstName"
+      | "lastName"
+      | "email"
+      | "password"
+      | "confirmPassword"
+      | "currentPassword",
       AuthErrorKey
     >
   >;
   // Typed values are sent back so the form keeps them; never the password
   values?: { firstName?: string; lastName?: string; email?: string };
-  // With tooManyLogins, tooManyAccounts and tooManyResets: when to try again
+  // With tooManyLogins, tooManyAccounts, tooManyResets and tooManyChecks:
+  // when to try again
   retryMinutes?: number;
   // The password reset form: the email has been handled
   sent?: boolean;
+  // The change password form: the new password is saved
+  changed?: boolean;
 }
 
 async function logIn(email: string, password: string) {

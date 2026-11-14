@@ -55,10 +55,15 @@ export async function AppHeader({ user }: { user: CurrentUser }) {
             label={app("account", { name })}
             logoutLabel={t("logOut")}
             guideLabel={t("guide")}
+            settingsLabel={t("settings")}
           />
           <MobileMenu
             label={t("menu")}
-            links={[...links, { href: "/guide", text: t("guide") }]}
+            links={[
+              ...links,
+              { href: "/settings", text: t("settings") },
+              { href: "/guide", text: t("guide") },
+            ]}
             logoutLabel={t("logOut")}
           />
         </div>

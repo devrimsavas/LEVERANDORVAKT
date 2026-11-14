@@ -102,23 +102,26 @@ export async function loginUser(
   user.lastLoginAt = new Date();
   await user.save();
 
+  const token = issueToken(user);
+
+  return { token, user: toPublicUser(user) };
+}
+
+// A signed session token for the user. "sub" holds the public user number,
+// not the internal database id. "iatMs" is when the token was made, to the
+// millisecond (the standard "iat" has whole seconds), so a password change
+// can end every session started before it, even one from the same second.
+export function issueToken(user: User): string {
   const options: SignOptions = {
     expiresIn: (process.env.JWT_EXPIRES_IN ?? "1d") as NonNullable<
       SignOptions["expiresIn"]
     >,
   };
-
-  // "sub" holds the public user number, not the internal database id.
-  // "iatMs" is when the token was made, to the millisecond (the standard
-  // "iat" has whole seconds), so a password reset can end every session
-  // started before it, even one from the same second.
-  const token = jwt.sign(
+  return jwt.sign(
     { sub: user.publicId, role: user.role, iatMs: Date.now() },
     getJwtSecret(),
     options,
   );
-
-  return { token, user: toPublicUser(user) };
 }
 
 // Returns the public data of the user with the given public id,
