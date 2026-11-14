@@ -7,8 +7,6 @@ import {
 } from "../src/services/trendsService.js";
 import { useFakeBrreg } from "./helpers/fakeBrreg.js";
 
-
-
 const brreg = useFakeBrreg();
 
 // Every test runs on the same day, so "the current month" never moves
@@ -211,6 +209,31 @@ describe("GET /api/trends/registrations", () => {
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain("municipality");
+  });
+
+  it("stops asking Brreg after a failure and leaves nothing running", async () => {
+    let calls = 0;
+    brreg.extraHandlers.push(async (url) => {
+      if (!url.pathname.endsWith("/enhetsregisteret/api/enheter")) {
+        return null;
+      }
+      calls++;
+      // The first month fails at once, the others answer slowly
+      if (calls === 1) {
+        return new Response(null, { status: 503 });
+      }
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      return null;
+    });
+
+    const res = await request(app).get("/api/trends/registrations");
+    const callsAtAnswer = calls;
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    expect(res.status).toBe(502);
+    // Only the requests started together with the failing one were made
+    expect(callsAtAnswer).toBeLessThanOrEqual(5);
+    expect(calls).toBe(callsAtAnswer);
   });
 
   it("returns 502 when Brreg cannot be reached", async () => {
