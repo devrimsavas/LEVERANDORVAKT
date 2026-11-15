@@ -48,7 +48,9 @@ export type RiskLimitationCode =
   | "ACCOUNTS_UNAVAILABLE"
   | "ACCOUNTS_DEADLINE_UNKNOWN"
   | "CHANGE_HISTORY_UNKNOWN"
-  | "CHANGE_HISTORY_PARTIAL";
+  | "CHANGE_HISTORY_PARTIAL"
+  | "NO_ACCOUNTS"
+  | "FOREIGN_COMPANY";
 
 export interface RiskLimitation {
   code: RiskLimitationCode;

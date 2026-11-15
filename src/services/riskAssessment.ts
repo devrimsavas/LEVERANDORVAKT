@@ -45,6 +45,9 @@ export const RISK_RULES = {
   // Company forms that must file annual accounts. Kept short on purpose:
   // a wrong "overdue" signal would be unfair to an honest company.
   accountsRequiredForms: ["AS", "ASA", "SA"],
+  // Foreign companies that are only registered in Norway, without a
+  // Norwegian branch: the registers hold little about them
+  foreignForms: ["UTLA"],
 } as const;
 
 export const RISK_DISCLAIMER =
@@ -272,6 +275,13 @@ function accountsSignals(
     .sort((a, b) => b.periodEnd.localeCompare(a.periodEnd));
   const latest = own[0];
   if (!latest) {
+    // Nothing to check is not the same as nothing wrong
+    limitations.push({
+      code: "NO_ACCOUNTS",
+      reason:
+        "The Register of Company Accounts has no annual accounts for the company itself, so the key figures were not checked.",
+      params: {},
+    });
     return [];
   }
 
@@ -442,10 +452,29 @@ export function riskLevel(score: number, hasCritical: boolean): RiskLevel {
   return score >= RISK_RULES.levels.medium ? "medium" : "low";
 }
 
+// A foreign company is named first among the limitations: the rest of the
+// assessment rests on very little
+function foreignLimitation(input: RiskInput, limitations: RiskLimitation[]) {
+  if (
+    input.company &&
+    (RISK_RULES.foreignForms as readonly string[]).includes(
+      input.company.organizationForm,
+    )
+  ) {
+    limitations.push({
+      code: "FOREIGN_COMPANY",
+      reason:
+        "A foreign company that is only registered in Norway: the Norwegian registers hold little about it. Check it in the company register of its home country.",
+      params: {},
+    });
+  }
+}
+
 // Assesses a company from register data. Pure: the same input and date
 // always give the same result, so `now` is a parameter.
 export function assessRisk(input: RiskInput, now: Date): RiskAssessment {
   const limitations: RiskLimitation[] = [];
+  foreignLimitation(input, limitations);
 
   const signals = [
     ...registerSignals(input),

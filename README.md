@@ -181,6 +181,8 @@ A transparent "check before you sign" assessment, built only from public registe
 
 The score is the sum of the points, at most 100. The level is `high` with any critical signal or a score of 40 or more, `medium` from 20, otherwise `low`. Key figures come from the company's own accounts, not the group's. Change-history signals need the company to be followed.
 
+What could not be checked is listed as limitations, because a short list of signals is not the same as a clean bill of health: accounts that could not be fetched or are not covered (`ACCOUNTS_UNAVAILABLE`, `ACCOUNTS_NOT_COVERED`), no annual accounts of the company's own (`NO_ACCOUNTS`), an unknown founding date (`ACCOUNTS_DEADLINE_UNKNOWN`), a change history that is missing or short (`CHANGE_HISTORY_UNKNOWN`, `CHANGE_HISTORY_PARTIAL`), and, named first, a foreign company only registered in Norway (`FOREIGN_COMPANY`, form `UTLA`), about which the Norwegian registers hold little. Missing data adds no points.
+
 Every signal and limitation has a `code`, ready-made English text (`title`, `detail` or `reason`, used for example by the AI assistant) and `params`: the values it is about, such as `{ "year": 2025, "equity": -120000, "currency": "NOK" }`. Clients write their own text from `code` and `params`, so the web app shows the report in English or Norwegian with amounts and dates in the reader's format.
 
 For followed companies the level is stored and re-assessed after every check. A rise is recorded and notified (unless the same check already notified the followers of the change behind it); a fall is recorded without a notification. Companies that have no risk level yet (e.g. followed before risk signals were added) are assessed from stored data at the end of the next change detection run.

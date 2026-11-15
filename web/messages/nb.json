@@ -591,11 +591,13 @@
       }
     },
     "limitations": {
+      "FOREIGN_COMPANY": "Et utenlandsk foretak som bare er registrert i Norge: de norske registrene har lite informasjon om det. Sjekk det i foretaksregisteret i hjemlandet.",
       "ACCOUNTS_NOT_COVERED": "Regnskapsregisteret gir ikke nøkkeltall for denne typen selskap (for eksempel banker).",
       "ACCOUNTS_UNAVAILABLE": "Årsregnskapet kunne ikke hentes, så nøkkeltallene ble ikke sjekket.",
       "ACCOUNTS_DEADLINE_UNKNOWN": "Stiftelsesdatoen er ukjent, så forsinket regnskap kunne ikke sjekkes.",
       "CHANGE_HISTORY_UNKNOWN": "Du følger ikke selskapet, så bytter av daglig leder, revisor og adresse er ukjent. Følg det for å ta dem med fra nå av.",
       "CHANGE_HISTORY_PARTIAL": "Endringer er bare kjent fra selskapet først ble fulgt, {since}.",
+      "NO_ACCOUNTS": "Regnskapsregisteret har ingen årsregnskap for selskapet selv, så nøkkeltallene ble ikke sjekket.",
       "unknown": "Noen data kunne ikke sjekkes."
     },
     "level": {

@@ -591,11 +591,13 @@
       }
     },
     "limitations": {
+      "FOREIGN_COMPANY": "A foreign company that is only registered in Norway: the Norwegian registers hold little about it. Check it in the company register of its home country.",
       "ACCOUNTS_NOT_COVERED": "The accounts register gives no key figures for this kind of company (for example banks).",
       "ACCOUNTS_UNAVAILABLE": "The annual accounts could not be fetched, so the key figures were not checked.",
       "ACCOUNTS_DEADLINE_UNKNOWN": "The founding date is unknown, so overdue accounts could not be checked.",
       "CHANGE_HISTORY_UNKNOWN": "You do not follow the company, so changes of CEO, auditor and address are unknown. Follow it to include them from now on.",
       "CHANGE_HISTORY_PARTIAL": "Changes are known only since the company was first followed, on {since}.",
+      "NO_ACCOUNTS": "The Register of Company Accounts has no annual accounts for the company itself, so the key figures were not checked.",
       "unknown": "Some data could not be checked."
     },
     "level": {

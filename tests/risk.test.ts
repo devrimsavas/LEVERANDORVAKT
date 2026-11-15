@@ -424,6 +424,62 @@ describe("assessRisk", () => {
         expect(limitationCodes(risk)).toEqual([code]);
       },
     );
+    it("says the key figures were not checked when there are no accounts", () => {
+      const risk = assessRisk(
+        input({
+          company: company({ organizationForm: "ENK" }),
+          accounts: { status: "available", list: [] },
+        }),
+        NOW,
+      );
+
+      expect(limitationCodes(risk)).toEqual(["NO_ACCOUNTS"]);
+      expect(risk.score).toBe(0);
+    });
+
+    it("does not count the group's accounts as the company's own", () => {
+      const risk = assessRisk(
+        input({
+          accounts: {
+            status: "available",
+            list: [own(2025, {}, { type: "group" })],
+          },
+        }),
+        NOW,
+      );
+
+      expect(limitationCodes(risk)).toEqual(["NO_ACCOUNTS"]);
+    });
+  });
+
+  describe("foreign companies", () => {
+    it("says first that a foreign company is little known in Norway", () => {
+      const risk = assessRisk(
+        input({
+          company: company({
+            organizationForm: "UTLA",
+            employees: null,
+            lastAnnualAccountsYear: null,
+          }),
+          accounts: { status: "available", list: [] },
+        }),
+        NOW,
+      );
+
+      expect(limitationCodes(risk)).toEqual(["FOREIGN_COMPANY", "NO_ACCOUNTS"]);
+      expect(risk.limitations[0]!.reason).toContain("home country");
+      // Missing data is not a warning sign in itself
+      expect(risk).toMatchObject({ level: "low", score: 0, signals: [] });
+    });
+
+    it("does not treat a Norwegian branch of a foreign company as foreign only", () => {
+      const risk = assessRisk(
+        input({ company: company({ organizationForm: "NUF" }) }),
+        NOW,
+      );
+
+      expect(limitationCodes(risk)).toEqual([]);
+    });
   });
 
   describe("change history", () => {
@@ -687,8 +743,12 @@ describe("risk on the watchlist", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.level).toBe("low");
-    // Followed today: the history is known, but only from today
-    expect(limitationCodes(res.body)).toEqual(["CHANGE_HISTORY_PARTIAL"]);
+    // No accounts in the fake register, and followed today: the history
+    // is known, but only from today
+    expect(limitationCodes(res.body)).toEqual([
+      "NO_ACCOUNTS",
+      "CHANGE_HISTORY_PARTIAL",
+    ]);
   });
 
   it("sorts the watchlist by risk, highest first", async () => {
