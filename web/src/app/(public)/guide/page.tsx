@@ -21,7 +21,7 @@ const SECTIONS = {
   start: ["search", "follow", "note"],
   watched: ["status", "roles", "details", "accounts"],
   risk: ["level", "score", "signals", "limits"],
-  notifications: ["critical", "warning", "info"],
+  notifications: ["critical", "warning", "info", "email"],
   accounts: [],
   trends: [],
   assistant: ["ask", "sources", "private", "limit"],

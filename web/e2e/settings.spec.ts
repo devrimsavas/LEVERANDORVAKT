@@ -15,7 +15,9 @@ test("the settings page is in the user menu and shows the account", async ({
 
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Settings");
-  await expect(page.getByRole("main").getByText(user.email)).toBeVisible();
+  await expect(
+    page.getByRole("main").getByText(user.email, { exact: true }),
+  ).toBeVisible();
 });
 
 test("changing the password keeps this device logged in and logs out the others", async ({
@@ -108,4 +110,48 @@ test("deletes the account after the password is typed", async ({
   await expect(
     page.getByText("The email address or password is wrong"),
   ).toBeVisible();
+});
+
+test("the user chooses when emails come, in the language of the app", async ({
+  page,
+  user,
+}) => {
+  void user;
+  await page.goto("/settings");
+  await expect(
+    page.getByRole("radio", {
+      name: "Critical changes at once, the rest once a day",
+    }),
+  ).toBeChecked();
+  await expect(page.getByText(", in English.")).toBeVisible();
+
+  await page.getByRole("radio", { name: "Every change at once" }).check();
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(
+    page.getByText("Saved. You get an email for every change at once."),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("radio", { name: "Every change at once" }),
+  ).toBeChecked();
+
+  // Switching the app to Norwegian switches the emails too
+  await page.getByRole("button", { name: "Bytt til norsk" }).click();
+  await expect(page.getByText(", på norsk.")).toBeVisible();
+});
+
+test("an unsubscribe link that is not valid says so", async ({
+  page,
+  request,
+}) => {
+  await page.goto("/unsubscribe?token=made-up");
+  await page.getByRole("button", { name: "Turn off emails" }).click();
+  await expect(page.getByText("This link is not valid.")).toBeVisible();
+
+  // The address email apps post to for their own unsubscribe button
+  const oneClick = await request.post("/unsubscribe/one-click?token=made-up");
+  expect(oneClick.status()).toBe(400);
+  // Opening it changes nothing
+  const opened = await request.get("/unsubscribe/one-click?token=made-up");
+  expect(opened.status()).toBe(405);
 });

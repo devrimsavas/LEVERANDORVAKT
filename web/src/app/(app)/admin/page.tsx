@@ -185,6 +185,36 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
                   disabled={status.accountsCheck.running}
                 />
               </article>
+
+              <article className={styles.card} aria-labelledby="job-emails">
+                <div className={styles.cardHead}>
+                  <Heading id="job-emails" level={3} data-size="xs">
+                    {t("jobs.emails.title")}
+                  </Heading>
+                  {jobTag(status.emails.running ? "running" : "idle")}
+                </div>
+                <Paragraph data-size="sm" className={styles.muted}>
+                  {t("jobs.emails.text")}
+                </Paragraph>
+                <dl className={styles.facts}>
+                  <dt>{t("jobs.emails.provider")}</dt>
+                  <dd>
+                    {status.emails.provider === "resend" ||
+                    status.emails.provider === "log"
+                      ? t(`jobs.emails.providers.${status.emails.provider}`)
+                      : status.emails.provider}
+                  </dd>
+                  <dt>{t("jobs.emails.waiting")}</dt>
+                  <dd>
+                    {t("jobs.emails.notifications", {
+                      count: status.emails.waiting,
+                    })}
+                  </dd>
+                  <dt>{t("jobs.emails.lastSent")}</dt>
+                  <dd>{when(status.emails.lastSentAt)}</dd>
+                </dl>
+                <RunJobButton kind="emails" disabled={status.emails.running} />
+              </article>
             </div>
           </section>
 

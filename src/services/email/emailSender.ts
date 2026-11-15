@@ -10,6 +10,8 @@ export interface Email {
   // Both a plain-text and an HTML version, for every mail program
   text: string;
   html: string;
+  // Extra headers, such as List-Unsubscribe
+  headers?: Record<string, string>;
 }
 
 export interface EmailSender {
@@ -42,6 +44,7 @@ const resendSender: EmailSender = {
         subject: email.subject,
         text: email.text,
         html: email.html,
+        ...(email.headers ? { headers: email.headers } : {}),
       }),
       signal: AbortSignal.timeout(10_000),
     });
@@ -74,8 +77,13 @@ const logSender: EmailSender = {
   },
 };
 
+// "log" or "resend", for the admin page
+export function emailProviderName(): string {
+  return process.env.EMAIL_PROVIDER || "log";
+}
+
 export function getEmailSender(): EmailSender {
-  const provider = process.env.EMAIL_PROVIDER || "log";
+  const provider = emailProviderName();
   if (provider === "resend") return resendSender;
   if (provider === "log") return logSender;
   throw new EmailError(`Unknown EMAIL_PROVIDER "${provider}"`);

@@ -9,6 +9,7 @@ import {
 import { DownloadIcon } from "@navikt/aksel-icons";
 import { requireUser } from "@/lib/user";
 import { ChangePasswordForm } from "@/components/settings/ChangePasswordForm";
+import { EmailNotificationsForm } from "@/components/settings/EmailNotificationsForm";
 import { DeleteAccount } from "@/components/settings/DeleteAccount";
 import styles from "@/components/settings/settings.module.css";
 
@@ -17,8 +18,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: `${t("title")} – Leverandørvakt` };
 }
 
-// The user's own account: who they are, a new password, all their data as
-// a file, and deleting the account
+// The user's own account: who they are, when emails come, a new password,
+// all their data as a file, and deleting the account
 export default async function SettingsPage({
   searchParams,
 }: PageProps<"/settings">) {
@@ -52,6 +53,19 @@ export default async function SettingsPage({
             {format.dateTime(new Date(user.createdAt), { dateStyle: "long" })}
           </dd>
         </dl>
+      </section>
+
+      <section className={styles.section} aria-labelledby="emails">
+        <Heading id="emails" level={2} data-size="sm">
+          {t("emails.title")}
+        </Heading>
+        <Paragraph>
+          {t("emails.text", {
+            email: user.email,
+            language: t(`emails.languages.${user.language}`),
+          })}
+        </Paragraph>
+        <EmailNotificationsForm current={user.emailNotifications} />
       </section>
 
       <section className={styles.section} aria-labelledby="password">

@@ -12,7 +12,10 @@ import {
   InvalidCredentialsError,
   issueToken,
   SALT_ROUNDS,
+  toPublicUser,
+  type PublicUser,
 } from "./authService.js";
+import type { EmailNotifications, Language } from "../models/User.js";
 
 // The user's own account: changing the password, downloading every piece
 // of data stored about them and deleting the account (the GDPR rights of
@@ -51,6 +54,20 @@ export async function changePassword(
   user.passwordChangedAt = new Date();
   await user.save();
   return { token: issueToken(user) };
+}
+
+// The user's language (for emails) and how they want notifications by email
+export async function updatePreferences(
+  userPublicId: string,
+  changes: { language?: Language; emailNotifications?: EmailNotifications },
+): Promise<PublicUser> {
+  const user = await findUser(userPublicId);
+  if (changes.language) user.language = changes.language;
+  if (changes.emailNotifications) {
+    user.emailNotifications = changes.emailNotifications;
+  }
+  await user.save();
+  return toPublicUser(user);
 }
 
 const createdAt = (row: { get(key: string): unknown }) =>
@@ -103,6 +120,9 @@ export async function exportUserData(userPublicId: string) {
       lastLoginAt: user.lastLoginAt,
       passwordChangedAt: user.passwordChangedAt,
       gettingStartedClosedAt: user.onboardingDismissedAt,
+      language: user.language,
+      emailNotifications: user.emailNotifications,
+      lastDailySummaryAt: user.lastDigestAt,
     },
     watchlist: watchlist.map((entry) => ({
       orgNumber: entry.company.orgNumber,
@@ -121,6 +141,7 @@ export async function exportUserData(userPublicId: string) {
       detectedAt: notification.change.detectedAt,
       createdAt: createdAt(notification),
       readAt: notification.readAt,
+      emailedAt: notification.emailedAt,
     })),
     assistant: {
       conversations: conversations.map((conversation) => ({

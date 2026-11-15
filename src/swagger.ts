@@ -33,6 +33,10 @@ const doc = {
       description:
         "New companies registered over time, by municipality, industry and organization form",
     },
+    {
+      name: "Email",
+      description: "Turning email notifications off from the link in an email",
+    },
     { name: "Admin", description: "Admin-only operations" },
     { name: "General", description: "API status" },
   ],

@@ -11,6 +11,12 @@ import { RECHECK_AFTER_HOURS } from "./accountsService.js";
 import { createLlmProvider } from "./llm/llmProvider.js";
 import { isChangeDetectionRunning } from "../jobs/changeDetectionJob.js";
 import { isAccountsCheckRunning } from "../jobs/accountsCheckJob.js";
+import { isEmailJobRunning } from "../jobs/emailJob.js";
+import {
+  countWaitingEmails,
+  lastEmailedAt,
+} from "./emailNotificationService.js";
+import { emailProviderName } from "./email/emailSender.js";
 import { toOffset, toPaginated } from "../utils/pagination.js";
 import type { Pagination, Paginated } from "../utils/pagination.js";
 import type { UserRole } from "../models/User.js";
@@ -34,6 +40,14 @@ export interface SystemStatus {
     lastCompanyCheckedAt: Date | null;
     // Companies waiting for their next check
     companiesDue: number;
+  };
+  emails: {
+    running: boolean;
+    // "resend" sends them; "log" only writes them to the API's console
+    provider: string;
+    // Notifications still to be emailed (most wait for the daily summary)
+    waiting: number;
+    lastSentAt: Date | null;
   };
   users: { total: number; admins: number };
   companies: {
@@ -83,6 +97,8 @@ export async function getSystemStatus(): Promise<SystemStatus> {
     unread,
     conversations,
     questions,
+    emailsWaiting,
+    lastSentAt,
   ] = await Promise.all([
     BrregSyncState.findOne(),
     CompanyRecord.max<Date | null, CompanyRecord>("accountsCheckedAt"),
@@ -114,6 +130,8 @@ export async function getSystemStatus(): Promise<SystemStatus> {
     AssistantUsage.count({
       where: { createdAt: { [Op.gte]: new Date(now - 24 * HOUR_MS) } },
     }),
+    countWaitingEmails(new Date(now)),
+    lastEmailedAt(),
   ]);
 
   const riskLevels = { low: 0, medium: 0, high: 0, notAssessed: 0 };
@@ -134,6 +152,12 @@ export async function getSystemStatus(): Promise<SystemStatus> {
       running: isAccountsCheckRunning(),
       lastCompanyCheckedAt: lastCompanyCheckedAt ?? null,
       companiesDue,
+    },
+    emails: {
+      running: isEmailJobRunning(),
+      provider: emailProviderName(),
+      waiting: emailsWaiting,
+      lastSentAt,
     },
     users: { total: users, admins },
     companies: { total: companies, followed, struckOff, riskLevels },

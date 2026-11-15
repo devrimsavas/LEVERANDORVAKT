@@ -3,6 +3,7 @@ import {
   getStatus,
   listUsersHandler,
   runAccountsCheckNow,
+  runEmailsNow,
   runChangeDetectionNow,
 } from "../controllers/adminController.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
@@ -17,5 +18,6 @@ router.get("/status", getStatus);
 router.get("/users", listUsersHandler);
 router.post("/change-detection/run", runChangeDetectionNow);
 router.post("/accounts-check/run", runAccountsCheckNow);
+router.post("/emails/run", runEmailsNow);
 
 export default router;

@@ -1,3 +1,4 @@
+import { sendEmailsAfterChanges } from "./emailJob.js";
 import { runChangeDetection } from "../services/changeDetectionService.js";
 import type { ChangeDetectionSummary } from "../services/changeDetectionService.js";
 
@@ -29,6 +30,10 @@ export async function runChangeDetectionOnce(): Promise<ChangeDetectionSummary |
         `Change detection: ${summary.companiesChecked} checked, ` +
           `${summary.changesFound} changes, ${summary.failedCompanies} failed`,
       );
+    }
+    // Changes found now are emailed to those who want them at once
+    if (summary.changesFound > 0) {
+      await sendEmailsAfterChanges();
     }
     return summary;
   } finally {

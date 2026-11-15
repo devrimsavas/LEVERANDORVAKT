@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { resolveLocale } from "@/i18n/request";
 import { apiFetch } from "./api";
 import { endSession, startSession } from "./session";
 import { safeNextPath } from "./redirect";
@@ -128,7 +129,14 @@ export async function registerAction(
 
   const created = await apiFetch("/api/auth/register", {
     method: "POST",
-    body: { firstName, lastName, email, password },
+    // The emails come in the language the account was made in
+    body: {
+      firstName,
+      lastName,
+      email,
+      password,
+      language: await resolveLocale(),
+    },
     auth: false,
   });
   if (!created.ok) {

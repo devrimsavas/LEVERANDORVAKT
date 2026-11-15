@@ -10,6 +10,7 @@ export interface SentEmail {
   subject: string;
   text: string;
   html: string;
+  headers?: Record<string, string>;
   // The Authorization header, to check the API key is sent
   authorization: string | null;
 }

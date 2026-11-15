@@ -1,3 +1,4 @@
+import { sendEmailsAfterChanges } from "./emailJob.js";
 import { runAccountsCheck } from "../services/accountsService.js";
 import type { AccountsCheckSummary } from "../services/accountsService.js";
 
@@ -26,6 +27,10 @@ export async function runAccountsCheckOnce(): Promise<AccountsCheckSummary | nul
       `Accounts check: ${summary.companiesChecked} checked, ` +
         `${summary.changesFound} changes, ${summary.failedCompanies} failed`,
     );
+    // Changes found now are emailed to those who want them at once
+    if (summary.changesFound > 0) {
+      await sendEmailsAfterChanges();
+    }
     return summary;
   } finally {
     isRunning = false;

@@ -2,6 +2,15 @@ import { Table, Column, Model, DataType } from "sequelize-typescript";
 
 export type UserRole = "user" | "admin";
 
+// The languages of the web app; emails are written in the user's one
+export const LANGUAGES = ["en", "nb"] as const;
+export type Language = (typeof LANGUAGES)[number];
+
+// How the user wants to hear about changes by email. Critical changes
+// (such as bankruptcy) are always sent at once, unless it is "off".
+export const EMAIL_NOTIFICATIONS = ["instant", "daily", "off"] as const;
+export type EmailNotifications = (typeof EMAIL_NOTIFICATIONS)[number];
+
 @Table({ tableName: "users", underscored: true })
 export class User extends Model {
   // Internal primary key, never exposed outside the database
@@ -48,4 +57,24 @@ export class User extends Model {
   // When the "getting started" list was closed; null while it is shown
   @Column({ type: DataType.DATE, allowNull: true })
   declare onboardingDismissedAt: Date | null;
+
+  @Column({
+    type: DataType.STRING(2),
+    allowNull: false,
+    defaultValue: "en",
+    validate: { isIn: [LANGUAGES] },
+  })
+  declare language: Language;
+
+  @Column({
+    type: DataType.STRING(10),
+    allowNull: false,
+    defaultValue: "daily",
+    validate: { isIn: [EMAIL_NOTIFICATIONS] },
+  })
+  declare emailNotifications: EmailNotifications;
+
+  // When the last daily summary was sent; at most one a day
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare lastDigestAt: Date | null;
 }

@@ -25,6 +25,7 @@ import adminRouter from "./routes/admin.js";
 //assistant router
 import assistantRouter from "./routes/assistant.js";
 //trends router
+import emailRouter from "./routes/email.js";
 import trendsRouter from "./routes/trends.js";
 
 const app = express();
@@ -75,6 +76,7 @@ app.use("/api/notifications", notificationsRouter);
 app.use("/api/admin", adminRouter);
 app.use("/api/assistant", assistantRouter);
 app.use("/api/trends", trendsRouter);
+app.use("/api/email", emailRouter);
 
 //swagger docs
 const swaggerPath = path.join(process.cwd(), "swagger_output.json");

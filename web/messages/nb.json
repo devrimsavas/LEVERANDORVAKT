@@ -811,6 +811,18 @@
         "text": "Henter nye årsregnskap for fulgte selskaper og ser etter varseltegn.",
         "lastChecked": "Sist sjekket selskap",
         "due": "Venter på sjekk"
+      },
+      "emails": {
+        "title": "Varsler på e-post",
+        "text": "Sender kritiske endringer med en gang, og de daglige oppsummeringene hver morgen. Knappen sender også dagens oppsummeringer nå.",
+        "provider": "Sendes med",
+        "providers": {
+          "resend": "Resend",
+          "log": "Bare konsollen til API-et (sendes ikke)"
+        },
+        "waiting": "Venter",
+        "lastSent": "Sist sendt",
+        "notifications": "{count, plural, one {# varsel} other {# varsler}}"
       }
     },
     "run": {
@@ -819,7 +831,8 @@
       "initialized": "Første kjøring: startpunktene i strømmene er lagret. Endringer blir funnet fra neste kjøring.",
       "done": "Ferdig: {checked, plural, one {# selskap} other {# selskaper}} sjekket, {changes, plural, one {# endring} other {# endringer}} funnet, {failed} feilet.",
       "alreadyRunning": "Denne jobben kjører allerede. Oppdater siden om litt.",
-      "failed": "Kjøringen feilet. Se loggen til API-et for årsaken."
+      "failed": "Kjøringen feilet. Se loggen til API-et for årsaken.",
+      "emailsDone": "Ferdig: {instant, plural, one {# e-post} other {# e-poster}} med en gang og {digest, plural, one {# daglig oppsummering} other {# daglige oppsummeringer}} sendt, {failed} feilet."
     },
     "numbers": {
       "title": "I tall",
@@ -942,6 +955,10 @@
         "info": {
           "title": "Info:",
           "text": "til orientering, for eksempel nye styremedlemmer, ny hjemmeside eller nylig levert regnskap."
+        },
+        "email": {
+          "title": "På e-post:",
+          "text": "kritiske endringer sendes med en gang, resten som én oppsummering hver morgen. I Innstillinger kan du få hver endring med en gang, eller ingen e-post."
         }
       }
     },
@@ -984,7 +1001,7 @@
       "bankrupt": {
         "title": "En leverandør går konkurs",
         "happens": "Retten åpner konkurs, og registeret markerer selskapet som konkurs.",
-        "see": "Et kritisk varsel innen omtrent ti minutter, en Konkurs-merkelapp på selskapet, og risikonivået går til høy.",
+        "see": "Et kritisk varsel og en e-post innen omtrent ti minutter, en Konkurs-merkelapp på selskapet, og risikonivået går til høy.",
         "do": "Kontakt boet om åpne ordre og leveranser, og begynn å se etter en annen leverandør."
       },
       "newCeo": {
@@ -1015,12 +1032,42 @@
   },
   "settings": {
     "title": "Innstillinger",
-    "lead": "Kontoen din, passordet ditt og dataene dine.",
+    "lead": "Kontoen din, e-postene dine, passordet ditt og dataene dine.",
     "account": {
       "title": "Kontoen din",
       "name": "Navn",
       "email": "E-post",
       "since": "Medlem siden"
+    },
+    "emails": {
+      "title": "Varsler på e-post",
+      "text": "E-postene går til {email}, på {language}. De følger språket du velger øverst på siden.",
+      "languages": {
+        "en": "engelsk",
+        "nb": "norsk"
+      },
+      "legend": "Når vil du ha e-post?",
+      "choices": {
+        "instant": {
+          "label": "Hver endring med en gang",
+          "description": "En e-post så snart en endring blir funnet i et selskap du følger."
+        },
+        "daily": {
+          "label": "Kritiske endringer med en gang, resten én gang om dagen",
+          "description": "Konkurs, avvikling og økt risikonivå kommer med en gang; alt annet i én oppsummering om morgenen."
+        },
+        "off": {
+          "label": "Ingen e-post",
+          "description": "Du ser fortsatt alle endringer i appen."
+        }
+      },
+      "submit": "Lagre",
+      "saved": {
+        "instant": "Lagret. Du får en e-post for hver endring med en gang.",
+        "daily": "Lagret. Kritiske endringer kommer med en gang, resten i en oppsummering om morgenen.",
+        "off": "Lagret. Du får ikke flere e-poster."
+      },
+      "failed": "Valget kunne ikke lagres. Prøv igjen om litt."
     },
     "password": {
       "title": "Endre passord",
@@ -1045,6 +1092,18 @@
       "password": "Passord",
       "confirm": "Slett kontoen min",
       "cancel": "Avbryt"
+    }
+  },
+  "unsubscribe": {
+    "title": "Slå av e-post",
+    "lead": "Stoppe varslene på e-post fra Leverandørvakt? Du ser fortsatt alle endringer i appen.",
+    "button": "Slå av e-post",
+    "done": "Ferdig. Du får ikke flere varsler på e-post.",
+    "again": "Ombestemt deg?",
+    "settingsLink": "Slå dem på igjen i Innstillinger",
+    "errors": {
+      "linkInvalid": "Denne lenken er ikke gyldig. Logg inn og velg i Innstillinger når du får e-post.",
+      "unavailable": "Tjenesten er ikke tilgjengelig akkurat nå. Prøv igjen om litt."
     }
   }
 }

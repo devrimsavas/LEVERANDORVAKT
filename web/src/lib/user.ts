@@ -3,6 +3,8 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { apiFetch } from "./api";
 import { getSessionToken } from "./session";
+import type { Locale } from "@/i18n/config";
+import type { EmailNotifications } from "./preferences";
 
 export interface CurrentUser {
   userId: string;
@@ -10,6 +12,9 @@ export interface CurrentUser {
   lastName: string;
   email: string;
   role: "user" | "admin";
+  // The language of the emails, which follows the app's language
+  language: Locale;
+  emailNotifications: EmailNotifications;
   createdAt: string;
 }
 

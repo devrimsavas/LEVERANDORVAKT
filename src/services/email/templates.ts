@@ -1,8 +1,10 @@
 import type { Email } from "./emailSender.js";
+import type { Language } from "../../models/User.js";
+import { changeTitle, changeValues, severityLabel } from "./changeTexts.js";
 
 // The languages of the web app; emails are written in the one the user
 // was using
-export type EmailLanguage = "en" | "nb";
+export type EmailLanguage = Language;
 
 export function toEmailLanguage(value: unknown): EmailLanguage {
   return value === "nb" ? "nb" : "en";
@@ -18,15 +20,18 @@ function escapeHtml(value: string): string {
 }
 
 // A plain layout that mail programs show well: one column, the brand
-// color, a button and the link written out below it
+// color, a button and the link written out below it. extraHtml goes
+// between the text and the button (the list of changes).
 function layout(
   paragraphs: string[],
   button: { text: string; url: string },
   footer: string,
+  extraHtml = "",
 ): string {
-  const body = paragraphs
-    .map((p) => `<p style="margin:0 0 16px;line-height:1.5">${p}</p>`)
-    .join("");
+  const body =
+    paragraphs
+      .map((p) => `<p style="margin:0 0 16px;line-height:1.5">${p}</p>`)
+      .join("") + extraHtml;
   return `<!doctype html>
 <html><body style="margin:0;padding:24px;background:#f4f5f6;font-family:Arial,Helvetica,sans-serif;color:#24272b">
 <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:8px;padding:32px">
@@ -78,5 +83,156 @@ export function passwordResetEmail(input: {
       { text: texts.button, url: input.link },
       escapeHtml(texts.footer),
     ),
+  };
+}
+
+// ---- Notification emails ----
+
+export interface NotificationEmailItem {
+  orgNumber: string;
+  companyName: string;
+  field: string;
+  oldValue: unknown;
+  newValue: unknown;
+  severity: string;
+}
+
+const NOTIFICATIONS = {
+  en: {
+    subjectOne: (company: string, title: string) => `${company}: ${title}`,
+    subjectMany: (count: number) =>
+      `${count} changes in the companies you follow`,
+    subjectDigest: (count: number) =>
+      count === 1
+        ? "Your daily summary: 1 change"
+        : `Your daily summary: ${count} changes`,
+    greeting: (name: string) => `Hi ${name},`,
+    introInstant: "Leverandørvakt has found changes in companies you follow:",
+    introDigest:
+      "Here is what has changed in the companies you follow since the last summary:",
+    before: "Before",
+    after: "Now",
+    button: "Open your notifications",
+    footer:
+      "You get this email because you follow these companies in Leverandørvakt.",
+    settings: "Change email settings",
+    unsubscribe: "Turn off emails",
+  },
+  nb: {
+    subjectOne: (company: string, title: string) => `${company}: ${title}`,
+    subjectMany: (count: number) => `${count} endringer i selskapene du følger`,
+    subjectDigest: (count: number) =>
+      count === 1
+        ? "Dagens oppsummering: 1 endring"
+        : `Dagens oppsummering: ${count} endringer`,
+    greeting: (name: string) => `Hei ${name},`,
+    introInstant: "Leverandørvakt har funnet endringer i selskaper du følger:",
+    introDigest:
+      "Dette har endret seg i selskapene du følger siden forrige oppsummering:",
+    before: "Før",
+    after: "Nå",
+    button: "Åpne varslene dine",
+    footer:
+      "Du får denne e-posten fordi du følger disse selskapene i Leverandørvakt.",
+    settings: "Endre e-postinnstillinger",
+    unsubscribe: "Slå av e-poster",
+  },
+} as const;
+
+const SEVERITY_COLORS: Record<string, string> = {
+  critical: "#c01b1b",
+  warning: "#a35200",
+  info: "#0062ba",
+};
+
+export function notificationEmail(input: {
+  to: string;
+  firstName: string;
+  language: EmailLanguage;
+  kind: "instant" | "digest";
+  items: NotificationEmailItem[];
+  webAppUrl: string;
+  unsubscribeUrl: string;
+  oneClickUnsubscribeUrl: string;
+}): Email {
+  const texts = NOTIFICATIONS[input.language];
+  const lines = input.items.map((item) => {
+    const title = changeTitle(input.language, item.field, item.newValue);
+    const values = changeValues(
+      input.language,
+      item.field,
+      item.oldValue,
+      item.newValue,
+    );
+    return {
+      ...item,
+      title,
+      ...values,
+      severityText: severityLabel(input.language, item.severity),
+      url: `${input.webAppUrl}/companies/${item.orgNumber}`,
+    };
+  });
+
+  const first = lines[0]!;
+  const subject =
+    input.kind === "digest"
+      ? texts.subjectDigest(lines.length)
+      : lines.length === 1
+        ? texts.subjectOne(first.companyName, first.title)
+        : texts.subjectMany(lines.length);
+  const intro =
+    input.kind === "digest" ? texts.introDigest : texts.introInstant;
+  const notificationsUrl = `${input.webAppUrl}/notifications`;
+  const settingsUrl = `${input.webAppUrl}/settings`;
+
+  const text = [
+    texts.greeting(input.firstName),
+    "",
+    intro,
+    "",
+    ...lines.flatMap((line) => [
+      `[${line.severityText}] ${line.companyName} (${line.orgNumber}): ${line.title}`,
+      `  ${texts.before}: ${line.before}`,
+      `  ${texts.after}: ${line.after}`,
+      `  ${line.url}`,
+      "",
+    ]),
+    `${texts.button}: ${notificationsUrl}`,
+    "",
+    texts.footer,
+    `${texts.settings}: ${settingsUrl}`,
+    `${texts.unsubscribe}: ${input.unsubscribeUrl}`,
+  ].join("\n");
+
+  const list = lines
+    .map((line) => {
+      const color = SEVERITY_COLORS[line.severity] ?? "#0062ba";
+      return `<div style="margin:0 0 12px;padding:12px 16px;border-left:4px solid ${color};background:#f4f5f6;border-radius:4px">
+<p style="margin:0 0 4px;font-size:12px;font-weight:bold;color:${color};text-transform:uppercase">${escapeHtml(line.severityText)}</p>
+<p style="margin:0 0 4px;font-weight:bold"><a href="${escapeHtml(line.url)}" style="color:#24272b">${escapeHtml(line.companyName)}</a> <span style="font-weight:normal;color:#5d6066">${escapeHtml(line.orgNumber)}</span></p>
+<p style="margin:0 0 4px">${escapeHtml(line.title)}</p>
+<p style="margin:0;font-size:13px;color:#5d6066">${escapeHtml(texts.before)}: ${escapeHtml(line.before)} &rarr; ${escapeHtml(texts.after)}: ${escapeHtml(line.after)}</p>
+</div>`;
+    })
+    .join("");
+
+  const footer = `${escapeHtml(texts.footer)}<br><a href="${escapeHtml(settingsUrl)}" style="color:#5d6066">${escapeHtml(texts.settings)}</a> · <a href="${escapeHtml(input.unsubscribeUrl)}" style="color:#5d6066">${escapeHtml(texts.unsubscribe)}</a>`;
+
+  return {
+    to: input.to,
+    subject,
+    text,
+    html: layout(
+      [escapeHtml(texts.greeting(input.firstName)), escapeHtml(intro)],
+      { text: texts.button, url: notificationsUrl },
+      footer,
+      list,
+    ),
+    // Lets mail programs show their own "unsubscribe" button, which turns
+    // the emails off with one click (RFC 8058)
+    headers: {
+      "List-Unsubscribe": `<${input.oneClickUnsubscribeUrl}>`,
+      "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+    },
   };
 }

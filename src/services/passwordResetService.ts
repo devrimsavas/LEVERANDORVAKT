@@ -6,6 +6,7 @@ import { User } from "../models/User.js";
 import { PasswordResetToken } from "../models/PasswordResetToken.js";
 import { normalizeEmail, SALT_ROUNDS } from "./authService.js";
 import { getEmailSender } from "./email/emailSender.js";
+import { webAppUrl } from "../utils/webAppUrl.js";
 import { passwordResetEmail, type EmailLanguage } from "./email/templates.js";
 
 // How long a reset link works
@@ -15,14 +16,6 @@ export class InvalidResetTokenError extends Error {}
 
 function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
-}
-
-// Where the web app runs, for the link in the email
-function webAppUrl(): string {
-  return (process.env.WEB_APP_URL || "http://localhost:3001").replace(
-    /\/+$/,
-    "",
-  );
 }
 
 // Sends a reset link if an account has this email. Does nothing for an

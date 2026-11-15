@@ -14,6 +14,7 @@ import {
   changeMyPassword,
   deleteMyAccount,
   exportMyData,
+  updateMyPreferences,
 } from "../controllers/accountController.js";
 import {
   passwordCheckLimit,
@@ -40,6 +41,7 @@ router.get("/me", requireAuth, me);
 router.delete("/me", requireAuth, passwordCheckLimit, deleteMyAccount);
 router.post("/me/password", requireAuth, passwordCheckLimit, changeMyPassword);
 router.get("/me/export", requireAuth, exportMyData);
+router.patch("/me/preferences", requireAuth, updateMyPreferences);
 router.get("/me/onboarding", requireAuth, getMyOnboarding);
 router.post("/me/onboarding/dismiss", requireAuth, dismissMyOnboarding);
 

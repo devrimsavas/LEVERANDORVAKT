@@ -10,7 +10,7 @@ import { User } from "./User.js";
 import { CompanyChange } from "./CompanyChange.js";
 
 // Tells one user about one change in a company they follow.
-// Only readAt changes after creation, so there is no updatedAt.
+// Only readAt and emailedAt change after creation, so there is no updatedAt.
 @Table({ tableName: "notifications", underscored: true, updatedAt: false })
 export class Notification extends Model {
   // Internal primary key, never exposed outside the database
@@ -43,4 +43,11 @@ export class Notification extends Model {
   // null means unread
   @Column({ type: DataType.DATE, allowNull: true })
   declare readAt: Date | null;
+
+  // When it was sent by email (at once or in a daily summary), or handled
+  // without an email; null while still waiting
+  @Column({ type: DataType.DATE, allowNull: true })
+  declare emailedAt: Date | null;
+
+  declare createdAt: Date;
 }

@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import type { SignOptions } from "jsonwebtoken";
 import { User } from "../models/User.js";
-import type { UserRole } from "../models/User.js";
+import type { EmailNotifications, Language, UserRole } from "../models/User.js";
 
 export const SALT_ROUNDS = 10;
 
@@ -17,6 +17,8 @@ export interface PublicUser {
   lastName: string;
   email: string;
   role: UserRole;
+  language: Language;
+  emailNotifications: EmailNotifications;
   lastLoginAt: Date | null;
   createdAt: Date;
 }
@@ -26,6 +28,8 @@ export interface RegisterInput {
   lastName: string;
   email: string;
   password: string;
+  // The web app's language when the account was made; emails use it
+  language?: Language;
 }
 
 export interface LoginResult {
@@ -54,6 +58,8 @@ export function toPublicUser(user: User): PublicUser {
     lastName: user.lastName,
     email: user.email,
     role: user.role,
+    language: user.language,
+    emailNotifications: user.emailNotifications,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,
   };
@@ -76,6 +82,7 @@ export async function registerUser(input: RegisterInput): Promise<PublicUser> {
     lastName: input.lastName.trim(),
     email,
     passwordHash,
+    ...(input.language ? { language: input.language } : {}),
   });
 
   return toPublicUser(user);

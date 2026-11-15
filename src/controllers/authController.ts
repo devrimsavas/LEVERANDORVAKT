@@ -18,6 +18,11 @@ import {
 } from "../services/passwordResetService.js";
 import { toEmailLanguage } from "../services/email/templates.js";
 import { loginPerAccountLimit } from "../middlewares/rateLimits.js";
+import { LANGUAGES, type Language } from "../models/User.js";
+
+export function isLanguage(value: unknown): value is Language {
+  return LANGUAGES.includes(value as Language);
+}
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const MIN_PASSWORD_LENGTH = 8;
@@ -34,7 +39,7 @@ function isValidName(value: unknown): value is string {
 // POST /api/auth/register
 export const register = async (req: Request, res: Response) => {
   // #swagger.tags = ["Auth"]
-  const { firstName, lastName, email, password } = req.body ?? {};
+  const { firstName, lastName, email, password, language } = req.body ?? {};
 
   if (!isValidName(firstName) || !isValidName(lastName)) {
     res.status(400).json({
@@ -56,7 +61,14 @@ export const register = async (req: Request, res: Response) => {
   }
 
   try {
-    const user = await registerUser({ firstName, lastName, email, password });
+    const user = await registerUser({
+      firstName,
+      lastName,
+      email,
+      password,
+      // An unknown language is left out, and English is used
+      ...(isLanguage(language) ? { language } : {}),
+    });
     res.status(201).json(user);
   } catch (error) {
     if (error instanceof EmailTakenError) {

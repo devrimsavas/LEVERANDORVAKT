@@ -811,6 +811,18 @@
         "text": "Fetches new annual accounts for followed companies and looks for warning signs.",
         "lastChecked": "Last company checked",
         "due": "Due for a check"
+      },
+      "emails": {
+        "title": "Notification emails",
+        "text": "Sends critical changes at once, and the daily summaries each morning. The button also sends today's summaries now.",
+        "provider": "Sent with",
+        "providers": {
+          "resend": "Resend",
+          "log": "The API's console only (not sent)"
+        },
+        "waiting": "Waiting",
+        "lastSent": "Last sent",
+        "notifications": "{count, plural, one {# notification} other {# notifications}}"
       }
     },
     "run": {
@@ -819,7 +831,8 @@
       "initialized": "First run: the starting points in the feeds are recorded. Changes are found from the next run.",
       "done": "Done: {checked, plural, one {# company} other {# companies}} checked, {changes, plural, one {# change} other {# changes}} found, {failed} failed.",
       "alreadyRunning": "This job is already running. Refresh the page in a little while.",
-      "failed": "The run failed. See the API's log for the reason."
+      "failed": "The run failed. See the API's log for the reason.",
+      "emailsDone": "Done: {instant, plural, one {# email} other {# emails}} at once and {digest, plural, one {# daily summary} other {# daily summaries}} sent, {failed} failed."
     },
     "numbers": {
       "title": "In numbers",
@@ -942,6 +955,10 @@
         "info": {
           "title": "Info:",
           "text": "for the record, such as new board members, a new website or newly filed accounts."
+        },
+        "email": {
+          "title": "By email:",
+          "text": "critical changes are emailed at once, the rest as one summary each morning. In Settings you can have every change at once, or no emails."
         }
       }
     },
@@ -984,7 +1001,7 @@
       "bankrupt": {
         "title": "A supplier goes bankrupt",
         "happens": "The court opens bankruptcy proceedings, and the register marks the company as bankrupt.",
-        "see": "A critical notification within about ten minutes, a Bankrupt tag on the company, and the risk level goes to high.",
+        "see": "A critical notification and an email within about ten minutes, a Bankrupt tag on the company, and the risk level goes to high.",
         "do": "Contact the estate about open orders and deliveries, and start looking for another supplier."
       },
       "newCeo": {
@@ -1015,12 +1032,42 @@
   },
   "settings": {
     "title": "Settings",
-    "lead": "Your account, your password and your data.",
+    "lead": "Your account, your emails, your password and your data.",
     "account": {
       "title": "Your account",
       "name": "Name",
       "email": "Email",
       "since": "Member since"
+    },
+    "emails": {
+      "title": "Email notifications",
+      "text": "Emails go to {email}, in {language}. They follow the language you choose at the top of the page.",
+      "languages": {
+        "en": "English",
+        "nb": "Norwegian"
+      },
+      "legend": "When should we email you?",
+      "choices": {
+        "instant": {
+          "label": "Every change at once",
+          "description": "An email as soon as a change is found in a company you follow."
+        },
+        "daily": {
+          "label": "Critical changes at once, the rest once a day",
+          "description": "Bankruptcy, liquidation and a rising risk level come at once; everything else in one summary in the morning."
+        },
+        "off": {
+          "label": "No emails",
+          "description": "You still see every change in the app."
+        }
+      },
+      "submit": "Save",
+      "saved": {
+        "instant": "Saved. You get an email for every change at once.",
+        "daily": "Saved. Critical changes come at once, the rest in a morning summary.",
+        "off": "Saved. You get no more emails."
+      },
+      "failed": "The choice could not be saved. Try again in a little while."
     },
     "password": {
       "title": "Change password",
@@ -1045,6 +1092,18 @@
       "password": "Password",
       "confirm": "Delete my account",
       "cancel": "Cancel"
+    }
+  },
+  "unsubscribe": {
+    "title": "Turn off emails",
+    "lead": "Stop the notification emails from Leverandørvakt? You still see every change in the app.",
+    "button": "Turn off emails",
+    "done": "Done. You get no more notification emails.",
+    "again": "Changed your mind?",
+    "settingsLink": "Turn them on again in Settings",
+    "errors": {
+      "linkInvalid": "This link is not valid. Log in and choose in Settings when you get emails.",
+      "unavailable": "The service is not available right now. Try again in a little while."
     }
   }
 }

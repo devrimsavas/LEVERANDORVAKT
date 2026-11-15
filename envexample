@@ -40,6 +40,11 @@ RESEND_API_KEY=
 EMAIL_FROM=Leverandørvakt <onboarding@resend.dev>
 # Where the web app runs, for the links in emails
 WEB_APP_URL=http://localhost:3001
+# Notification emails: minutes between checks for new ones (0 turns them off),
+# the hour the daily summary goes out and the time zone of that hour
+EMAIL_CHECK_MINUTES=5
+EMAIL_DIGEST_HOUR=7
+EMAIL_TIME_ZONE=Europe/Oslo
 
 # AI assistant. AI_PROVIDER is "ollama" or "gemini"; leave it empty to turn the assistant off.
 AI_PROVIDER=ollama

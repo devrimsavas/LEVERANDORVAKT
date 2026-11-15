@@ -16,6 +16,13 @@ export interface SystemStatus {
     lastCompanyCheckedAt: string | null;
     companiesDue: number;
   };
+  emails: {
+    running: boolean;
+    // "resend", or "log" when emails are only written to the API's console
+    provider: string;
+    waiting: number;
+    lastSentAt: string | null;
+  };
   users: { total: number; admins: number };
   companies: {
     total: number;
@@ -50,7 +57,7 @@ export interface AdminUserPage {
   totalPages: number;
 }
 
-export type JobKind = "changeDetection" | "accountsCheck";
+export type JobKind = "changeDetection" | "accountsCheck" | "emails";
 
 export interface JobSummary {
   // Only change detection: true when the first run only set the start
@@ -60,8 +67,20 @@ export interface JobSummary {
   failedCompanies: number;
 }
 
+// What one run of the emails did (POST /api/admin/emails/run)
+export interface EmailRunSummary {
+  usersEmailed: number;
+  notificationsEmailed: number;
+  failedUsers: number;
+}
+
+export interface EmailJobSummary {
+  instant: EmailRunSummary;
+  digest: EmailRunSummary;
+}
+
 export type JobResult =
-  | { ok: true; summary: JobSummary }
+  | { ok: true; summary: JobSummary | EmailJobSummary }
   | { ok: false; error: "running" | "failed" };
 
 export const USERS_PAGE_SIZE = 20;

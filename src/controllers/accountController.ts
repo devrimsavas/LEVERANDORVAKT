@@ -7,7 +7,12 @@ import {
   LastAdminError,
   UserNotFoundError,
 } from "../services/accountService.js";
-import { MIN_PASSWORD_LENGTH } from "./authController.js";
+import { isLanguage, MIN_PASSWORD_LENGTH } from "./authController.js";
+import { updatePreferences } from "../services/accountService.js";
+import {
+  EMAIL_NOTIFICATIONS,
+  type EmailNotifications,
+} from "../models/User.js";
 
 // POST /api/auth/me/password
 export const changeMyPassword = async (req: Request, res: Response) => {
@@ -90,5 +95,43 @@ export const deleteMyAccount = async (req: Request, res: Response) => {
     }
     console.error(error);
     res.status(500).json({ error: "Could not delete the account" });
+  }
+};
+
+// PATCH /api/auth/me/preferences
+export const updateMyPreferences = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Auth"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.description = "Sets the language for emails (en or nb) and how notifications are emailed: instant, daily or off. Critical changes are emailed at once unless it is off." */
+  const { language, emailNotifications } = req.body ?? {};
+
+  if (language !== undefined && !isLanguage(language)) {
+    res.status(400).json({ error: "language must be en or nb" });
+    return;
+  }
+  if (
+    emailNotifications !== undefined &&
+    !EMAIL_NOTIFICATIONS.includes(emailNotifications as EmailNotifications)
+  ) {
+    res
+      .status(400)
+      .json({ error: "emailNotifications must be instant, daily or off" });
+    return;
+  }
+
+  try {
+    res.json(
+      await updatePreferences(req.auth!.userId, {
+        ...(language !== undefined ? { language } : {}),
+        ...(emailNotifications !== undefined ? { emailNotifications } : {}),
+      }),
+    );
+  } catch (error) {
+    if (error instanceof UserNotFoundError) {
+      res.status(404).json({ error: error.message });
+      return;
+    }
+    console.error(error);
+    res.status(500).json({ error: "Could not save the preferences" });
   }
 };

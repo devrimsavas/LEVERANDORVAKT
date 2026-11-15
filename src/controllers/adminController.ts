@@ -1,3 +1,4 @@
+import { runEmailsOnce } from "../jobs/emailJob.js";
 import type { Request, Response } from "express";
 import { runChangeDetectionOnce } from "../jobs/changeDetectionJob.js";
 import { runAccountsCheckOnce } from "../jobs/accountsCheckJob.js";
@@ -95,5 +96,27 @@ export const runAccountsCheckNow = async (req: Request, res: Response) => {
     res
       .status(500)
       .json({ error: "The accounts check failed, see the server log" });
+  }
+};
+
+// POST /api/admin/emails/run
+export const runEmailsNow = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Admin"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.description = "Sends the emails that are due, and every daily summary now, whatever the hour"
+     #swagger.responses[403] = { description: "Only admins can run this" }
+     #swagger.responses[409] = { description: "A run is already in progress" } */
+  try {
+    const summary = await runEmailsOnce({ forceDigest: true });
+    if (summary === null) {
+      res.status(409).json({ error: "The emails are already being sent" });
+      return;
+    }
+    res.json(summary);
+  } catch (error) {
+    console.error(error);
+    res
+      .status(500)
+      .json({ error: "Sending the emails failed, see the server log" });
   }
 };

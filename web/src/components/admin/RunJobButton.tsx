@@ -5,10 +5,15 @@ import { useTranslations } from "next-intl";
 import { Alert, Button } from "@digdir/designsystemet-react";
 import { PlayIcon } from "@navikt/aksel-icons";
 import { runJob } from "@/lib/adminActions";
-import type { JobKind, JobResult } from "@/lib/adminTypes";
+import type {
+  EmailJobSummary,
+  JobKind,
+  JobResult,
+  JobSummary,
+} from "@/lib/adminTypes";
 import styles from "./admin.module.css";
 
-// Starts a background job and shows what the run did. A run can take a
+// Starts a background job and shows what the run did. A check can take a
 // while, since it asks Brreg about every company that needs it.
 export function RunJobButton({
   kind,
@@ -18,6 +23,22 @@ export function RunJobButton({
   disabled: boolean;
 }) {
   const t = useTranslations("admin.run");
+  const done = (summary: JobSummary | EmailJobSummary) => {
+    if ("instant" in summary) {
+      return t("emailsDone", {
+        instant: summary.instant.usersEmailed,
+        digest: summary.digest.usersEmailed,
+        failed: summary.instant.failedUsers + summary.digest.failedUsers,
+      });
+    }
+    return summary.initialized
+      ? t("initialized")
+      : t("done", {
+          checked: summary.companiesChecked,
+          changes: summary.changesFound,
+          failed: summary.failedCompanies,
+        });
+  };
   const [pending, startTransition] = useTransition();
   const [result, setResult] = useState<JobResult | null>(null);
 
@@ -39,13 +60,7 @@ export function RunJobButton({
       <div aria-live="polite">
         {result?.ok === true && (
           <Alert data-color="success" data-size="sm">
-            {result.summary.initialized
-              ? t("initialized")
-              : t("done", {
-                  checked: result.summary.companiesChecked,
-                  changes: result.summary.changesFound,
-                  failed: result.summary.failedCompanies,
-                })}
+            {done(result.summary)}
           </Alert>
         )}
         {result?.ok === false && (

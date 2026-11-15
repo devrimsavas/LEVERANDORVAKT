@@ -8,6 +8,7 @@ import { runMigrations } from "./config/migrator.js";
 import { ensureAdmin } from "./config/ensureAdmin.js";
 import { startChangeDetectionJob } from "./jobs/changeDetectionJob.js";
 import { startAccountsCheckJob } from "./jobs/accountsCheckJob.js";
+import { startEmailJob } from "./jobs/emailJob.js";
 
 const PORT = process.env.PORT || 3000;
 
@@ -27,6 +28,7 @@ const startServer = async () => {
     startChangeDetectionJob();
     //annual accounts check
     startAccountsCheckJob();
+    startEmailJob();
   } catch (error: any) {
     console.error(`Error ${error.message}`);
     process.exit(1);
