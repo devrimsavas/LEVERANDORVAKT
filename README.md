@@ -34,6 +34,7 @@ Small businesses rarely notice when a supplier or customer gets into trouble unt
 - **Your data, your account (GDPR)** — download everything stored about you as one JSON file, change your password, or delete the account and everything that belongs to it
 - **Password reset by email** — a link that works once, for an hour, sent with Resend in the user's language; only a hash of the token is stored, and the reset ends every other session
 - **Rate limits and security headers** — failed logins limited per account and per address, new accounts and all API requests per address, with a `429` that says when to try again; security headers with Helmet on the API and a nonce-based content security policy on the web app
+- **Logging and alerts** — one structured log line per request with a request id shared by the web app and the API, secrets never logged; the admin is emailed when a background job keeps failing or the API answers with a server error
 - **Admin overview** — an admin-only status of the background jobs and the data, and a read-only list of users
 - **Interactive API documentation** — Swagger UI at `/api/docs`
 - **Automated tests and CI** — Vitest + Supertest against a real PostgreSQL database for the API, Playwright end-to-end tests in a real browser for the web app, run by GitHub Actions on every push
@@ -88,6 +89,7 @@ The web app in [`web/`](web) is a Next.js app (App Router) on top of the API. It
 | ORM            | Sequelize with `sequelize-typescript` (decorator models)                                                                                                                                                   |
 | Migrations     | Umzug                                                                                                                                                                                                      |
 | Authentication | JSON Web Tokens (`jsonwebtoken`), password hashing with `bcryptjs`                                                                                                                                         |
+| Logging        | pino and pino-http (JSON lines, readable with pino-pretty in development)                                                                                                                                  |
 | Security       | `helmet` (security headers), `express-rate-limit` (rate limits)                                                                                                                                            |
 | Email          | Resend's HTTP API, behind one interface (or the console in development)                                                                                                                                    |
 | AI             | Ollama (`ollama` client, local or Ollama Cloud) or the Gemini API, behind one provider interface                                                                                                           |
@@ -131,6 +133,8 @@ Services do not know about HTTP, so the same functions can be reused by the sche
 - **Password reset that reveals nothing.** The request always answers `202` with the same text, and before the work is done, so neither the answer nor the time it takes tells whether an account has the email. The token in the link is 32 random bytes; only its SHA-256 hash is stored, so a copy of the database cannot reset passwords. A new link replaces the old one, a link works once for an hour, and the reset ends every earlier session: `requireAuth` refuses tokens issued before `password_changed_at`. Tokens carry the time they were made to the millisecond (`iatMs`), since the standard `iat` has whole seconds and a session started in the same second as the reset would otherwise survive it. A successful reset also lifts the lock from earlier wrong passwords.
 - **Data export and deletion that leave nothing out.** The export lists everything stored about the user (profile, followed companies and notes, notifications with what changed, assistant conversations and when questions were asked) under public ids only, never the password hash, internal ids or reset links, and is sent with `Cache-Control: no-store`. Deleting the account needs the password and removes the user's rows through the database's `ON DELETE CASCADE`, in one transaction; companies stay, since they are register data shared with other users. The last admin cannot be deleted, and wrong passwords on these endpoints are limited per user, so a stolen session cannot guess the password.
 - **Email notifications that are never sent twice or lost.** A notification is claimed for an email by setting `emailed_at` only where it is still empty, so two runs at the same time cannot both send it; if Resend fails, the claim is released and the next run tries again. Notifications already read in the app are not emailed. Critical changes go out right after change detection finds them, also to users who chose the daily summary; the summary is sent once a day after `EMAIL_DIGEST_HOUR` in Norwegian time (summer time included). The unsubscribe link carries the user's public id signed with HMAC-SHA256, so it works without logging in but cannot be made for someone else, and it needs a `POST`, so a link checker opening the email does not unsubscribe anyone. The `List-Unsubscribe` headers let email apps offer their own one-click button (RFC 8058).
+- **Logs that can be followed and never leak.** Every request is logged once when it is answered, as one JSON line with the method, path, status, time taken, a request id and the user's public id. The id comes back in `X-Request-Id`, and the web app sends its own id with every API call and logs it when a call fails, so one failing page can be followed from the web app's log into the API's. Headers, bodies and query strings are never logged, and fields such as `password`, `token` and `authorization` are replaced by `[hidden]` wherever they appear in a logged object.
+- **Alerts without an alerting service.** A background job that fails `ALERT_AFTER_FAILURES` runs in a row (a run where companies or emails could not be handled counts too) emails the admin once, and again when it works; a server error (`500`) is emailed with its request id, at most once an hour, with a count of the errors in between. The counts live in memory, which is enough for one API process. An alert that cannot be sent is logged and never fails the job or the request.
 - **Email behind one interface.** `EMAIL_PROVIDER=log` (the default) writes emails to the console, so development needs no account; `resend` sends them with Resend's HTTP API. The tests use a fake Resend, and the end-to-end tests read the emails from it to follow the reset link.
 - **User roles are never taken from client input.** New users are always `user`; the admin account is created once from environment variables.
 - **Same error for unknown email and wrong password**, so the login endpoint cannot be used to find out which emails are registered.
@@ -323,16 +327,19 @@ Applied migrations are recorded in the `migrations` table.
 LEVERANDORVAKT/
 ├── src/
 │   ├── app.ts                    # Express app: middleware, routes, Swagger UI (no startup side effects)
-│   ├── server.ts                 # Entry point: loads .env, connects to the DB, runs migrations, starts the server and the job
+│   ├── server.ts                 # Entry point: loads .env, connects to the DB, runs migrations, starts the server and the jobs
 │   ├── swagger.ts                # Generates swagger_output.json from the routes
 │   ├── config/
 │   │   ├── database.ts           # Sequelize connection and model registration
 │   │   ├── migrator.ts           # Umzug migration runner
+│   │   ├── logger.ts             # The pino logger: JSON or readable lines, secret fields hidden
 │   │   └── ensureAdmin.ts        # Creates the admin account once from environment variables
 │   ├── migrations/               # Numbered schema changes (0001-create-users.ts, ...), applied on startup
 │   ├── models/                   # User, CompanyRecord, WatchlistEntry, CompanyChange, Notification, BrregSyncState, AnnualAccountsRecord, Assistant*
 │   ├── routes/                   # URL → controller mapping: index, auth, companies, watchlist, notifications, assistant, admin
 │   ├── middlewares/
+│   │   ├── requestLogger.ts      # One log line per request, with a request id (pino-http)
+│   │   ├── errorHandling.ts      # Alerts on server errors, JSON answers for errors no route handled
 │   │   ├── requireAuth.ts        # Verifies the JWT and adds the user to the request
 │   │   └── requireRole.ts        # Allows only the given roles (e.g. admin)
 │   ├── controllers/              # HTTP layer: input validation and status codes
@@ -346,6 +353,7 @@ LEVERANDORVAKT/
 │   │   │   ├── templates.ts      # The emails' text and HTML, in English and Norwegian
 │   │   │   └── changeTexts.ts    # Titles and before / after values of changes in the emails
 │   │   ├── emailNotificationService.ts # Which notifications to email and when, unsubscribe links
+│   │   ├── alertService.ts       # Emails the admin about failing jobs and server errors
 │   │   ├── userService.ts        # Maps the public user id in tokens to the internal id
 │   │   ├── onboardingService.ts  # Getting-started steps, read from the user's data
 │   │   ├── watchlistService.ts   # Following companies, notes, change history
@@ -503,6 +511,15 @@ RESEND_API_KEY=
 EMAIL_FROM=Leverandørvakt <onboarding@resend.dev>
 # Where the web app runs, for the links in emails
 WEB_APP_URL=http://localhost:3001
+# Logs: "json" (one JSON object per line) or "pretty" (readable, for development),
+# and the lowest level written: trace, debug, info, warn, error, fatal or silent
+LOG_FORMAT=pretty
+LOG_LEVEL=info
+# Alerts for the admin: failed runs in a row before a job's alert (0 turns
+# job alerts off) and where they go (ADMIN_EMAIL when empty)
+ALERT_AFTER_FAILURES=3
+ALERT_EMAIL=
+
 # Notification emails: minutes between checks (0 turns them off), the hour of
 # the daily summary and the time zone for that hour
 EMAIL_CHECK_MINUTES=5
@@ -612,6 +629,7 @@ The API's tests run with **Vitest** and **Supertest** against a real PostgreSQL 
 | `tests/passwordReset.test.ts`      | The reset email (address, sender, API key, English and Norwegian, the name escaped in HTML), the same `202` and no email for an unknown address, only a hash stored, a new link replacing the old one, a failed send logged without changing the answer, `EMAIL_PROVIDER=log`, the per-account limit; checking links; setting the password once, expired and made-up links, a short password, other users untouched, earlier sessions ended, a login lock lifted                                                                                                                                                                                                                                                 |
 | `tests/account.test.ts`            | Changing the password (a new token here, every other session ended even from the same second, a wrong current password, a short new one, the per-user limit); the export (every kind of data, a JSON attachment with `no-store`, no password hash, internal ids or reset links, only the user's own data); deleting (everything of the user gone, companies and other users kept, the email free again, a wrong or missing password, the last admin kept)                                                                                                                                                                                                                                                        |
 | `tests/emailNotifications.test.ts` | Preferences (defaults, the language from registration, changing one or both, invalid values); critical changes at once for daily users, everything at once in one email for instant users, nothing when off, never twice even when two runs overlap, only the user's own, read and old notifications left out, Norwegian texts, names escaped in HTML, the unsubscribe link and headers, a failed send tried again; sent right after change detection finds a bankruptcy; the daily summary at the hour (also in summer time), once a day, without what was already sent, only for users who chose it, by force, retried the same day; unsubscribing with a valid, changed or made-up link; the admin run        |
+| `tests/logging.test.ts`            | One line per request with its id, the user and the time taken; an id sent by the web app kept and an unsafe one replaced; passwords, tokens and search words never written, secret fields hidden in anything logged; server errors logged with the error; a JSON 400 for a body that is not JSON and a JSON 500 for errors no route handled; server error alerts (to `ALERT_EMAIL` or `ADMIN_EMAIL`, at most once an hour with a count, only logged without an address); job alerts after three failed runs in a row, once, and when the job works again, counting runs where companies failed, `ALERT_AFTER_FAILURES`, an alert that cannot be sent                                                             |
 
 ### Running the tests
 
@@ -738,7 +756,7 @@ GitHub Actions runs three jobs on every push: the API's type check and all its t
 - [x] Password reset by email
 - [x] Account settings: changing the password, downloading your data and deleting the account (GDPR)
 - [x] Email notifications: critical changes at once, the rest as a daily summary
-- [ ] Logging and error alerts
+- [x] Logging and error alerts
 
 ## Data Source
 

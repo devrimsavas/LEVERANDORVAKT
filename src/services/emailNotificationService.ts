@@ -9,6 +9,9 @@ import { notificationEmail } from "./email/templates.js";
 import { getJwtSecret } from "./authService.js";
 import { webAppUrl } from "../utils/webAppUrl.js";
 import { localHour, startOfLocalDay } from "../utils/localTime.js";
+import { moduleLogger } from "../config/logger.js";
+
+const log = moduleLogger("emails");
 
 // Notifications by email. Each user chooses (users.email_notifications):
 //   instant  every notification is emailed within minutes
@@ -136,7 +139,7 @@ async function sendTo(
     return true;
   } catch (error) {
     // The address is not logged, only the user's public id
-    console.error(`Email to user ${user.publicId} failed:`, error);
+    log.error({ err: error }, `Email to user ${user.publicId} failed:`);
     return false;
   }
 }

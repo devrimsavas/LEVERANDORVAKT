@@ -4,6 +4,12 @@
 // that happens in server.ts, so tests can import the app safely.
 import express from "express";
 import helmet from "helmet";
+import { logger } from "./config/logger.js";
+import { requestLogger } from "./middlewares/requestLogger.js";
+import {
+  alertOnServerErrors,
+  errorHandler,
+} from "./middlewares/errorHandling.js";
 import { apiLimit } from "./middlewares/rateLimits.js";
 //swagger
 import swaggerUi from "swagger-ui-express";
@@ -42,6 +48,11 @@ app.set(
   "trust proxy",
   /^\d+$/.test(trustProxy) ? Number(trustProxy) : trustProxy,
 );
+
+// One log line per request, with a request id sent back in X-Request-Id;
+// server errors are also emailed to the admin
+app.use(requestLogger);
+app.use(alertOnServerErrors);
 
 // Security headers. The API answers with JSON; the content security policy
 // still allows what the Swagger UI at /api/docs needs.
@@ -85,9 +96,11 @@ if (existsSync(swaggerPath)) {
   const swaggerDocument = JSON.parse(readFileSync(swaggerPath, "utf-8"));
   app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 } else {
-  console.warn(
+  logger.warn(
     "swagger_output.json not found. Run 'npm run swagger' to generate API docs.",
   );
 }
+
+app.use(errorHandler);
 
 export default app;

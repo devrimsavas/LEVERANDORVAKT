@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import { isIP } from "node:net";
 import { headers as requestHeaders } from "next/headers";
 import { getSessionToken } from "./session";
@@ -53,6 +54,11 @@ export async function apiFetch<T>(
   }
   const address = await clientAddress();
   if (address) headers["X-Forwarded-For"] = address;
+  // The API logs every request with this id, so a failure logged here can
+  // be found in the API's log too
+  const requestId = randomUUID();
+  headers["X-Request-Id"] = requestId;
+  const call = `${method} ${path.split("?")[0]}`;
 
   let response: Response;
   try {
@@ -62,8 +68,17 @@ export async function apiFetch<T>(
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
     });
-  } catch {
+  } catch (error) {
+    console.error(
+      `API call failed: ${call} could not reach the API at ${API_URL} (request ${requestId})`,
+      error instanceof Error && error.cause ? error.cause : error,
+    );
     return { ok: false, status: 0, error: "The API could not be reached" };
+  }
+  if (response.status >= 500) {
+    console.error(
+      `API call failed: ${call} answered ${response.status} (request ${requestId})`,
+    );
   }
 
   const data: unknown =

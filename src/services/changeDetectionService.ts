@@ -15,6 +15,9 @@ import { detectRoleChanges } from "./roleDiff.js";
 import { notifyFollowers } from "./notificationService.js";
 import { assessMissingRiskLevels, reassessRisk } from "./riskService.js";
 import type { ChangeSeverity } from "../models/CompanyChange.js";
+import { moduleLogger } from "../config/logger.js";
+
+const log = moduleLogger("changeDetection");
 
 // Brreg accepts a list of organization numbers in one request; keep URLs short
 const ORG_NUMBERS_PER_REQUEST = 100;
@@ -105,7 +108,11 @@ async function fetchRoleEvents(
     let afterId = lastRoleEventId;
 
     while (true) {
-      const batch = await getRoleEventsAfter(afterId, orgChunk, EVENTS_PER_REQUEST);
+      const batch = await getRoleEventsAfter(
+        afterId,
+        orgChunk,
+        EVENTS_PER_REQUEST,
+      );
       events.push(
         ...batch.map((e) => ({
           id: Number(e.id),
@@ -127,12 +134,20 @@ async function fetchRoleEvents(
 
 // Groups the events of both feeds per company. Companies are returned in the
 // order their oldest event happened, so changes are processed chronologically.
-function groupByCompany(updates: FeedEvent[], roleEvents: FeedEvent[]): CompanyEvents[] {
+function groupByCompany(
+  updates: FeedEvent[],
+  roleEvents: FeedEvent[],
+): CompanyEvents[] {
   const byCompany = new Map<string, CompanyEvents>();
   const entry = (event: FeedEvent) => {
     let events = byCompany.get(event.orgNumber);
     if (!events) {
-      events = { orgNumber: event.orgNumber, updateIds: [], roleEventIds: [], firstTime: event.time };
+      events = {
+        orgNumber: event.orgNumber,
+        updateIds: [],
+        roleEventIds: [],
+        firstTime: event.time,
+      };
       byCompany.set(event.orgNumber, events);
     }
     events.firstTime = Math.min(events.firstTime, event.time);
@@ -169,7 +184,10 @@ function nextPosition(
 
 // Compares one company with its current state in Brreg and records what changed.
 // Returns the number of changes recorded.
-async function checkCompany(record: CompanyRecord, events: CompanyEvents): Promise<number> {
+async function checkCompany(
+  record: CompanyRecord,
+  events: CompanyEvents,
+): Promise<number> {
   const lookup = await lookupCompany(record.orgNumber);
   const now = new Date();
   const lastUpdateId = events.updateIds.at(-1) ?? null;
@@ -235,7 +253,10 @@ async function checkCompany(record: CompanyRecord, events: CompanyEvents): Promi
           oldValue: change.oldValue,
           newValue: change.newValue,
           severity: change.severity,
-          sourceUpdateId: change.sourceUpdateId === null ? null : String(change.sourceUpdateId),
+          sourceUpdateId:
+            change.sourceUpdateId === null
+              ? null
+              : String(change.sourceUpdateId),
           detectedAt: now,
         })),
         { transaction },
@@ -253,7 +274,9 @@ async function checkCompany(record: CompanyRecord, events: CompanyEvents): Promi
     await record.save({ transaction });
 
     // A rise in risk is notified only if this check had no other news
-    await reassessRisk(record, transaction, { notifyRise: changes.length === 0 });
+    await reassessRisk(record, transaction, {
+      notifyRise: changes.length === 0,
+    });
   });
 
   return changes.length;
@@ -263,7 +286,9 @@ async function checkCompany(record: CompanyRecord, events: CompanyEvents): Promi
 // Nothing is reported as a change; the roles become the starting point.
 // Failures are only logged; the company is tried again on the next run.
 async function backfillMissingRoles(records: CompanyRecord[]): Promise<void> {
-  const missing = records.filter((record) => record.roles === null).slice(0, ROLE_BACKFILL_PER_RUN);
+  const missing = records
+    .filter((record) => record.roles === null)
+    .slice(0, ROLE_BACKFILL_PER_RUN);
 
   for (const record of missing) {
     try {
@@ -273,7 +298,10 @@ async function backfillMissingRoles(records: CompanyRecord[]): Promise<void> {
         await record.save();
       }
     } catch (error) {
-      console.error(`Change detection: could not fill in roles for ${record.orgNumber}`, error);
+      log.error(
+        { err: error },
+        `Change detection: could not fill in roles for ${record.orgNumber}`,
+      );
     }
   }
 }
@@ -322,7 +350,9 @@ export async function runChangeDetection(): Promise<ChangeDetectionSummary> {
   let roleEvents: FeedEvent[] = [];
   const unchecked = new Set<string>();
 
-  const records = await CompanyRecord.findAll({ where: { deletedFromRegistryAt: null } });
+  const records = await CompanyRecord.findAll({
+    where: { deletedFromRegistryAt: null },
+  });
 
   if (records.length > 0) {
     const orgNumbers = records.map((record) => record.orgNumber);
@@ -332,7 +362,9 @@ export async function runChangeDetection(): Promise<ChangeDetectionSummary> {
     ]);
 
     const eventsByCompany = groupByCompany(updates, roleEvents);
-    const recordsByOrgNumber = new Map(records.map((record) => [record.orgNumber, record]));
+    const recordsByOrgNumber = new Map(
+      records.map((record) => [record.orgNumber, record]),
+    );
 
     for (const events of eventsByCompany) {
       unchecked.add(events.orgNumber);
@@ -353,7 +385,10 @@ export async function runChangeDetection(): Promise<ChangeDetectionSummary> {
       } catch (error) {
         // Stop here. This company and the ones after it stay unchecked,
         // so their events are read again on the next run.
-        console.error(`Change detection: could not check ${orgNumber}`, error);
+        log.error(
+          { err: error },
+          `Change detection: could not check ${orgNumber}`,
+        );
         summary.failedCompanies += 1;
         break;
       }
@@ -361,13 +396,23 @@ export async function runChangeDetection(): Promise<ChangeDetectionSummary> {
   }
 
   const uncheckedIds = (events: FeedEvent[]) =>
-    events.filter((event) => unchecked.has(event.orgNumber)).map((event) => event.id);
+    events
+      .filter((event) => unchecked.has(event.orgNumber))
+      .map((event) => event.id);
 
   state.lastUpdateId = String(
-    nextPosition(lastUpdateId, updates.map((event) => event.id), uncheckedIds(updates)),
+    nextPosition(
+      lastUpdateId,
+      updates.map((event) => event.id),
+      uncheckedIds(updates),
+    ),
   );
   state.lastRoleEventId = String(
-    nextPosition(lastRoleEventId, roleEvents.map((event) => event.id), uncheckedIds(roleEvents)),
+    nextPosition(
+      lastRoleEventId,
+      roleEvents.map((event) => event.id),
+      uncheckedIds(roleEvents),
+    ),
   );
   state.lastRunAt = new Date();
   await state.save();

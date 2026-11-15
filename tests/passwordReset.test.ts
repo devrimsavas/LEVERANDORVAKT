@@ -5,6 +5,7 @@ import app from "../src/app.js";
 import { PasswordResetToken } from "../src/models/PasswordResetToken.js";
 import { kari, lukas, registerAndLogin } from "./helpers/users.js";
 import { useFakeBrreg } from "./helpers/fakeBrreg.js";
+import { LEVELS, useLogs } from "./helpers/logs.js";
 import {
   FAKE_RESEND_API_KEY,
   FAKE_WEB_APP_URL,
@@ -14,6 +15,7 @@ import {
 
 const brreg = useFakeBrreg();
 const email = useFakeEmail(brreg);
+const logs = useLogs();
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -155,15 +157,20 @@ describe("POST /api/auth/password-reset", () => {
   it("still answers 202 when the email cannot be sent, and logs why", async () => {
     await registerAndLogin(lukas);
     email.failure = { status: 403, message: "The domain is not verified" };
-    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
 
     const res = await askForReset(lukas.email);
 
     expect(res.status).toBe(202);
-    await vi.waitFor(() => expect(logged).toHaveBeenCalled());
-    expect(String(logged.mock.calls[0]?.[1])).toContain(
-      "Resend refused the email (403): The domain is not verified",
-    );
+    const failure = () =>
+      logs.lines.find((line) => line.msg === "Password reset email failed");
+    await vi.waitFor(() => expect(failure()).toBeDefined());
+    expect(failure()).toMatchObject({
+      level: LEVELS.error,
+      requestId: res.headers["x-request-id"],
+      err: {
+        message: "Resend refused the email (403): The domain is not verified",
+      },
+    });
   });
 
   it("only writes the email to the console with EMAIL_PROVIDER=log", async () => {

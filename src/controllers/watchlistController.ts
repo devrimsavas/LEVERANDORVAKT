@@ -71,7 +71,7 @@ export const listWatchlist = async (req: Request, res: Response) => {
     res.json(items);
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the watchlist" });
   }
 };
@@ -106,7 +106,7 @@ export const addCompany = async (req: Request, res: Response) => {
     res.status(201).json(item);
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     // The only remaining failure is the Brreg call
     res.status(502).json({ error: "Could not reach the Brreg API" });
   }
@@ -131,7 +131,7 @@ export const getWatchedCompany = async (
     res.json(await getWatchlistItem(req.auth!.userId, orgNumber));
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the company" });
   }
 };
@@ -172,7 +172,7 @@ export const updateNote = async (
     res.json(item);
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not update the note" });
   }
 };
@@ -197,7 +197,7 @@ export const removeCompany = async (
     res.status(204).end();
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not remove the company" });
   }
 };
@@ -234,7 +234,7 @@ export const listCompanyChanges = async (
     res.json(result);
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the change history" });
   }
 };
@@ -259,7 +259,7 @@ export const listCompanyAccounts = async (
     res.json(result);
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the annual accounts" });
   }
 };
@@ -284,7 +284,7 @@ export const getCompanyRiskReport = async (
     res.json(report);
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not assess the risk" });
   }
 };
@@ -312,7 +312,7 @@ export const listConnections = async (req: Request, res: Response) => {
     res.json(result);
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(502).json({ error: "Could not reach the Brreg API" });
   }
 };

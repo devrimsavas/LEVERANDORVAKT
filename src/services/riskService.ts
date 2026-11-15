@@ -8,6 +8,9 @@ import { getStoredAccounts } from "./storedAccounts.js";
 import { notifyFollowers } from "./notificationService.js";
 import { assessRisk, RISK_RULES } from "./riskAssessment.js";
 import type { RiskAssessment, RiskInput, RiskLevel } from "../types/risk.js";
+import { moduleLogger } from "../config/logger.js";
+
+const log = moduleLogger("risk");
 
 const LEVEL_RANK: Record<RiskLevel, number> = { low: 0, medium: 1, high: 2 };
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -69,7 +72,10 @@ export async function assessCompanyLive(
     const result = await getAnnualAccounts(orgNumber);
     accounts = { status: result.status, list: result.accounts };
   } catch (error) {
-    console.error(`Risk: could not fetch the accounts of ${orgNumber}`, error);
+    log.error(
+      { err: error },
+      `Risk: could not fetch the accounts of ${orgNumber}`,
+    );
     accounts = { status: "unknown", list: [] };
   }
 
@@ -160,7 +166,7 @@ export async function assessMissingRiskLevels(): Promise<void> {
         reassessRisk(record, transaction, { notifyRise: false }),
       );
     } catch (error) {
-      console.error(`Risk: could not assess ${record.orgNumber}`, error);
+      log.error({ err: error }, `Risk: could not assess ${record.orgNumber}`);
     }
   }
 }

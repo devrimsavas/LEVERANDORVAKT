@@ -21,6 +21,9 @@ import type {
   AnnualAccounts,
 } from "../types/annualAccounts.js";
 import type { RiskAssessment, RiskLevel } from "../types/risk.js";
+import { moduleLogger } from "../config/logger.js";
+
+const log = moduleLogger("watchlist");
 
 export class CompanyNotFoundError extends Error {}
 export class AlreadyWatchingError extends Error {}
@@ -133,7 +136,10 @@ async function checkAccountsIfNeverChecked(
   try {
     await checkCompanyAccounts(record);
   } catch (error) {
-    console.error(`Could not fetch the accounts of ${record.orgNumber}`, error);
+    log.error(
+      { err: error },
+      `Could not fetch the accounts of ${record.orgNumber}`,
+    );
   }
 }
 
@@ -148,7 +154,10 @@ async function assessRiskIfNeverAssessed(record: CompanyRecord): Promise<void> {
       reassessRisk(record, transaction, { notifyRise: false }),
     );
   } catch (error) {
-    console.error(`Could not assess the risk of ${record.orgNumber}`, error);
+    log.error(
+      { err: error },
+      `Could not assess the risk of ${record.orgNumber}`,
+    );
   }
 }
 

@@ -397,7 +397,6 @@ describe("emails at once", () => {
     await setChoice(lukas, "instant");
     await notify(lukas);
     email.failure = { status: 500, message: "Down" };
-    vi.spyOn(console, "error").mockImplementation(() => {});
 
     const failed = await sendInstantEmails();
     email.failure = null;
@@ -540,7 +539,6 @@ describe("daily summaries", () => {
     await registerAndLogin(lukas);
     await notify(lukas);
     email.failure = { status: 500, message: "Down" };
-    vi.spyOn(console, "error").mockImplementation(() => {});
 
     await sendDailyDigests({ now: MORNING });
     email.failure = null;

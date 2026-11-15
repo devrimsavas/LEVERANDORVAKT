@@ -1,9 +1,14 @@
 import { sendEmailsAfterChanges } from "./emailJob.js";
+import { moduleLogger } from "../config/logger.js";
+import { recordJobRun } from "../services/alertService.js";
+import { errorMessage } from "../utils/errorMessage.js";
 import { runAccountsCheck } from "../services/accountsService.js";
 import type { AccountsCheckSummary } from "../services/accountsService.js";
 
 // Brreg updates the accounts register on weekdays, so once a day is enough
 const DEFAULT_INTERVAL_HOURS = 24;
+
+const log = moduleLogger("accountsCheck");
 
 let isRunning = false;
 
@@ -22,10 +27,23 @@ export async function runAccountsCheckOnce(): Promise<AccountsCheckSummary | nul
 
   isRunning = true;
   try {
-    const summary = await runAccountsCheck();
-    console.log(
+    let summary: AccountsCheckSummary;
+    try {
+      summary = await runAccountsCheck();
+    } catch (error) {
+      await recordJobRun("accountsCheck", errorMessage(error));
+      throw error;
+    }
+    log.info(
+      summary,
       `Accounts check: ${summary.companiesChecked} checked, ` +
         `${summary.changesFound} changes, ${summary.failedCompanies} failed`,
+    );
+    await recordJobRun(
+      "accountsCheck",
+      summary.failedCompanies > 0
+        ? `${summary.failedCompanies} of ${summary.companiesChecked} companies could not be checked. See the API's log.`
+        : null,
     );
     // Changes found now are emailed to those who want them at once
     if (summary.changesFound > 0) {
@@ -42,10 +60,10 @@ async function runScheduled(): Promise<void> {
   try {
     const summary = await runAccountsCheckOnce();
     if (summary === null) {
-      console.log("Accounts check: previous run still in progress, skipped");
+      log.info("Accounts check: previous run still in progress, skipped");
     }
   } catch (error) {
-    console.error("Accounts check: run failed", error);
+    log.error({ err: error }, "Accounts check: run failed");
   }
 }
 
@@ -57,11 +75,11 @@ export function startAccountsCheckJob(): void {
   );
 
   if (!Number.isFinite(hours) || hours <= 0) {
-    console.log("Accounts check: turned off");
+    log.info("Accounts check: turned off");
     return;
   }
 
-  console.log(`Accounts check: every ${hours} hours`);
+  log.info(`Accounts check: every ${hours} hours`);
   void runScheduled();
   setInterval(() => void runScheduled(), hours * 60 * 60 * 1000);
 }

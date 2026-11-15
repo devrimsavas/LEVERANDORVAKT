@@ -1,6 +1,9 @@
 import bcrypt from "bcryptjs";
 import { User } from "../models/User.js";
 import { SALT_ROUNDS } from "../services/authService.js";
+import { moduleLogger } from "./logger.js";
+
+const log = moduleLogger("admin");
 
 const MIN_ADMIN_PASSWORD_LENGTH = 8;
 
@@ -14,18 +17,18 @@ export async function ensureAdmin() {
   const lastName = process.env.ADMIN_LAST_NAME;
 
   if (!email || !password || !firstName || !lastName) {
-    console.warn("Admin: skipped, ADMIN_* environment variables are not set");
+    log.warn("Admin: skipped, ADMIN_* environment variables are not set");
     return;
   }
 
   const existingAdmin = await User.findOne({ where: { role: "admin" } });
   if (existingAdmin) {
-    console.log("Admin: already exists");
+    log.info("Admin: already exists");
     return;
   }
 
   if (password.length < MIN_ADMIN_PASSWORD_LENGTH) {
-    console.warn(
+    log.warn(
       `Admin: skipped, ADMIN_PASSWORD must be at least ${MIN_ADMIN_PASSWORD_LENGTH} characters`,
     );
     return;
@@ -36,7 +39,7 @@ export async function ensureAdmin() {
   // Never promote an existing normal user to admin automatically
   const emailTaken = await User.findOne({ where: { email: normalizedEmail } });
   if (emailTaken) {
-    console.warn(
+    log.warn(
       `Admin: skipped, ${normalizedEmail} is already registered as a normal user`,
     );
     return;
@@ -52,5 +55,5 @@ export async function ensureAdmin() {
     role: "admin",
   });
 
-  console.log(`Admin: created ${normalizedEmail}`);
+  log.info(`Admin: created ${normalizedEmail}`);
 }

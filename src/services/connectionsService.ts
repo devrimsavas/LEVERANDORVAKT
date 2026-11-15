@@ -7,6 +7,9 @@ import type {
   ConnectionsResult,
   RoleHolder,
 } from "../types/connections.js";
+import { moduleLogger } from "../config/logger.js";
+
+const log = moduleLogger("connections");
 
 // At most this many companies are compared per request
 export const MAX_COMPANIES = 50;
@@ -68,9 +71,9 @@ export async function findConnections(
       try {
         return (await getRoleHolders(company.orgNumber)) ?? [];
       } catch (error) {
-        console.error(
+        log.error(
+          { err: error },
           `Connections: could not fetch roles of ${company.orgNumber}`,
-          error,
         );
         limitations.push({
           code: "ROLES_UNAVAILABLE",

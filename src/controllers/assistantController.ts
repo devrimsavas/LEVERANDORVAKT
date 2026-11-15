@@ -20,7 +20,7 @@ import { parsePagination } from "../utils/pagination.js";
 import { isValidUuid } from "../utils/uuid.js";
 
 // Maps service errors to HTTP responses. Returns false for unknown errors.
-function sendKnownError(error: unknown, res: Response): boolean {
+function sendKnownError(error: unknown, req: Request, res: Response): boolean {
   if (error instanceof UserNotFoundError) {
     res.status(401).json({ error: "Your account no longer exists" });
     return true;
@@ -37,17 +37,17 @@ function sendKnownError(error: unknown, res: Response): boolean {
     error instanceof AssistantNotConfiguredError ||
     error instanceof LlmUnavailableError
   ) {
-    console.error(error.message);
+    req.log.warn({ err: error }, "Assistant unavailable");
     res.status(503).json({ error: "The assistant is not available right now" });
     return true;
   }
   if (error instanceof LlmTimeoutError) {
-    console.error(error.message);
+    req.log.warn({ err: error }, "Assistant timed out");
     res.status(504).json({ error: "The assistant did not answer in time" });
     return true;
   }
   if (error instanceof LlmResponseError) {
-    console.error(error.message);
+    req.log.warn({ err: error }, "Language model error");
     res.status(502).json({ error: "The language model returned an error" });
     return true;
   }
@@ -94,8 +94,8 @@ export const askQuestion = async (req: Request, res: Response) => {
     );
     res.json(answer);
   } catch (error) {
-    if (sendKnownError(error, res)) return;
-    console.error(error);
+    if (sendKnownError(error, req, res)) return;
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not answer the question" });
   }
 };
@@ -108,8 +108,8 @@ export const getMyAssistantStatus = async (req: Request, res: Response) => {
   try {
     res.json(await getAssistantStatus(req.auth!.userId));
   } catch (error) {
-    if (sendKnownError(error, res)) return;
-    console.error(error);
+    if (sendKnownError(error, req, res)) return;
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the assistant status" });
   }
 };
@@ -129,8 +129,8 @@ export const listMyConversations = async (req: Request, res: Response) => {
   try {
     res.json(await listConversations(req.auth!.userId, pagination));
   } catch (error) {
-    if (sendKnownError(error, res)) return;
-    console.error(error);
+    if (sendKnownError(error, req, res)) return;
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load conversations" });
   }
 };
@@ -151,8 +151,8 @@ export const getMyConversation = async (
   try {
     res.json(await getConversation(req.auth!.userId, req.params.id));
   } catch (error) {
-    if (sendKnownError(error, res)) return;
-    console.error(error);
+    if (sendKnownError(error, req, res)) return;
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the conversation" });
   }
 };
@@ -174,8 +174,8 @@ export const deleteMyConversation = async (
     await deleteConversation(req.auth!.userId, req.params.id);
     res.status(204).end();
   } catch (error) {
-    if (sendKnownError(error, res)) return;
-    console.error(error);
+    if (sendKnownError(error, req, res)) return;
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not delete the conversation" });
   }
 };

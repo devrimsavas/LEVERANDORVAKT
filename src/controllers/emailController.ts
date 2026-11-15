@@ -16,7 +16,7 @@ export const unsubscribeHandler = async (req: Request, res: Response) => {
       res.status(400).json({ error: error.message });
       return;
     }
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not turn the emails off" });
   }
 };

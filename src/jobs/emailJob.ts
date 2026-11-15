@@ -3,8 +3,13 @@ import {
   sendInstantEmails,
   type EmailRunSummary,
 } from "../services/emailNotificationService.js";
+import { moduleLogger } from "../config/logger.js";
+import { recordJobRun } from "../services/alertService.js";
+import { errorMessage } from "../utils/errorMessage.js";
 
 const DEFAULT_INTERVAL_MINUTES = 5;
+
+const log = moduleLogger("emails");
 
 let isRunning = false;
 
@@ -17,7 +22,7 @@ export interface EmailJobSummary {
   digest: EmailRunSummary;
 }
 
-function log(summary: EmailJobSummary): void {
+function logSummary(summary: EmailJobSummary): void {
   const { instant, digest } = summary;
   if (
     instant.usersEmailed +
@@ -26,7 +31,8 @@ function log(summary: EmailJobSummary): void {
       digest.failedUsers >
     0
   ) {
-    console.log(
+    log.info(
+      summary,
       `Emails: ${instant.usersEmailed} at once, ${digest.usersEmailed} daily summaries, ` +
         `${instant.failedUsers + digest.failedUsers} failed`,
     );
@@ -44,11 +50,24 @@ export async function runEmailsOnce(
   }
   isRunning = true;
   try {
-    const summary = {
-      instant: await sendInstantEmails(),
-      digest: await sendDailyDigests({ force: options.forceDigest === true }),
-    };
-    log(summary);
+    let summary: EmailJobSummary;
+    try {
+      summary = {
+        instant: await sendInstantEmails(),
+        digest: await sendDailyDigests({ force: options.forceDigest === true }),
+      };
+    } catch (error) {
+      await recordJobRun("emails", errorMessage(error));
+      throw error;
+    }
+    logSummary(summary);
+    const failed = summary.instant.failedUsers + summary.digest.failedUsers;
+    await recordJobRun(
+      "emails",
+      failed > 0
+        ? `Emails to ${failed} ${failed === 1 ? "user" : "users"} could not be sent. See the API's log.`
+        : null,
+    );
     return summary;
   } finally {
     isRunning = false;
@@ -62,7 +81,7 @@ export async function sendEmailsAfterChanges(): Promise<void> {
   try {
     await runEmailsOnce();
   } catch (error) {
-    console.error("Emails: run failed", error);
+    log.error({ err: error }, "Emails: run failed");
   }
 }
 
@@ -73,9 +92,9 @@ export function startEmailJob(): void {
     process.env.EMAIL_CHECK_MINUTES ?? DEFAULT_INTERVAL_MINUTES,
   );
   if (!Number.isFinite(minutes) || minutes <= 0) {
-    console.log("Emails: turned off");
+    log.info("Emails: turned off");
     return;
   }
-  console.log(`Emails: checked every ${minutes} minutes`);
+  log.info(`Emails: checked every ${minutes} minutes`);
   setInterval(() => void sendEmailsAfterChanges(), minutes * 60 * 1000);
 }

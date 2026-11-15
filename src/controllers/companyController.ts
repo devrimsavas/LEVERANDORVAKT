@@ -32,7 +32,7 @@ export const searchCompaniesByName = async (req: Request, res: Response) => {
     const companies = await searchCompanies(name.trim());
     res.json(companies);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(502).json({ error: "Could not reach the Brreg API" });
   }
 };
@@ -63,7 +63,7 @@ export const getCompanyByOrgNumber = async (
 
     res.json(company);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(502).json({ error: "Could not reach the Brreg API" });
   }
 };
@@ -92,7 +92,7 @@ export const getRolesByOrgNumber = async (
 
     res.json(roles);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(502).json({ error: "Could not reach the Brreg API" });
   }
 };
@@ -125,7 +125,7 @@ export const getAccountsByOrgNumber = async (
     const result = await getAnnualAccounts(orgNumber);
     res.json(result);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(502).json({ error: "Could not reach the Brreg API" });
   }
 };
@@ -153,7 +153,7 @@ export const getRiskByOrgNumber = async (
     }
     res.json(assessment);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(502).json({ error: "Could not reach the Brreg API" });
   }
 };

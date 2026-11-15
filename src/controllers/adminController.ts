@@ -15,7 +15,7 @@ export const getStatus = async (req: Request, res: Response) => {
   try {
     res.json(await getSystemStatus());
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the system status" });
   }
 };
@@ -48,7 +48,7 @@ export const listUsersHandler = async (req: Request, res: Response) => {
   try {
     res.json(await listUsers(pagination, search === "" ? null : search));
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the users" });
   }
 };
@@ -69,7 +69,7 @@ export const runChangeDetectionNow = async (req: Request, res: Response) => {
 
     res.json(summary);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res
       .status(502)
       .json({ error: "Change detection failed, see the server log" });
@@ -92,7 +92,7 @@ export const runAccountsCheckNow = async (req: Request, res: Response) => {
 
     res.json(summary);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res
       .status(500)
       .json({ error: "The accounts check failed, see the server log" });
@@ -114,7 +114,7 @@ export const runEmailsNow = async (req: Request, res: Response) => {
     }
     res.json(summary);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res
       .status(500)
       .json({ error: "Sending the emails failed, see the server log" });

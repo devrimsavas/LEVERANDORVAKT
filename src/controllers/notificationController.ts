@@ -52,7 +52,7 @@ export const listNotifications = async (req: Request, res: Response) => {
     res.json(result);
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load notifications" });
   }
 };
@@ -66,7 +66,7 @@ export const countUnread = async (req: Request, res: Response) => {
     res.json({ count });
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not count notifications" });
   }
 };
@@ -91,7 +91,7 @@ export const readNotification = async (
     res.json(notification);
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not update the notification" });
   }
 };
@@ -105,7 +105,7 @@ export const readAllNotifications = async (req: Request, res: Response) => {
     res.json({ updated });
   } catch (error) {
     if (sendKnownError(error, res)) return;
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not update notifications" });
   }
 };

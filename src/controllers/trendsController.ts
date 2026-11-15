@@ -37,7 +37,7 @@ export const registrationTrend = async (req: Request, res: Response) => {
   try {
     res.json(await getRegistrationTrend(params));
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(502).json({ error: "Could not reach the Brreg API" });
   }
 };
@@ -68,29 +68,29 @@ export const industryBreakdown = async (req: Request, res: Response) => {
   try {
     res.json(await getIndustryBreakdown(params, level));
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(502).json({ error: "Could not reach the Brreg API" });
   }
 };
 
 // GET /api/trends/municipalities
-export const listMunicipalities = async (_req: Request, res: Response) => {
+export const listMunicipalities = async (req: Request, res: Response) => {
   // #swagger.tags = ["Trends"]
   try {
     res.json(await getMunicipalities());
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(502).json({ error: "Could not reach Kartverket" });
   }
 };
 
 // GET /api/trends/industry-divisions
-export const listIndustryDivisions = async (_req: Request, res: Response) => {
+export const listIndustryDivisions = async (req: Request, res: Response) => {
   // #swagger.tags = ["Trends"]
   try {
     res.json(await getIndustryDivisions());
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(502).json({ error: "Could not reach Statistics Norway" });
   }
 };

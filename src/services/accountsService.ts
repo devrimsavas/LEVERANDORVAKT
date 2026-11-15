@@ -10,6 +10,9 @@ import { getStoredAccounts } from "./storedAccounts.js";
 import { notifyFollowers } from "./notificationService.js";
 import { reassessRisk } from "./riskService.js";
 import type { AnnualAccounts } from "../types/annualAccounts.js";
+import { moduleLogger } from "../config/logger.js";
+
+const log = moduleLogger("accountsCheck");
 
 // A company's accounts are checked again when the last check is older than this.
 // A little under a day, so a daily run never skips a company by a few minutes.
@@ -151,9 +154,9 @@ export async function runAccountsCheck(): Promise<AccountsCheckSummary> {
       summary.changesFound += await checkCompanyAccounts(record);
       summary.companiesChecked += 1;
     } catch (error) {
-      console.error(
+      log.error(
+        { err: error },
         `Accounts check: could not check ${record.orgNumber}`,
-        error,
       );
       summary.failedCompanies += 1;
     }

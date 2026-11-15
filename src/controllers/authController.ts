@@ -75,7 +75,7 @@ export const register = async (req: Request, res: Response) => {
       res.status(409).json({ error: error.message });
       return;
     }
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Registration failed" });
   }
 };
@@ -98,7 +98,7 @@ export const login = async (req: Request, res: Response) => {
       res.status(401).json({ error: error.message });
       return;
     }
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Login failed" });
   }
 };
@@ -122,7 +122,7 @@ export const me = async (req: Request, res: Response) => {
 
     res.json(user);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the user" });
   }
 };
@@ -140,7 +140,7 @@ export const getMyOnboarding = async (req: Request, res: Response) => {
     }
     res.json(onboarding);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the getting-started steps" });
   }
 };
@@ -158,7 +158,7 @@ export const dismissMyOnboarding = async (req: Request, res: Response) => {
     }
     res.json(onboarding);
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not close the getting-started list" });
   }
 };
@@ -183,7 +183,7 @@ export const requestPasswordResetHandler = async (
     message: "If an account has this email, a reset link has been sent",
   });
   requestPasswordReset(email, toEmailLanguage(language)).catch((error) => {
-    console.error("Password reset email failed:", error);
+    req.log.error({ err: error }, "Password reset email failed");
   });
 };
 
@@ -195,7 +195,7 @@ export const checkPasswordResetToken = async (req: Request, res: Response) => {
   try {
     res.json({ valid: await isResetTokenValid(token) });
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not check the link" });
   }
 };
@@ -224,7 +224,7 @@ export const confirmPasswordReset = async (req: Request, res: Response) => {
       res.status(400).json({ error: error.message });
       return;
     }
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not set the new password" });
   }
 };

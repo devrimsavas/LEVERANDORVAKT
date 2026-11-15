@@ -44,7 +44,7 @@ export const changeMyPassword = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
       return;
     }
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not change the password" });
   }
 };
@@ -67,7 +67,7 @@ export const exportMyData = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
       return;
     }
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not export the data" });
   }
 };
@@ -93,7 +93,7 @@ export const deleteMyAccount = async (req: Request, res: Response) => {
       res.status(409).json({ error: error.message });
       return;
     }
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not delete the account" });
   }
 };
@@ -131,7 +131,7 @@ export const updateMyPreferences = async (req: Request, res: Response) => {
       res.status(404).json({ error: error.message });
       return;
     }
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not save the preferences" });
   }
 };

@@ -26,6 +26,9 @@ import { isValidOrgNumber } from "../utils/orgNumber.js";
 import type { AnnualAccounts } from "../types/annualAccounts.js";
 import type { RiskAssessment } from "../types/risk.js";
 import type { ToolDefinition } from "../types/llm.js";
+import { moduleLogger } from "../config/logger.js";
+
+const log = moduleLogger("assistant");
 
 // The tools the assistant can use. They only read data: anything that
 // changes data is done by the user through the normal API.
@@ -455,7 +458,7 @@ export async function executeTool(
       return { error: error.message };
     }
     // Brreg or the database failed; the model can tell the user
-    console.error(`Assistant tool ${name} failed`, error);
+    log.error({ err: error }, `Assistant tool ${name} failed`);
     return {
       error: "The data could not be loaded right now. Try again later.",
     };

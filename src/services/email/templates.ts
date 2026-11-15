@@ -236,3 +236,71 @@ export function notificationEmail(input: {
     },
   };
 }
+
+// Alerts for the admin when something goes wrong in the running app.
+// Only in English: they go to whoever runs the app, not to its users.
+export type AlertEmailInput =
+  | {
+      kind: "jobFailing";
+      job: string;
+      failures: number;
+      problem: string;
+    }
+  | { kind: "jobRecovered"; job: string; failures: number }
+  | {
+      kind: "serverError";
+      method: string;
+      path: string;
+      requestId: string;
+      at: Date;
+      // Server errors since the previous alert that got no email of their own
+      earlier: number;
+    };
+
+export function alertEmail(
+  input: AlertEmailInput & { to: string; webAppUrl: string },
+): Email {
+  let subject: string;
+  let paragraphs: string[];
+  switch (input.kind) {
+    case "jobFailing":
+      subject = `Leverandørvakt: ${input.job} has failed ${input.failures} times in a row`;
+      paragraphs = [
+        `${input.job} has failed ${input.failures} times in a row.`,
+        `The last problem: ${input.problem}`,
+        "It keeps running on its schedule. You get one more email when it works again.",
+      ];
+      break;
+    case "jobRecovered":
+      subject = `Leverandørvakt: ${input.job} works again`;
+      paragraphs = [
+        `${input.job} works again, after ${input.failures} failed runs in a row.`,
+      ];
+      break;
+    case "serverError":
+      subject = "Leverandørvakt: the API answered with a server error";
+      paragraphs = [
+        `${input.method} ${input.path} answered with 500 at ${input.at.toISOString()}.`,
+        `Request id: ${input.requestId}. Search the API's log for this id to see the error.`,
+        ...(input.earlier > 0
+          ? [
+              `There were ${input.earlier} more server errors since the previous email.`,
+            ]
+          : []),
+        "You get at most one email like this an hour.",
+      ];
+      break;
+  }
+  const button = {
+    text: "Open the admin page",
+    url: `${input.webAppUrl}/admin`,
+  };
+  const footer =
+    "You get this email because it is the alert address of Leverandørvakt (ALERT_EMAIL, or else ADMIN_EMAIL).";
+  return {
+    to: input.to,
+    subject,
+    text: [...paragraphs, `${button.text}: ${button.url}`, footer].join("\n\n"),
+    html: layout(paragraphs.map(escapeHtml), button, escapeHtml(footer)),
+  };
+}

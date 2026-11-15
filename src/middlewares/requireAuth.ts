@@ -73,7 +73,7 @@ export async function requireAuth(
       return;
     }
   } catch (error) {
-    console.error(error);
+    req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not check the session" });
     return;
   }

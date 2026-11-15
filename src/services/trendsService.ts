@@ -18,6 +18,9 @@ import type {
   RegistrationTrend,
   TrendLimitation,
 } from "../types/trends.js";
+import { moduleLogger } from "../config/logger.js";
+
+const log = moduleLogger("trends");
 
 // How long cached answers are kept
 const HOUR_MS = 60 * 60 * 1000;
@@ -263,7 +266,7 @@ async function byDivision(
   try {
     names = await getIndustryDivisionNames();
   } catch (error) {
-    console.error("Trends: could not load industry names from SSB", error);
+    log.error({ err: error }, "Trends: could not load industry names from SSB");
     limitations.push({
       code: "INDUSTRY_NAMES_UNAVAILABLE",
       reason:

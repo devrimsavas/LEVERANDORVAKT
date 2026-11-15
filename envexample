@@ -13,6 +13,19 @@ ADMIN_LAST_NAME=User
 CHANGE_DETECTION_INTERVAL_MINUTES=10
 ACCOUNTS_CHECK_INTERVAL_HOURS=24
 
+# Logs: "json" writes one JSON object per line (the default, for servers);
+# "pretty" writes readable, coloured lines (for development, needs the dev
+# dependencies). LOG_LEVEL is the lowest level written: trace, debug, info,
+# warn, error, fatal or silent.
+LOG_FORMAT=pretty
+LOG_LEVEL=info
+
+# Alerts emailed to the admin: a background job failing this many runs in a
+# row (0 turns job alerts off), and server errors at most once an hour.
+# They go to ALERT_EMAIL, or to ADMIN_EMAIL when it is empty.
+ALERT_AFTER_FAILURES=3
+ALERT_EMAIL=
+
 # Rate limits (the defaults are shown). Failed logins are counted per account
 # and per address in 15 minutes, new accounts per address in an hour, and all
 # API requests per address in 15 minutes.

@@ -37,6 +37,9 @@ services:
       DATABASE_URL: postgres://leverandorvakt:${POSTGRES_PASSWORD:-leverandorvakt}@db:5432/leverandorvakt
       OLLAMA_HOST: ${DOCKER_OLLAMA_HOST:-http://host.docker.internal:11434}
       PORT: "3000"
+      # JSON lines, read with "docker compose logs"; the image has no
+      # pino-pretty, which is a development dependency
+      LOG_FORMAT: json
     ports:
       - "3000:3000"
     extra_hosts:
