@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
+import readExcelFile from "read-excel-file/node";
 import request from "supertest";
 import app from "../src/app.js";
 import { User } from "../src/models/User.js";
 import { runChangeDetectionOnce } from "../src/jobs/changeDetectionJob.js";
 import { toCsv } from "../src/utils/csv.js";
-import { localDate } from "../src/utils/localTime.js";
+import { localDate, wallClock } from "../src/utils/localTime.js";
 import { kari, lukas, registerAndLogin } from "./helpers/users.js";
 import {
   brregEnhet,
@@ -306,6 +307,151 @@ describe("GET /api/watchlist/export/changes", () => {
     const { auth } = await registerAndLogin(kari);
 
     expect(records((await download(auth, "changes")).body, ",")).toEqual([]);
+  });
+});
+
+// Downloads the Excel file and reads its sheets the way Excel does
+async function downloadExcel(auth: Auth) {
+  const res = await request(app)
+    .get("/api/watchlist/export/excel")
+    .set(auth)
+    .buffer(true)
+    .parse((response, done) => {
+      const chunks: Buffer[] = [];
+      response.on("data", (chunk: Buffer) => chunks.push(chunk));
+      response.on("end", () => done(null, Buffer.concat(chunks)));
+    });
+  const sheets = await readExcelFile(res.body as Buffer);
+  return { res, sheets };
+}
+
+describe("GET /api/watchlist/export/excel", () => {
+  it("is one Excel file with the companies and their changes", async () => {
+    brreg.setActive(brregEnhet(ALTA_TOURS, "ALTA TOURS AS"));
+    brreg.setAccounts(ALTA_TOURS, [
+      brregRegnskap({ id: 1, year: 2025, equity: 5_200_000 }),
+    ]);
+    const { auth } = await registerAndLogin(lukas);
+    await follow(auth, ALTA_TOURS, '=HYPERLINK("http://evil.example")');
+    await runChangeDetectionOnce();
+    brreg.setActive(brregEnhet(ALTA_TOURS, "ALTA REISER AS"));
+    brreg.addUpdate(ALTA_TOURS);
+    await runChangeDetectionOnce();
+
+    const { res, sheets } = await downloadExcel(auth);
+
+    expect(res.status).toBe(200);
+    expect(res.headers["content-type"]).toBe(
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+    expect(res.headers["content-disposition"]).toBe(
+      `attachment; filename="leverandorvakt-watchlist-${localDate(new Date())}.xlsx"`,
+    );
+    expect(res.headers["cache-control"]).toBe("no-store");
+    expect(sheets.map((sheet) => sheet.sheet)).toEqual([
+      "Companies",
+      "Changes",
+    ]);
+
+    const [companies, changes] = sheets.map((sheet) => sheet.data);
+    expect(companies![0]![0]).toBe("Organization number");
+    const company = Object.fromEntries(
+      companies![0]!.map((name, i) => [name, companies![1]![i]]),
+    );
+    const followedAt = (
+      await request(app).get(`/api/watchlist/${ALTA_TOURS}`).set(auth)
+    ).body.followedSince;
+    expect(company).toMatchObject({
+      // Codes stay text, so Excel does not turn 79.120 into 79.12
+      "Organization number": ALTA_TOURS,
+      "Industry code": "79.120",
+      "Organization form": "AS",
+      Name: "ALTA REISER AS",
+      Status: "Active",
+      Employees: 12,
+      "Accounts year": 2025,
+      Equity: 5_200_000,
+      "Net profit": 1_000_000,
+      // A note is text, never a formula
+      Note: '=HYPERLINK("http://evil.example")',
+    });
+    // Dates are real dates: the day in Norway, without a time
+    const followed = wallClock(new Date(followedAt));
+    expect(company["Followed since"]).toEqual(
+      new Date(
+        Date.UTC(
+          followed.getUTCFullYear(),
+          followed.getUTCMonth(),
+          followed.getUTCDate(),
+        ),
+      ),
+    );
+
+    expect(changes![0]).toEqual([
+      "Detected",
+      "Organization number",
+      "Company",
+      "Severity",
+      "Change",
+      "Before",
+      "After",
+      "Field",
+    ]);
+    const name = changes!.find((row) => row[7] === "name");
+    expect(name).toEqual([
+      expect.any(Date),
+      ALTA_TOURS,
+      "ALTA REISER AS",
+      "Warning",
+      "New company name",
+      "ALTA TOURS AS",
+      "ALTA REISER AS",
+      "name",
+    ]);
+  });
+
+  it("is in Norwegian for Norwegian users", async () => {
+    brreg.setActive(brregEnhet(ALTA_TOURS, "ALTA TOURS AS"));
+    const { auth } = await registerAndLogin(lukas);
+    await setLanguage(lukas, "nb");
+    await follow(auth, ALTA_TOURS);
+
+    const { res, sheets } = await downloadExcel(auth);
+
+    expect(res.headers["content-disposition"]).toContain(
+      "leverandorvakt-folgeliste-",
+    );
+    expect(sheets.map((sheet) => sheet.sheet)).toEqual([
+      "Selskaper",
+      "Endringer",
+    ]);
+    expect(sheets[0]!.data[0]![0]).toBe("Organisasjonsnummer");
+    expect(sheets[0]!.data[1]![2]).toBe("Aktiv");
+  });
+
+  it("has the headers alone for an empty watchlist", async () => {
+    const { auth } = await registerAndLogin(lukas);
+
+    const { sheets } = await downloadExcel(auth);
+
+    expect(sheets.map((sheet) => sheet.data.length)).toEqual([1, 1]);
+  });
+
+  it("needs a token", async () => {
+    expect((await request(app).get("/api/watchlist/export/excel")).status).toBe(
+      401,
+    );
+  });
+});
+
+describe("wallClock", () => {
+  it("holds the time in Norway, in winter and in summer", () => {
+    expect(wallClock(new Date("2026-11-16T07:30:00Z")).toISOString()).toBe(
+      "2026-11-16T08:30:00.000Z",
+    );
+    expect(wallClock(new Date("2027-06-14T07:30:00Z")).toISOString()).toBe(
+      "2027-06-14T09:30:00.000Z",
+    );
   });
 });
 

@@ -45,6 +45,16 @@ export function localDateTime(date: Date, timeZone = emailTimeZone()): string {
   return `${localDate(date, timeZone)} ${pad(local.hour)}:${pad(local.minute)}`;
 }
 
+// The date and time in the time zone as a Date whose UTC fields hold it.
+// Spreadsheets have no time zones: they show a date's UTC fields as they
+// are, so this is how 08:30 in Oslo is shown as 08:30.
+export function wallClock(date: Date, timeZone = emailTimeZone()): Date {
+  const local = parts(date, timeZone);
+  return new Date(
+    Date.UTC(local.year, local.month - 1, local.day, local.hour, local.minute),
+  );
+}
+
 // The hour (0 to 23) in the time zone
 export function localHour(date: Date, timeZone = emailTimeZone()): number {
   return parts(date, timeZone).hour;

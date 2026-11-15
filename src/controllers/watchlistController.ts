@@ -17,9 +17,10 @@ import { isValidOrgNumber } from "../utils/orgNumber.js";
 import { parsePagination } from "../utils/pagination.js";
 import { findConnections } from "../services/connectionsService.js";
 import {
-  exportChanges,
-  exportWatchlist,
-  type CsvFile,
+  exportChangesCsv,
+  exportWatchlistCsv,
+  exportWatchlistExcel,
+  type ExportFile,
 } from "../services/exportService.js";
 
 const MAX_NOTE_LENGTH = 500;
@@ -81,40 +82,58 @@ export const listWatchlist = async (req: Request, res: Response) => {
   }
 };
 
-function sendCsv(res: Response, file: CsvFile): void {
+function sendFile(res: Response, file: ExportFile): void {
   res
-    .type("text/csv; charset=utf-8")
+    .type(file.contentType)
     .set("Content-Disposition", `attachment; filename="${file.filename}"`)
     .set("Cache-Control", "no-store")
     .send(file.content);
 }
 
-// GET /api/watchlist/export/companies
-export const exportWatchlistCsv = async (req: Request, res: Response) => {
+// Sends one of the export files, or the error
+function download(
+  make: (userPublicId: string) => Promise<ExportFile>,
+  failure: string,
+) {
+  return async (req: Request, res: Response) => {
+    try {
+      sendFile(res, await make(req.auth!.userId));
+    } catch (error) {
+      if (sendKnownError(error, res)) return;
+      req.log.error({ err: error }, "Request failed");
+      res.status(500).json({ error: failure });
+    }
+  };
+}
+
+// GET /api/watchlist/export/excel
+export const downloadExcel = async (req: Request, res: Response) => {
   // #swagger.tags = ["Watchlist"]
   /* #swagger.security = [{ "bearerAuth": [] }]
-     #swagger.description = "The watchlist as a CSV file for Excel or Power BI: status, risk and latest key figures of every followed company, with your notes. In your language; separated by semicolons in Norwegian and commas in English" */
-  try {
-    sendCsv(res, await exportWatchlist(req.auth!.userId));
-  } catch (error) {
-    if (sendKnownError(error, res)) return;
-    req.log.error({ err: error }, "Request failed");
-    res.status(500).json({ error: "Could not export the watchlist" });
-  }
+     #swagger.description = "The watchlist and the changes of the followed companies as one Excel file, a sheet for each, in your language. Codes are kept as text, amounts as numbers and dates as dates" */
+  await download(exportWatchlistExcel, "Could not export the watchlist")(
+    req,
+    res,
+  );
+};
+
+// GET /api/watchlist/export/companies
+export const downloadCompaniesCsv = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Watchlist"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.description = "The watchlist as a CSV file for Power BI and other tools: status, risk and latest key figures of every followed company, with your notes. In your language; separated by semicolons in Norwegian and commas in English" */
+  await download(exportWatchlistCsv, "Could not export the watchlist")(
+    req,
+    res,
+  );
 };
 
 // GET /api/watchlist/export/changes
-export const exportChangesCsv = async (req: Request, res: Response) => {
+export const downloadChangesCsv = async (req: Request, res: Response) => {
   // #swagger.tags = ["Watchlist"]
   /* #swagger.security = [{ "bearerAuth": [] }]
      #swagger.description = "Every recorded change of the followed companies as a CSV file, newest first (at most 10 000)" */
-  try {
-    sendCsv(res, await exportChanges(req.auth!.userId));
-  } catch (error) {
-    if (sendKnownError(error, res)) return;
-    req.log.error({ err: error }, "Request failed");
-    res.status(500).json({ error: "Could not export the changes" });
-  }
+  await download(exportChangesCsv, "Could not export the changes")(req, res);
 };
 
 // POST /api/watchlist

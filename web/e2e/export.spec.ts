@@ -69,13 +69,20 @@ test("a company report to print or save as PDF, without the private note", async
   );
 });
 
-test("the watchlist and its changes download as CSV files", async ({
+test("the watchlist and its changes download as an Excel file and CSV files", async ({
   page,
   user,
 }) => {
   void user;
   await follow(page, transport.orgNumber);
   await page.goto("/watchlist");
+
+  const excel = await download(page, "Excel");
+  expect(excel.filename).toMatch(
+    /^leverandorvakt-watchlist-\d{4}-\d{2}-\d{2}\.xlsx$/,
+  );
+  // An .xlsx file is a zip archive
+  expect(excel.content.startsWith("PK")).toBe(true);
 
   const companies = await download(page, "Companies (CSV)");
   expect(companies.filename).toMatch(

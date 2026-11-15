@@ -7,7 +7,11 @@ import {
   Heading,
   Paragraph,
 } from "@digdir/designsystemet-react";
-import { FileCsvIcon, MagnifyingGlassIcon } from "@navikt/aksel-icons";
+import {
+  FileCsvIcon,
+  FileExcelIcon,
+  MagnifyingGlassIcon,
+} from "@navikt/aksel-icons";
 import { getWatchlist, type WatchlistSort } from "@/lib/companies";
 import { formatOrgNumber } from "@/lib/orgNumber";
 import type { RiskLevel } from "@/lib/companyTypes";
@@ -103,6 +107,12 @@ export default async function WatchlistPage({
             {/* Plain links: the browser downloads the files */}
             <div className={styles.exports}>
               <span>{t("export.label")}:</span>
+              <Button asChild variant="tertiary" data-size="sm">
+                <a href="/watchlist/export/excel" download>
+                  <FileExcelIcon aria-hidden />
+                  {t("export.excel")}
+                </a>
+              </Button>
               <Button asChild variant="tertiary" data-size="sm">
                 <a href="/watchlist/export/companies" download>
                   <FileCsvIcon aria-hidden />

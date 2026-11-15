@@ -501,6 +501,7 @@
     "accountsUnsupported": "Ikke tilgjengelig",
     "export": {
       "label": "Last ned",
+      "excel": "Excel",
       "companies": "Selskaper (CSV)",
       "changes": "Endringer (CSV)",
       "failed": "Filen kunne ikke lages. Prøv igjen om litt."

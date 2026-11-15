@@ -501,6 +501,7 @@
     "accountsUnsupported": "Not available",
     "export": {
       "label": "Download",
+      "excel": "Excel",
       "companies": "Companies (CSV)",
       "changes": "Changes (CSV)",
       "failed": "The file could not be made. Try again in a little while."
