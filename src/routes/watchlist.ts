@@ -9,6 +9,8 @@ import {
   listCompanyAccounts,
   getCompanyRiskReport,
   listConnections,
+  exportWatchlistCsv,
+  exportChangesCsv,
 } from "../controllers/watchlistController.js";
 import { requireAuth } from "../middlewares/requireAuth.js";
 
@@ -19,6 +21,9 @@ router.use(requireAuth);
 
 router.get("/", listWatchlist);
 router.get("/connections", listConnections);
+// Before the /:orgNumber routes, which would take "export" for a number
+router.get("/export/companies", exportWatchlistCsv);
+router.get("/export/changes", exportChangesCsv);
 router.post("/", addCompany);
 router.get("/:orgNumber", getWatchedCompany);
 router.patch("/:orgNumber", updateNote);

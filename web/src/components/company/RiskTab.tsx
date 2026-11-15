@@ -58,9 +58,12 @@ function textValues(params: RiskParams, format: Formatter) {
 export async function RiskTab({
   orgNumber,
   followed,
+  headingLevel = 2,
 }: {
   orgNumber: string;
   followed: boolean;
+  // 3 inside the report, where the tab sits under a heading of its own
+  headingLevel?: 2 | 3;
 }) {
   const t = await getTranslations("risk");
   const severity = await getTranslations("notifications.severity");
@@ -115,7 +118,7 @@ export async function RiskTab({
       </div>
 
       <section className={styles.stack} aria-labelledby="signals">
-        <Heading id="signals" level={2} data-size="xs">
+        <Heading id="signals" level={headingLevel} data-size="xs">
           {t("signalsTitle")}
         </Heading>
         {risk.signals.length === 0 ? (
@@ -155,7 +158,7 @@ export async function RiskTab({
 
       {risk.limitations.length > 0 && (
         <Alert data-color="info">
-          <Heading level={2} data-size="2xs">
+          <Heading level={headingLevel} data-size="2xs">
             {t("limitationsTitle")}
           </Heading>
           <ul className={styles.limitations}>

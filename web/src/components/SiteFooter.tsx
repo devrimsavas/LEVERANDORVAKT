@@ -20,7 +20,7 @@ export async function SiteFooter() {
   const loggedIn = Boolean(await getSessionToken());
 
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} data-print="hide">
       <div className={`container ${styles.columns}`}>
         <div className={styles.brand}>
           <Logo />

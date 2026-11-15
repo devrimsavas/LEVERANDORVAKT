@@ -33,9 +33,12 @@ const YEARS_SHOWN = 5;
 export async function AccountsTab({
   orgNumber,
   followed,
+  headingLevel = 2,
 }: {
   orgNumber: string;
   followed: boolean;
+  // 3 inside the report, where the tab sits under a heading of its own
+  headingLevel?: 2 | 3;
 }) {
   const t = await getTranslations("company.accounts");
   const result = await getCompanyAccounts(orgNumber, followed);
@@ -63,12 +66,19 @@ export async function AccountsTab({
 
   return (
     <div className={styles.stack}>
-      {own.length > 0 && <AccountsTable title={t("own")} accounts={own} />}
+      {own.length > 0 && (
+        <AccountsTable
+          title={t("own")}
+          accounts={own}
+          headingLevel={headingLevel}
+        />
+      )}
       {group.length > 0 && (
         <AccountsTable
           title={t("group")}
           accounts={group}
           note={t("groupNote")}
+          headingLevel={headingLevel}
         />
       )}
       <Paragraph data-size="sm" className={styles.source}>
@@ -82,10 +92,12 @@ async function AccountsTable({
   title,
   accounts,
   note,
+  headingLevel,
 }: {
   title: string;
   accounts: AnnualAccounts[];
   note?: string;
+  headingLevel: 2 | 3;
 }) {
   const t = await getTranslations("company.accounts");
   const format = await getFormatter();
@@ -105,7 +117,7 @@ async function AccountsTable({
 
   return (
     <section className={styles.stack}>
-      <Heading level={2} data-size="xs">
+      <Heading level={headingLevel} data-size="xs">
         {title}
       </Heading>
       {note && <Paragraph data-size="sm">{note}</Paragraph>}

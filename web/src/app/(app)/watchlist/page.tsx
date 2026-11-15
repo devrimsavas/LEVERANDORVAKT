@@ -7,7 +7,7 @@ import {
   Heading,
   Paragraph,
 } from "@digdir/designsystemet-react";
-import { MagnifyingGlassIcon } from "@navikt/aksel-icons";
+import { FileCsvIcon, MagnifyingGlassIcon } from "@navikt/aksel-icons";
 import { getWatchlist, type WatchlistSort } from "@/lib/companies";
 import { formatOrgNumber } from "@/lib/orgNumber";
 import type { RiskLevel } from "@/lib/companyTypes";
@@ -30,7 +30,7 @@ export default async function WatchlistPage({
   const t = await getTranslations("watchlist");
   const format = await getFormatter();
   const now = await getNow();
-  const { sort: sortParam } = await searchParams;
+  const { sort: sortParam, export: exportState } = await searchParams;
   const sort: WatchlistSort = sortParam === "risk" ? "risk" : "name";
   const result = await getWatchlist(sort);
 
@@ -63,6 +63,10 @@ export default async function WatchlistPage({
         </Button>
       </div>
 
+      {exportState === "failed" && (
+        <Alert data-color="danger">{t("export.failed")}</Alert>
+      )}
+
       {result.status === "unavailable" && (
         <Alert data-color="warning">{t("unavailable")}</Alert>
       )}
@@ -81,18 +85,38 @@ export default async function WatchlistPage({
 
       {result.status === "ok" && result.data.length > 0 && (
         <>
-          <nav aria-label={t("sortLabel")} className={styles.sort}>
-            <span>{t("sortLabel")}:</span>
-            {SORTS.map((key) => (
-              <NextLink
-                key={key}
-                href={key === "name" ? "/watchlist" : `/watchlist?sort=${key}`}
-                aria-current={sort === key ? "true" : undefined}
-              >
-                {t(`sort.${key}`)}
-              </NextLink>
-            ))}
-          </nav>
+          <div className={styles.toolbar}>
+            <nav aria-label={t("sortLabel")} className={styles.sort}>
+              <span>{t("sortLabel")}:</span>
+              {SORTS.map((key) => (
+                <NextLink
+                  key={key}
+                  href={
+                    key === "name" ? "/watchlist" : `/watchlist?sort=${key}`
+                  }
+                  aria-current={sort === key ? "true" : undefined}
+                >
+                  {t(`sort.${key}`)}
+                </NextLink>
+              ))}
+            </nav>
+            {/* Plain links: the browser downloads the files */}
+            <div className={styles.exports}>
+              <span>{t("export.label")}:</span>
+              <Button asChild variant="tertiary" data-size="sm">
+                <a href="/watchlist/export/companies" download>
+                  <FileCsvIcon aria-hidden />
+                  {t("export.companies")}
+                </a>
+              </Button>
+              <Button asChild variant="tertiary" data-size="sm">
+                <a href="/watchlist/export/changes" download>
+                  <FileCsvIcon aria-hidden />
+                  {t("export.changes")}
+                </a>
+              </Button>
+            </div>
+          </div>
 
           <ul className={styles.list}>
             {result.data.map((row) => (

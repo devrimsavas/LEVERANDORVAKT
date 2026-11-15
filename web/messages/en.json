@@ -402,7 +402,8 @@
       "pages": "Pages",
       "newer": "Newer",
       "older": "Older",
-      "pageOf": "Page {page} of {total}"
+      "pageOf": "Page {page} of {total}",
+      "latestOf": "The {shown} latest of {total} changes."
     },
     "accounts": {
       "unavailable": "The annual accounts could not be loaded right now. Try again in a little while.",
@@ -434,6 +435,23 @@
         "choose": "Key figure in the chart",
         "mixedCurrencies": "The years were reported in different currencies, so they are not compared in a chart. The table shows each year in its own currency.",
         "noData": "The company does not report {figure} in these years."
+      }
+    },
+    "reportButton": "Report (PDF)",
+    "report": {
+      "title": "Supplier check",
+      "back": "Back to the company",
+      "print": "Print or save as PDF",
+      "printHint": "In the print window, choose “Save as PDF” as the printer to get a file.",
+      "made": "Made {date} by {name}",
+      "sources": "Source: the Brønnøysund Register Centre (the Central Coordinating Register and the Register of Company Accounts). The report shows the registers as they were when it was made.",
+      "madeWith": "Made with Leverandørvakt.",
+      "sections": {
+        "risk": "Risk",
+        "details": "Company details",
+        "roles": "Roles",
+        "accounts": "Annual accounts",
+        "changes": "Recent changes"
       }
     }
   },
@@ -480,7 +498,13 @@
       "accounts": "Accounts"
     },
     "noChanges": "None yet",
-    "accountsUnsupported": "Not available"
+    "accountsUnsupported": "Not available",
+    "export": {
+      "label": "Download",
+      "companies": "Companies (CSV)",
+      "changes": "Changes (CSV)",
+      "failed": "The file could not be made. Try again in a little while."
+    }
   },
   "risk": {
     "unavailable": "The risk could not be assessed right now. Try again in a little while.",

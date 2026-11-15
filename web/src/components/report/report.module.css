@@ -1,0 +1,122 @@
+/* The company report: as wide as an A4 page's text, so the screen shows
+   what the printout will look like, charts included */
+.report {
+  display: grid;
+  gap: var(--ds-size-8);
+  max-width: 42rem;
+  margin-inline: auto;
+  padding-block: var(--ds-size-8) var(--ds-size-12);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--ds-size-4);
+}
+
+.print {
+  display: grid;
+  justify-items: end;
+  gap: var(--ds-size-2);
+}
+
+.hint {
+  margin: 0;
+  max-width: 18rem;
+  text-align: end;
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.header {
+  display: grid;
+  gap: var(--ds-size-2);
+  padding-bottom: var(--ds-size-6);
+  border-bottom: 2px solid var(--ds-color-accent-base-default);
+}
+
+.header h1 {
+  overflow-wrap: anywhere;
+}
+
+.header p {
+  margin: 0;
+}
+
+.kicker {
+  font-size: var(--ds-body-sm-font-size);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ds-color-accent-text-subtle);
+}
+
+.sub,
+.made {
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.made {
+  font-size: var(--ds-body-sm-font-size);
+}
+
+.section {
+  display: grid;
+  gap: var(--ds-size-4);
+}
+
+.section > h2 {
+  padding-bottom: var(--ds-size-2);
+  border-bottom: 1px solid var(--ds-color-neutral-border-subtle);
+}
+
+.footer {
+  display: grid;
+  gap: var(--ds-size-2);
+  padding-top: var(--ds-size-4);
+  border-top: 1px solid var(--ds-color-neutral-border-subtle);
+  font-size: var(--ds-body-sm-font-size);
+  color: var(--ds-color-neutral-text-subtle);
+}
+
+.footer p {
+  margin: 0;
+}
+
+@media print {
+  .report {
+    max-width: none;
+    padding: 0;
+    gap: var(--ds-size-6);
+  }
+
+  /* Block layout, since printers only keep a heading with what follows it
+     in normal flow. Short sections stay on one page. */
+  .report,
+  .section {
+    display: block;
+  }
+
+  .section > * + *,
+  .report > * + * {
+    margin-top: var(--ds-size-5);
+  }
+
+  .section > h2 {
+    break-after: avoid;
+  }
+
+  .section {
+    break-inside: avoid;
+  }
+
+  .report tr,
+  .report li {
+    break-inside: avoid;
+  }
+
+  .report :global(.ds-table) {
+    font-size: 0.8rem;
+  }
+}

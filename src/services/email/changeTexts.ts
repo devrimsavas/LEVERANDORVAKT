@@ -1,6 +1,7 @@
 import type { Language } from "../../models/User.js";
 
-// How a stored change is described in an email, in English and Norwegian.
+// How a stored change is described in emails and exported files, in
+// English and Norwegian.
 // The wording is the same as the web app's (web/messages, "changes" and
 // "changeValues"), so a change reads the same in the app and the inbox.
 
@@ -135,6 +136,10 @@ export function changeTitle(
 
 export function severityLabel(language: Language, severity: string): string {
   return WORDS[language].severity[severity] ?? severity;
+}
+
+export function riskLevelLabel(language: Language, level: string): string {
+  return WORDS[language].levels[level] ?? level;
 }
 
 function plainValue(language: Language, value: unknown): string {

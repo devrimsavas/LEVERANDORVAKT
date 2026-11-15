@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import NextLink from "next/link";
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Alert, Heading, Link, Paragraph } from "@digdir/designsystemet-react";
+import {
+  Alert,
+  Button,
+  Heading,
+  Link,
+  Paragraph,
+} from "@digdir/designsystemet-react";
+import { FilePdfIcon } from "@navikt/aksel-icons";
 import { getCompanyPage } from "@/lib/companies";
 import { formatOrgNumber, parseOrgNumber } from "@/lib/orgNumber";
 import { companyStatuses } from "@/components/company/companyStatus";
@@ -92,11 +99,19 @@ export default async function CompanyPage({
           </Paragraph>
           <StatusTags statuses={statuses} />
         </div>
-        <FollowControls
-          orgNumber={company.orgNumber}
-          name={company.name}
-          followed={watch !== null}
-        />
+        <div className={styles.headerActions}>
+          <FollowControls
+            orgNumber={company.orgNumber}
+            name={company.name}
+            followed={watch !== null}
+          />
+          <Button asChild variant="secondary">
+            <NextLink href={`/companies/${company.orgNumber}/report`}>
+              <FilePdfIcon aria-hidden />
+              {t("reportButton")}
+            </NextLink>
+          </Button>
+        </div>
       </header>
 
       {watch && <NoteEditor orgNumber={company.orgNumber} note={watch.note} />}

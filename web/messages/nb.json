@@ -402,7 +402,8 @@
       "pages": "Sider",
       "newer": "Nyere",
       "older": "Eldre",
-      "pageOf": "Side {page} av {total}"
+      "pageOf": "Side {page} av {total}",
+      "latestOf": "De {shown} siste av {total} endringer."
     },
     "accounts": {
       "unavailable": "Årsregnskapet kunne ikke lastes akkurat nå. Prøv igjen om litt.",
@@ -434,6 +435,23 @@
         "choose": "Nøkkeltall i grafen",
         "mixedCurrencies": "Årene er rapportert i ulike valutaer, så de sammenlignes ikke i en graf. Tabellen viser hvert år i sin egen valuta.",
         "noData": "Selskapet rapporterer ikke {figure} disse årene."
+      }
+    },
+    "reportButton": "Rapport (PDF)",
+    "report": {
+      "title": "Leverandørsjekk",
+      "back": "Tilbake til selskapet",
+      "print": "Skriv ut eller lagre som PDF",
+      "printHint": "Velg «Lagre som PDF» som skriver i utskriftsvinduet for å få en fil.",
+      "made": "Laget {date} av {name}",
+      "sources": "Kilde: Brønnøysundregistrene (Enhetsregisteret og Regnskapsregisteret). Rapporten viser registrene slik de var da den ble laget.",
+      "madeWith": "Laget med Leverandørvakt.",
+      "sections": {
+        "risk": "Risiko",
+        "details": "Om selskapet",
+        "roles": "Roller",
+        "accounts": "Årsregnskap",
+        "changes": "Siste endringer"
       }
     }
   },
@@ -480,7 +498,13 @@
       "accounts": "Regnskap"
     },
     "noChanges": "Ingen ennå",
-    "accountsUnsupported": "Ikke tilgjengelig"
+    "accountsUnsupported": "Ikke tilgjengelig",
+    "export": {
+      "label": "Last ned",
+      "companies": "Selskaper (CSV)",
+      "changes": "Endringer (CSV)",
+      "failed": "Filen kunne ikke lages. Prøv igjen om litt."
+    }
   },
   "risk": {
     "unavailable": "Risikoen kunne ikke vurderes akkurat nå. Prøv igjen om litt.",

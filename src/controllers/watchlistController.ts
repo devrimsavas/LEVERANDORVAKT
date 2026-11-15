@@ -16,6 +16,11 @@ import { UserNotFoundError } from "../services/userService.js";
 import { isValidOrgNumber } from "../utils/orgNumber.js";
 import { parsePagination } from "../utils/pagination.js";
 import { findConnections } from "../services/connectionsService.js";
+import {
+  exportChanges,
+  exportWatchlist,
+  type CsvFile,
+} from "../services/exportService.js";
 
 const MAX_NOTE_LENGTH = 500;
 
@@ -73,6 +78,42 @@ export const listWatchlist = async (req: Request, res: Response) => {
     if (sendKnownError(error, res)) return;
     req.log.error({ err: error }, "Request failed");
     res.status(500).json({ error: "Could not load the watchlist" });
+  }
+};
+
+function sendCsv(res: Response, file: CsvFile): void {
+  res
+    .type("text/csv; charset=utf-8")
+    .set("Content-Disposition", `attachment; filename="${file.filename}"`)
+    .set("Cache-Control", "no-store")
+    .send(file.content);
+}
+
+// GET /api/watchlist/export/companies
+export const exportWatchlistCsv = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Watchlist"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.description = "The watchlist as a CSV file for Excel or Power BI: status, risk and latest key figures of every followed company, with your notes. In your language; separated by semicolons in Norwegian and commas in English" */
+  try {
+    sendCsv(res, await exportWatchlist(req.auth!.userId));
+  } catch (error) {
+    if (sendKnownError(error, res)) return;
+    req.log.error({ err: error }, "Request failed");
+    res.status(500).json({ error: "Could not export the watchlist" });
+  }
+};
+
+// GET /api/watchlist/export/changes
+export const exportChangesCsv = async (req: Request, res: Response) => {
+  // #swagger.tags = ["Watchlist"]
+  /* #swagger.security = [{ "bearerAuth": [] }]
+     #swagger.description = "Every recorded change of the followed companies as a CSV file, newest first (at most 10 000)" */
+  try {
+    sendCsv(res, await exportChanges(req.auth!.userId));
+  } catch (error) {
+    if (sendKnownError(error, res)) return;
+    req.log.error({ err: error }, "Request failed");
+    res.status(500).json({ error: "Could not export the changes" });
   }
 };
 

@@ -29,7 +29,7 @@ export async function AppHeader({ user }: { user: CurrentUser }) {
   const name = `${user.firstName} ${user.lastName}`;
 
   return (
-    <header className={`${styles.header} ${styles.app}`}>
+    <header className={`${styles.header} ${styles.app}`} data-print="hide">
       <div className={`container ${styles.inner}`}>
         <NextLink
           href="/overview"

@@ -109,7 +109,9 @@ export function AccountsChart({
           {t("chart.title", { figure: t(`rows.${metric}`) })}
           {currency && <span className={styles.chartUnit}> ({currency})</span>}
         </figcaption>
+        {/* On paper the chart shows the figure chosen on screen */}
         <ToggleGroup
+          data-print="hide"
           value={metric}
           onChange={(value) => setMetric(value as ChartMetric)}
           data-size="sm"

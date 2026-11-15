@@ -31,6 +31,20 @@ function parts(date: Date, timeZone: string) {
   };
 }
 
+const pad = (value: number) => String(value).padStart(2, "0");
+
+// The date in the time zone, e.g. 2026-11-16
+export function localDate(date: Date, timeZone = emailTimeZone()): string {
+  const local = parts(date, timeZone);
+  return `${local.year}-${pad(local.month)}-${pad(local.day)}`;
+}
+
+// The date and time in the time zone, e.g. 2026-11-16 07:30
+export function localDateTime(date: Date, timeZone = emailTimeZone()): string {
+  const local = parts(date, timeZone);
+  return `${localDate(date, timeZone)} ${pad(local.hour)}:${pad(local.minute)}`;
+}
+
 // The hour (0 to 23) in the time zone
 export function localHour(date: Date, timeZone = emailTimeZone()): number {
   return parts(date, timeZone).hour;

@@ -76,3 +76,24 @@ main {
     --chart-series-2: #d95926;
   }
 }
+
+/* Printing (the company report): only the page's own content, on white
+   paper. The report switches the color scheme to light while printing. */
+@media print {
+  [data-print="hide"] {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff;
+  }
+
+  a {
+    text-decoration: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin: 15mm;
+}

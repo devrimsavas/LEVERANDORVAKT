@@ -18,13 +18,17 @@ import { getCompanyChanges } from "@/lib/companies";
 import { SEVERITY_COLOR } from "@/lib/notificationTypes";
 import styles from "./company.module.css";
 
-// Detected changes of a followed company, newest first, 20 per page
+// Detected changes of a followed company, newest first, 20 per page.
+// Without paging (the printed report) only the latest page is shown, with
+// how many there are in all.
 export async function ChangesTab({
   orgNumber,
   page,
+  paging = true,
 }: {
   orgNumber: string;
   page: number;
+  paging?: boolean;
 }) {
   const t = await getTranslations("company.changes");
   const changes = await getTranslations("changes");
@@ -35,7 +39,7 @@ export async function ChangesTab({
   if (result.status !== "ok") {
     return <Alert data-color="warning">{t("unavailable")}</Alert>;
   }
-  const { items, totalPages } = result.data;
+  const { items, totalPages, totalItems } = result.data;
   if (items.length === 0) return <Paragraph>{t("none")}</Paragraph>;
 
   const display = await getChangeDisplay();
@@ -89,7 +93,12 @@ export async function ChangesTab({
           </TableBody>
         </Table>
       </div>
-      {totalPages > 1 && (
+      {!paging && totalPages > 1 && (
+        <Paragraph data-size="sm">
+          {t("latestOf", { shown: items.length, total: totalItems })}
+        </Paragraph>
+      )}
+      {paging && totalPages > 1 && (
         <nav aria-label={t("pages")} className={styles.pager}>
           {page > 1 && (
             <Button asChild variant="secondary" data-size="sm">

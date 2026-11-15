@@ -12,6 +12,13 @@
   gap: var(--ds-size-5);
 }
 
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--ds-size-2);
+}
+
 .titleBlock {
   display: grid;
   gap: var(--ds-size-2);
@@ -345,4 +352,16 @@
   padding-block: var(--ds-size-8);
   text-align: center;
   color: var(--ds-color-neutral-text-subtle);
+}
+
+@media print {
+  /* Printed tables are not cut off by a scroll box */
+  .tableWrap {
+    overflow: visible;
+  }
+
+  /* "How it works" is folded away on screen and left out on paper */
+  .howItWorks {
+    display: none;
+  }
 }
