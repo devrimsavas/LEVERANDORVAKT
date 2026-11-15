@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml/badge.svg)](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml)
 
-_Last updated: 12.11.2026_
+_Last updated: 15.11.2026_
 
 > ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages, trends, notifications, the assistant, an admin page and an in-app guide, with end-to-end tests in a real browser; production hardening and deployment are next. See the [Roadmap](#roadmap).
 
