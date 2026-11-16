@@ -57,6 +57,8 @@ services:
       # The web app's server calls the API inside Docker's network;
       # the browser only ever talks to the web app
       API_URL: http://api:3000
+      # Page view counts, from GOATCOUNTER_URL in .env; empty counts nothing
+      GOATCOUNTER_URL: ${GOATCOUNTER_URL:-}
     ports:
       - "3001:3001"
 

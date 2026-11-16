@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { counterOrigin } from "@/lib/analytics";
 
 // Runs before every page request. It sends visitors to the login page and
 // back by the session cookie alone (no API call, so it is fast; the API
@@ -45,16 +46,19 @@ function isExpired(token: string): boolean {
 // for each request, which Next.js puts on its own script tags; a script
 // slipped into the page without it does not run. Styles allow inline
 // style attributes, which the charts and the design system use.
+// The page view counter, when GOATCOUNTER_URL is set, may receive counts.
 function contentSecurityPolicy(nonce: string): string {
   const development = process.env.NODE_ENV === "development";
+  const counter = counterOrigin();
+  const toCounter = counter ? ` ${counter}` : "";
   return [
     "default-src 'self'",
     // React's development tools need eval; never in production
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${development ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob:",
+    `img-src 'self' data: blob:${toCounter}`,
     "font-src 'self'",
-    "connect-src 'self'",
+    `connect-src 'self'${toCounter}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

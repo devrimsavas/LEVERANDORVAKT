@@ -74,10 +74,38 @@ interface Fixtures {
   admin: AdminApi;
 }
 
+// GoatCounter's script, replaced by one that keeps what it is asked to
+// count in window.counted and sends it to the counter address like the
+// real one, so the content security policy is tested too
+export const COUNTER_URL = "https://e2e.goatcounter.test/count";
+
+async function fakeGoatCounter(page: Page) {
+  await page.route("https://gc.zgo.at/count.js", (route) =>
+    route.fulfill({
+      contentType: "text/javascript",
+      body: `
+        window.counted = [];
+        window.goatcounter = window.goatcounter || {};
+        window.goatcounter.count = function (vars) {
+          window.counted.push(vars);
+          fetch("${COUNTER_URL}?p=" + encodeURIComponent(vars.path), {
+            method: "POST",
+            keepalive: true,
+          });
+        };
+      `,
+    }),
+  );
+  await page.route(`${COUNTER_URL}**`, (route) =>
+    route.fulfill({ status: 200, body: "" }),
+  );
+}
+
 export const test = base.extend<Fixtures>({
   // Every page fails its test if the browser blocks anything under the
   // content security policy, so a policy that is too strict is found here
   page: async ({ page }, use) => {
+    await fakeGoatCounter(page);
     const blocked: string[] = [];
     page.on("console", (message) => {
       if (/Content Security Policy/i.test(message.text())) {

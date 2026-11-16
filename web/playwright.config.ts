@@ -84,7 +84,11 @@ export default defineConfig({
         ? `npx next start -p ${WEB_PORT}`
         : `npx next build && npx next start -p ${WEB_PORT}`,
       url: `http://localhost:${WEB_PORT}/`,
-      env: { API_URL: `http://localhost:${API_PORT}` },
+      env: {
+        API_URL: `http://localhost:${API_PORT}`,
+        // A made-up counter; the tests answer for GoatCounter (fixtures.ts)
+        GOATCOUNTER_URL: "https://e2e.goatcounter.test/count",
+      },
       reuseExistingServer: false,
       timeout: 240_000,
     },
