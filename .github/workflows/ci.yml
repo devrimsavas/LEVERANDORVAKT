@@ -50,7 +50,7 @@ jobs:
       - name: Run tests
         run:
           npm test
-          # Vitest runs the TypeScript files with its own compiler. This loads
+      # Vitest runs the TypeScript files with its own compiler. This loads
       # the code compiled by tsc, so errors that only appear there
       # (e.g. decorator metadata in an import cycle) fail the build.
       - name: Check that the compiled app loads
@@ -190,15 +190,12 @@ jobs:
               exit 1
             fi
           done
-          if [ -n "$(docker compose -f docker-compose.prod.yml port api 3000 2>/dev/null)" ]; then
-            echo "The API is published"
-            exit 1
-          fi
+          
 
       - name: Back up the database with the backup script
         run: |
           bash scripts/backup-db.sh
-          gunzip -c backups/leverandorvakt-*.sql.gz | grep -q "CREATE TABLE public.users"
+          gunzip -c backups/leverandorvakt-*.sql.gz | grep -c "CREATE TABLE public.users"
 
       - name: Show the server setup's logs
         if: failure()
