@@ -42,3 +42,6 @@ program_notes/
 
 #company files 
 equinor-regnskap.json 
+
+# Database backups made on a server (scripts/backup-db.sh)
+backups/

@@ -1,0 +1,64 @@
+# Runs Leverandørvakt on a server: the web app, the API and its database.
+#   docker compose -f docker-compose.prod.yml up -d --build
+# The same file runs every environment (production, staging); what differs
+# between them is only in the server's .env, never in this file.
+#
+# Only the web app can be reached, and only from the server itself
+# (127.0.0.1): Cloudflare Tunnel (cloudflared) brings visitors to it, so no
+# port is open to the internet. The API and the database are reachable
+# only inside Docker's network.
+
+# Its own project name, so it never touches the containers or the data of
+# docker-compose.yml if both are started on the same machine
+name: leverandorvakt-server
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: leverandorvakt
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: leverandorvakt
+    volumes:
+      # Keeps the data when the containers are recreated
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U leverandorvakt -d leverandorvakt"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      # These override .env: inside Docker the database is the "db" service
+      DATABASE_URL: postgres://leverandorvakt:${POSTGRES_PASSWORD}@db:5432/leverandorvakt
+      PORT: "3000"
+      # JSON lines, read with "docker compose logs"
+      LOG_FORMAT: json
+    # No ports: only the web app calls the API
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      API_URL: http://api:3000
+      # Behind Cloudflare the visitor's address is in cf-connecting-ip
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-cf-connecting-ip}
+      # Page view counts; empty counts nothing (staging)
+      GOATCOUNTER_URL: ${GOATCOUNTER_URL:-}
+    ports:
+      # Only on the server itself, for cloudflared
+      - "127.0.0.1:${WEB_PORT:-3001}:3001"
+
+volumes:
+  db-data:

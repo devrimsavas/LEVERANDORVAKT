@@ -70,3 +70,14 @@ OLLAMA_API_KEY=
 # Gemini: API key from Google AI Studio
 GEMINI_API_KEY=
 GEMINI_MODEL=
+
+# ---- On a server (docker-compose.prod.yml) ----
+# The database password: letters and digits only, since it goes into a
+# connection address. Make one with: openssl rand -hex 24
+POSTGRES_PASSWORD=
+# The port the web app listens on, on the server itself, for cloudflared
+WEB_PORT=3001
+# The header Cloudflare puts the visitor's address in, for the rate limits
+CLIENT_IP_HEADER=cf-connecting-ip
+# GoatCounter's /count address; empty counts nothing (staging)
+GOATCOUNTER_URL=

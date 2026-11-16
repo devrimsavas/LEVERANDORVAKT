@@ -21,3 +21,7 @@ equinor-regnskap.json
 README.md
 Dockerfile
 docker-compose.yml
+docker-compose.prod.yml
+.gitattributes
+scripts
+backups

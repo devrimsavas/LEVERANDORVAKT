@@ -438,6 +438,10 @@ LEVERANDORVAKT/
 │   └── portfolio-rebuild.yml     # Rebuilds the portfolio site when the README changes
 ├── Dockerfile                    # Multi-stage image: build with all dependencies, run with production ones only
 ├── docker-compose.yml            # The web app, the API and PostgreSQL for local development
+├── docker-compose.prod.yml       # The same on a server, reachable only through Cloudflare Tunnel
+├── scripts/
+│   ├── backup-db.sh              # A compressed dump of the database, 14 days kept
+│   └── restore-db.sh             # Puts a backup back, with the app stopped meanwhile
 ├── .dockerignore
 ├── vitest.config.ts
 ├── envexample
@@ -463,6 +467,59 @@ docker compose up --build
 The web app runs at `http://localhost:3001`, the API at `http://localhost:3000` and its docs at `http://localhost:3000/api/docs`. Compose starts PostgreSQL, waits until it accepts connections, then starts the API, which applies the migrations itself, and then the web app. The database is also reachable from your machine on port `5433` (e.g. for pgAdmin), and its data is kept in a Docker volume between runs; `docker compose down --volumes` deletes it.
 
 Inside Docker the database address and the Ollama address are set by `docker-compose.yml`, so the `DATABASE_URL` and `OLLAMA_HOST` in `.env` are not used there. The assistant reaches Ollama running on your machine through `host.docker.internal`.
+
+### Running on a server
+
+`docker-compose.prod.yml` runs the same three services on a Linux server, for production or for staging. Every difference between environments is in the server's `.env`; the files in Git are the same everywhere.
+
+```
+visitor ──HTTPS──> Cloudflare ──tunnel──> cloudflared ──> web (127.0.0.1:3001) ──> api ──> db
+                                          (on the server)      (Docker network only)
+```
+
+- **No open ports.** `cloudflared` keeps an outgoing connection to Cloudflare, which sends visitors to the web app. The web app listens only on `127.0.0.1`, and the API and the database only inside Docker's network, so neither can be reached from outside, not even from the local network. (Docker opens published ports past the firewall, which is why nothing else is published.)
+- **Restarts by itself.** Every service has `restart: unless-stopped`, so the app comes back after a crash or a reboot.
+- **Nightly backups.** `scripts/backup-db.sh` writes a compressed dump of the database to `backups/` and keeps 14 days; `scripts/restore-db.sh` puts one back, with the app stopped meanwhile.
+
+**First start**, as a user with Docker on the server:
+
+```bash
+git clone https://github.com/devrimsavas/LEVERANDORVAKT.git leverandorvakt
+cd leverandorvakt
+cp envexample .env
+nano .env        # see the list below
+docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml ps     # all three "healthy"
+```
+
+**What to set in `.env` on a server**
+
+| Setting                                          | Production                                                    | Staging                               |
+| ------------------------------------------------ | ------------------------------------------------------------- | ------------------------------------- |
+| `POSTGRES_PASSWORD`                              | `openssl rand -hex 24`                                        | another one                           |
+| `JWT_SECRET`                                     | `openssl rand -hex 32`                                        | another one                           |
+| `ADMIN_EMAIL`, `ADMIN_PASSWORD`                  | the real admin, a strong password                             | the same or a test admin              |
+| `WEB_APP_URL`                                    | `https://leverandorvakt.devrimdev.no`                         | `https://leveranstaging.devrimdev.no` |
+| `EMAIL_PROVIDER`, `RESEND_API_KEY`, `EMAIL_FROM` | `resend`, the key, an address on a domain verified in Resend  | `log`: no real emails from staging    |
+| `ALERT_EMAIL`                                    | where alerts go                                               | empty                                 |
+| `AI_PROVIDER` and its key                        | `gemini` (or Ollama Cloud): a small server cannot run a model | the same, or empty to turn it off     |
+| `GOATCOUNTER_URL`                                | the counter's `/count` address                                | empty                                 |
+
+`DATABASE_URL`, `PORT` and `LOG_FORMAT` are set by the compose file.
+
+**Cloudflare Tunnel**: in the Cloudflare dashboard (Zero Trust → Networks → Tunnels), install the connector on the server with the command it shows, then add a published application: the hostname (for example `leverandorvakt.devrimdev.no`) and the service `http://localhost:3001`.
+
+**Updating**: `git pull`, then `docker compose -f docker-compose.prod.yml up -d --build`. The API applies new migrations when it starts.
+
+**Logs**: `docker compose -f docker-compose.prod.yml logs -f api` (JSON lines; `| grep <request id>` finds one request).
+
+**Backups**: run `bash scripts/backup-db.sh` once by hand, then add it to cron (`crontab -e`):
+
+```
+15 3 * * * cd /home/USER/leverandorvakt && bash scripts/backup-db.sh >> backups/backup.log 2>&1
+```
+
+To restore: `bash scripts/restore-db.sh backups/leverandorvakt-<date>.sql.gz`. Backups on the same server do not survive the server itself, so copy them elsewhere now and then, and take a snapshot in the provider's panel before larger changes.
 
 ### Development setup
 
@@ -749,7 +806,8 @@ GitHub Actions runs three jobs on every push: the API's type check and all its t
 ### Delivery
 
 - [x] Docker Compose for local development
-- [ ] Deployment (Render + Aiven PostgreSQL)
+- [x] Docker Compose for servers, behind Cloudflare Tunnel, with nightly database backups
+- [ ] Production on a VPS and staging on a home server
 - [ ] Usage guide with scenarios
 
 ### Web app

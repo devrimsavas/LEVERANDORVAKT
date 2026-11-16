@@ -171,3 +171,39 @@ jobs:
       - name: Stop the containers
         if: always()
         run: docker compose down --volumes
+
+      # The server setup: the same images, but only the web app may answer,
+      # and only on the machine itself
+      - name: Start the server setup (docker-compose.prod.yml)
+        run: |
+          echo "POSTGRES_PASSWORD=ci$(openssl rand -hex 12)" >> .env
+          docker compose -f docker-compose.prod.yml up --build --detach --wait --wait-timeout 180
+
+      - name: Check that only the web app answers
+        run: |
+          curl --fail --silent --show-error --output /dev/null http://127.0.0.1:3001/
+          curl --fail --silent --show-error --output /dev/null http://127.0.0.1:3001/guide
+          # The API and the database must not be reachable from outside Docker
+          for port in 3000 5432 5433; do
+            if curl --silent --max-time 3 --output /dev/null "http://localhost:$port/"; then
+              echo "Port $port answers, but should not be published"
+              exit 1
+            fi
+          done
+          if [ -n "$(docker compose -f docker-compose.prod.yml port api 3000 2>/dev/null)" ]; then
+            echo "The API is published"
+            exit 1
+          fi
+
+      - name: Back up the database with the backup script
+        run: |
+          bash scripts/backup-db.sh
+          gunzip -c backups/leverandorvakt-*.sql.gz | grep -q "CREATE TABLE public.users"
+
+      - name: Show the server setup's logs
+        if: failure()
+        run: docker compose -f docker-compose.prod.yml logs
+
+      - name: Stop the server setup
+        if: always()
+        run: docker compose -f docker-compose.prod.yml down --volumes
