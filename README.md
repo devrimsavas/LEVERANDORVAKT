@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml/badge.svg)](https://github.com/devrimsavas/LEVERANDORVAKT/actions/workflows/ci.yml)
 
-_Last updated: 16.11.2026_
+_Last updated: 17.11.2026_
 
-> ⚠️ **Under active development** — the backend (following companies, detecting changes in company data, roles and annual accounts, notifications, an explainable risk assessment, regional trends and an AI assistant with tool calling) is in place and covered by tests. The web app has its public pages, login, overview, watchlist, search, company pages, trends, notifications, the assistant, an admin page and an in-app guide, with end-to-end tests in a real browser; production hardening and deployment are next. See the [Roadmap](#roadmap).
+> 🟢 **Live:** [leverandorvakt.devrimdev.no](https://leverandorvakt.devrimdev.no) — running on a small VPS (Docker Compose behind a Cloudflare Tunnel) with email notifications from its own domain and nightly database backups. The backend and web app are covered by unit, integration and end-to-end tests. Development continues — see the [Roadmap](#roadmap).
 
 An early-warning service for Norwegian businesses, built on open data from the **Brønnøysund Register Centre** (Brønnøysundregistrene).
 
@@ -805,9 +805,15 @@ GitHub Actions runs three jobs on every push: the API's type check and all its t
 
 ### Delivery
 
+### Delivery
+
 - [x] Docker Compose for local development
 - [x] Docker Compose for servers, behind Cloudflare Tunnel, with nightly database backups
-- [ ] Production on a VPS and staging on a home server
+- [x] Production on a netcup VPS (Debian, Docker Compose), deployed manually with `git pull` and a rebuild
+- [x] Email from its own domain (Resend, verified with DKIM)
+- [ ] Automatic deployment from GitHub Actions after CI passes
+- [ ] Staging on a home server
+- [ ] Off-site backups
 - [ ] Usage guide with scenarios
 
 ### Web app
