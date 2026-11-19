@@ -84,9 +84,10 @@ export async function SiteFooter() {
           {t("independent")}
         </Paragraph>
         <Paragraph data-size="xs">
-          © {new Date().getFullYear()} Leverandørvakt ·{" "}
+          © {new Date().getFullYear()} Leverandørvakt
           {SITE.ownerName && (
             <>
+              {" · "}
               {t("builtBy")}{" "}
               {SITE.portfolioUrl ? (
                 <Link href={SITE.portfolioUrl} target="_blank" rel="noreferrer">
@@ -94,13 +95,9 @@ export async function SiteFooter() {
                 </Link>
               ) : (
                 SITE.ownerName
-              )}{" "}
-              ·{" "}
+              )}
             </>
           )}
-          <Link href={SITE.repositoryUrl} target="_blank" rel="noreferrer">
-            {t("sourceCode")}
-          </Link>
         </Paragraph>
       </div>
     </footer>
